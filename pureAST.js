@@ -46,7 +46,7 @@ var sourceFile = ts.createSourceFile('temp.ts', code);
 global.sourceFile = sourceFile;
 
 function getIden (num) {
-    return " ".repeat(num);
+    return "    ".repeat(num);
 }
 
 
@@ -88,7 +88,7 @@ const {expression, name} = expressionStatement;
  * @params {ts.Expression} expression
  *
  * */
-function printExpressionStatement(expressionStatement) {
+function printExpressionStatement(expressionStatement, identation) {
 
     if (expressionStatement.kind === ts.SyntaxKind.BinaryExpression) {
         const binaryExpressionString =  printBinaryExpression(expressionStatement);
@@ -103,9 +103,9 @@ function printExpressionStatement(expressionStatement) {
         }).join(", ");
 
         const expressionResult = printExpressionStatement(expression);
-        const exprWithParam =  expressionResult + "(" + parsedArgs + ");";
+        const exprWithParam =  expressionResult + "(" + parsedArgs + ")";
 
-        return exprWithParam;
+        return getIden(identation) + exprWithParam;
     }
     // is node object 206
     if (expressionStatement.kind === ts.SyntaxKind.PropertyAccessExpression) {
@@ -176,7 +176,7 @@ function printFunction(node) {
     return functionDef;
 }
 
-function printMethodDeclaration(node, indentation) {
+function printMethodDeclaration(node, identation) {
     const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
     const parsedArgs = (parameters.length > 0) ? parseParameters(parameters, FunctionDefSupportedKindNames) : [];
@@ -185,7 +185,7 @@ function printMethodDeclaration(node, indentation) {
         return `${a.name}: ${a.type}`
     }).join(", ");
 
-    let functionDef = "def " + escapedText
+    let functionDef = getIden(identation) +  "def " + escapedText
         + "(" + parsedArgsAsString + ")"
         + ":\n"
         // // NOTE - must have function RETURN TYPE in TS
@@ -195,12 +195,12 @@ function printMethodDeclaration(node, indentation) {
     const statementsAsString = body.statements.map((s) => {
         if (s.kind === ts.SyntaxKind.ReturnStatement) {
 //            console.log("this function returns data");
-            const exprString = printExpressionStatement(s.expression, indentation + 1);
+            const exprString = printExpressionStatement(s.expression, identation + 1);
             return "  return " + exprString
         }
 
         // unknown stuff at this point
-        return printTree(s, indentation+1);
+        return printTree(s, identation+1);
     }).filter((s)=>!!s).join("");
 
     functionDef += statementsAsString;
@@ -224,13 +224,13 @@ function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
         const expression = node.expression;
-        const exprString = printExpressionStatement(expression, indentation);
+        const exprString = printExpressionStatement(expression, identation);
 
         return exprString;
     } else if (ts.isFunctionDeclaration(node)){
         return printFunction(node, identation);
     } else if (ts.isClassDeclaration(node)) {
-        return printClass(node, indentation) 
+        return printClass(node, identation) 
     } else if (ts.isVariableStatement(node)) {
         node.getLeadingTriviaWidth(global.sourceFile)
         const varType = node.declarationList.flags;
