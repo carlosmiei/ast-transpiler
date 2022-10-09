@@ -22,12 +22,14 @@ class Greeter {
     
     teste() {
         console.log("Hello");
+    return "ola"
     }
 }
 `;
 
+// code = "const x = y.length";
 
-global.code = code;
+// global.code = code;
 let generatedCode = "";
 
 const SupportedKindNames = {
@@ -72,22 +74,25 @@ function printBinaryExpression({left, right, operatorToken}) {
 }
 
 function extractPropertyAccessExpression(expressionStatement) {
-const {expression, name} = expressionStatement;
-    //console.log("child identifier", expression.escapedText);
-    //console.log("--- IdentifierObject", name.escapedText);
+    const {expression, name} = expressionStatement;
 
-    // the known keywords we could map
-    if (expression.escapedText === "console") {
-        return "print";
-    }
+        // the known keywords we could map
+        if (expression.escapedText === "console") {
+            return "print";
+        }
 
-    return expression.escapedText;
+        return expression.escapedText;
 }
 
-/**
- * @params {ts.Expression} expression
- *
- * */
+function printPropertyAccessExpression(node, identation) {
+    const {expression, name} = node;
+
+    const leftSide = node.expression.escapedText;
+    const rightSide = node.name.escapedText;
+
+    return getIden(identation) + leftSide + "." + rightSide;
+}
+
 function printExpressionStatement(expressionStatement, identation) {
 
     if (expressionStatement.kind === ts.SyntaxKind.BinaryExpression) {
@@ -192,20 +197,40 @@ function printMethodDeclaration(node, identation) {
         // + SupportedKindNames[returnType.kind]
         // +" {\n";
 
+    const funcBodyIdentation = identation + 1
     const statementsAsString = body.statements.map((s) => {
         if (s.kind === ts.SyntaxKind.ReturnStatement) {
-//            console.log("this function returns data");
-            const exprString = printExpressionStatement(s.expression, identation + 1);
-            return "  return " + exprString
+            const exprString = printExpressionStatement(s.expression, funcBodyIdentation);
+            return getIden(funcBodyIdentation )  + "return " + exprString
         }
 
         // unknown stuff at this point
-        return printTree(s, identation+1);
-    }).filter((s)=>!!s).join("");
+        return printTree(s, funcBodyIdentation);
+    }).filter((s)=>!!s).join("\n");
 
     functionDef += statementsAsString;
 
     return functionDef;
+}
+
+function printVariableStatement(node, identation){
+    const decList = node.declarationList;
+    // const isConst = decList.flags === 2;
+    const declaration = decList.declarations[0];
+    const name = declaration.name.escapedText;
+    const value = declaration.initializer.text
+
+    let parsedValue = "";
+    const type = declaration.initializer.kind;
+    if (type === ts.SyntaxKind.StringLiteral) {
+        parsedValue = '"' + value + '"';
+    } else if (type === ts.SyntaxKind.NumericLiteral) {
+        parsedValue = value;
+    } else if (type === ts.SyntaxKind.PropertyAccessExpression) {
+        parsedValue = printPropertyAccessExpression(declaration.initializer, 0);
+    }
+
+    return getIden(identation) + name + " = " + parsedValue;
 }
 
 
@@ -225,25 +250,25 @@ function printTree(node, identation) {
     if(ts.isExpressionStatement(node)) {
         const expression = node.expression;
         const exprString = printExpressionStatement(expression, identation);
-
         return exprString;
     } else if (ts.isFunctionDeclaration(node)){
         return printFunction(node, identation);
     } else if (ts.isClassDeclaration(node)) {
         return printClass(node, identation) 
     } else if (ts.isVariableStatement(node)) {
-        node.getLeadingTriviaWidth(global.sourceFile)
-        const varType = node.declarationList.flags;
-        const declarations = node.declarationList.declarations;
-        // declarations.
-        console.log("variable statement");
-        let y = []
-        declarations.forEach((s) => {
+        return printVariableStatement(node, identation);
+        // node.getLeadingTriviaWidth(global.sourceFile)
+        // const varType = node.declarationList.flags;
+        // const declarations = node.declarationList.declarations;
+        // // declarations.
+        // console.log("variable statement");
+        // let y = []
+        // declarations.forEach((s) => {
             
-            y.push(s)
-            let init = s.initializer;
-            // console.log(s.name.escapedText)
-        })
+        //     y.push(s)
+        //     let init = s.initializer;
+        //     // console.log(s.name.escapedText)
+        // })
     } else if (ts.isMethodDeclaration(node)) {
         return printMethodDeclaration(node, identation) 
     }
