@@ -22,7 +22,8 @@ class Greeter {
     
     teste() {
         console.log("Hello");
-    return "ola"
+        const x = 23;
+    return 3333
     }
 }
 `;
@@ -121,7 +122,7 @@ function printExpressionStatement(expressionStatement, identation) {
     if (expressionStatement.kind === ts.SyntaxKind.Identifier) {
         return expressionStatement.escapedText;
     }
-    console.log("should never be here", expressionStatement);
+    // console.log("should never be here", expressionStatement);
 }
 
 function parseParameters(parameters, kindNames) {
@@ -200,17 +201,24 @@ function printMethodDeclaration(node, identation) {
     const funcBodyIdentation = identation + 1
     const statementsAsString = body.statements.map((s) => {
         if (s.kind === ts.SyntaxKind.ReturnStatement) {
-            const exprString = printExpressionStatement(s.expression, funcBodyIdentation);
-            return getIden(funcBodyIdentation )  + "return " + exprString
+            // const exprString = printExpressionStatement(s.expression, funcBodyIdentation);
+            return getIden(funcBodyIdentation )  + "return " + printTree(s.expression, 0);
         }
 
-        // unknown stuff at this point
         return printTree(s, funcBodyIdentation);
     }).filter((s)=>!!s).join("\n");
 
     functionDef += statementsAsString;
 
     return functionDef;
+}
+
+function printStringLiteral(node) {
+    return '"' + node.text + '"';
+}
+
+function printNumericLiteral(node) {
+    return node.text;
 }
 
 function printVariableStatement(node, identation){
@@ -248,30 +256,34 @@ function printClass(node, identation) {
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
-        const expression = node.expression;
-        const exprString = printExpressionStatement(expression, identation);
-        return exprString;
+        return printExpressionStatement(node.expression, identation);
     } else if (ts.isFunctionDeclaration(node)){
         return printFunction(node, identation);
     } else if (ts.isClassDeclaration(node)) {
         return printClass(node, identation) 
     } else if (ts.isVariableStatement(node)) {
         return printVariableStatement(node, identation);
-        // node.getLeadingTriviaWidth(global.sourceFile)
-        // const varType = node.declarationList.flags;
-        // const declarations = node.declarationList.declarations;
-        // // declarations.
-        // console.log("variable statement");
-        // let y = []
-        // declarations.forEach((s) => {
-            
-        //     y.push(s)
-        //     let init = s.initializer;
-        //     // console.log(s.name.escapedText)
-        // })
     } else if (ts.isMethodDeclaration(node)) {
         return printMethodDeclaration(node, identation) 
+    } else if (ts.isStringLiteral(node)) {
+        return printStringLiteral(node);
+    } else if (ts.isNumericLiteral(node)) {
+        return printNumericLiteral(node);
     }
+
+    // switch(node) {
+    //     case ts.isExpressionStatement(node):
+    //         return printExpressionStatement(node.expression, identation);
+    //     case ts.isFunctionDeclaration(node):
+    //         return printFunction(node, identation);
+    //     case ts.isClassDeclaration(node):
+    //         return printClass(node, identation);
+    //     case ts.isVariableStatement(node):
+    //         return printVariableStatement(node, identation);
+    //     case ts.isMethodDeclaration(node):
+    //         return printMethodDeclaration(node, identation);
+    // }
+
 
     if (node.statements) {
         const transformedStatements = node.statements.map((m)=> {
