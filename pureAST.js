@@ -22,7 +22,8 @@ class Greeter {
     
     teste() {
         console.log("Hello");
-        const x = 23;
+        const x = [1,2,3]
+        const y = x.length;
     return 3333
     }
 }
@@ -32,6 +33,11 @@ class Greeter {
 
 // global.code = code;
 let generatedCode = "";
+
+const PropertyAccessReplacements = {
+    'console.log': 'print'
+}
+
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -74,16 +80,6 @@ function printBinaryExpression({left, right, operatorToken}) {
     return leftVar +" "+ operator + " " + rightVar + ";\n";
 }
 
-function extractPropertyAccessExpression(expressionStatement) {
-    const {expression, name} = expressionStatement;
-
-        // the known keywords we could map
-        if (expression.escapedText === "console") {
-            return "print";
-        }
-
-        return expression.escapedText;
-}
 
 function printPropertyAccessExpression(node, identation) {
     const {expression, name} = node;
@@ -91,7 +87,17 @@ function printPropertyAccessExpression(node, identation) {
     const leftSide = node.expression.escapedText;
     const rightSide = node.name.escapedText;
 
-    return getIden(identation) + leftSide + "." + rightSide;
+    if (rightSide === "length") {
+        const type = node.expression.type;
+    }
+
+    const rawExpression = leftSide + "." + rightSide;
+
+    if (PropertyAccessReplacements[rawExpression]) {
+        return getIden(identation) + PropertyAccessReplacements[rawExpression];
+    }
+
+    return getIden(identation) + rawExpression;
 }
 
 function printExpressionStatement(expressionStatement, identation) {
@@ -105,7 +111,7 @@ function printExpressionStatement(expressionStatement, identation) {
         const {expression, arguments} = expressionStatement;
 
         const parsedArgs = parseParameters(arguments, SupportedKindNames).map((a) => {
-            return '"' + a.name + '"'// + (a.type === "StringLiteral" ? ".to_owned()" : "")
+            return '"' + a.name + '"'
         }).join(", ");
 
         const expressionResult = printExpressionStatement(expression);
@@ -113,16 +119,16 @@ function printExpressionStatement(expressionStatement, identation) {
 
         return getIden(identation) + exprWithParam;
     }
-    // is node object 206
+    // is node object prin
     if (expressionStatement.kind === ts.SyntaxKind.PropertyAccessExpression) {
         // retrieve a name of potentially known function name on a platform
-        return extractPropertyAccessExpression(expressionStatement);
+        // return extractPropertyAccessExpression(expressionStatement);
+        return printTree(expressionStatement, identation)
     }
 
     if (expressionStatement.kind === ts.SyntaxKind.Identifier) {
         return expressionStatement.escapedText;
     }
-    // console.log("should never be here", expressionStatement);
 }
 
 function parseParameters(parameters, kindNames) {
@@ -201,11 +207,11 @@ function printMethodDeclaration(node, identation) {
     const funcBodyIdentation = identation + 1
     const statementsAsString = body.statements.map((s) => {
         if (s.kind === ts.SyntaxKind.ReturnStatement) {
-            // const exprString = printExpressionStatement(s.expression, funcBodyIdentation);
             return getIden(funcBodyIdentation )  + "return " + printTree(s.expression, 0);
         }
 
         return printTree(s, funcBodyIdentation);
+
     }).filter((s)=>!!s).join("\n");
 
     functionDef += statementsAsString;
@@ -221,22 +227,21 @@ function printNumericLiteral(node) {
     return node.text;
 }
 
+function printArrayLiteralExpression(node) {
+
+    const elements = node.elements.map((e) => {
+        return printTree(e);
+    }).join(", ");
+    return "[[" + elements + "]]";
+}
+
 function printVariableStatement(node, identation){
     const decList = node.declarationList;
     // const isConst = decList.flags === 2;
     const declaration = decList.declarations[0];
     const name = declaration.name.escapedText;
-    const value = declaration.initializer.text
 
-    let parsedValue = "";
-    const type = declaration.initializer.kind;
-    if (type === ts.SyntaxKind.StringLiteral) {
-        parsedValue = '"' + value + '"';
-    } else if (type === ts.SyntaxKind.NumericLiteral) {
-        parsedValue = value;
-    } else if (type === ts.SyntaxKind.PropertyAccessExpression) {
-        parsedValue = printPropertyAccessExpression(declaration.initializer, 0);
-    }
+    const parsedValue = printTree(declaration.initializer, 0);
 
     return getIden(identation) + name + " = " + parsedValue;
 }
@@ -269,6 +274,10 @@ function printTree(node, identation) {
         return printStringLiteral(node);
     } else if (ts.isNumericLiteral(node)) {
         return printNumericLiteral(node);
+    } else if (ts.isPropertyAccessExpression(node)) {
+        return printPropertyAccessExpression(node, identation);
+    } else if (ts.isArrayLiteralExpression(node)) {
+        return printArrayLiteralExpression(node);
     }
 
     // switch(node) {
