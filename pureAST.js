@@ -217,10 +217,11 @@ function printFunction(node) {
 function printMethodDeclaration(node, identation) {
     const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
-    const parsedArgs = (parameters.length > 0) ? parseParameters(parameters, FunctionDefSupportedKindNames) : [];
+    let parsedArgs = (parameters.length > 0) ? parseParameters(parameters, FunctionDefSupportedKindNames) : [];
 
+    parsedArgs.unshift("self")
     const parsedArgsAsString = parsedArgs.map((a) => {
-        return `${a.name}`
+        return `${a.name ?? a}`
     }).join(", ");
 
     let functionDef = getIden(identation) +  "def " + escapedText
