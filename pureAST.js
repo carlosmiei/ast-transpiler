@@ -55,6 +55,7 @@ global.checker = typeChecker
 let generatedCode = ""
 
 const PropertyAccessReplacements = {
+    'this': 'self',
     'console.log': 'print'
 }
 
@@ -70,6 +71,7 @@ const SupportedKindNames = {
     [ts.SyntaxKind.GreaterThanEqualsToken]: ">=",
     [ts.SyntaxKind.EqualsEqualsToken]: "==",
     [ts.SyntaxKind.EqualsEqualsEqualsToken]: "==",
+    [ts.SyntaxKind.EqualsToken]: "=", 
 }
 
 const PostFixOperators = {
@@ -98,32 +100,48 @@ function getIdentifierValueKind(identifier) {
     return identifier.text ?? identifier.escapedText; // check this later
 }
 
-function printBinaryExpression({left, right, operatorToken}) {
+function printBinaryExpression(node, identation) {
+    const {left, right, operatorToken} = node;
 
-    const leftVar = getIdentifierValueKind(left);
-    const rightVar = getIdentifierValueKind(right);
+    let leftVar = getIdentifierValueKind(left);
+    let rightVar = getIdentifierValueKind(right);
+
+    if (leftVar === undefined) {
+        leftVar = printTree(left, 0)
+    }
+
+    if (leftVar === undefined) {
+        leftVar = printTree(right, 0)
+    }
 
     const operator = SupportedKindNames[operatorToken.kind];
 
-    return leftVar +" "+ operator + " " + rightVar;
+    return getIden(identation) + leftVar +" "+ operator + " " + rightVar;
 }
 
 
 function printPropertyAccessExpression(node, identation) {
-    const {expression, name} = node;
 
-    const leftSide = node.expression.escapedText;
+    const expression = node.expression;
+    
+    let leftSide = expression?.escapedText;
+    if (expression.kind === ts.SyntaxKind.ThisKeyword) {
+        leftSide = "self";
+    }
     let rightSide = node.name.escapedText;
 
     const idType = checker.getTypeAtLocation(node.expression);
 
+    leftSide = PropertyAccessReplacements[leftSide] ?? leftSide;
+    
+    let rawExpression = leftSide + "." + rightSide;
+    
     if (rightSide === "length") {
         if (checker.isArrayType(idType)) {
-            rightSide = "lenArray";
+            rawExpression =  "len(" + leftSide + ")";
         }
     }
 
-    const rawExpression = leftSide + "." + rightSide;
 
     if (PropertyAccessReplacements[rawExpression]) {
         return getIden(identation) + PropertyAccessReplacements[rawExpression];
@@ -135,8 +153,7 @@ function printPropertyAccessExpression(node, identation) {
 function printExpressionStatement(expressionStatement, identation) {
 
     if (expressionStatement.kind === ts.SyntaxKind.BinaryExpression) {
-        const binaryExpressionString =  printBinaryExpression(expressionStatement);
-        return binaryExpressionString;
+        return printBinaryExpression(expressionStatement, identation);
     }
 
     if (expressionStatement.kind === ts.SyntaxKind.CallExpression) {
