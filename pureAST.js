@@ -17,6 +17,7 @@ const PropertyAccessReplacements = {
     'console.log': 'print'
 }
 
+const UNDEFINED_CORRESPONDENT = "None";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -55,7 +56,12 @@ function getIdentifierValueKind(identifier) {
     // if (identifier.kind === ts.SyntaxKind.Identifier) {
     //     return "&" + identifier.escapedText
     // }
-    return identifier.text ?? identifier.escapedText; // check this later
+    const idValue = identifier.text ?? identifier.escapedText;
+
+    if (idValue === "undefined") {
+        return UNDEFINED_CORRESPONDENT;
+    }
+    return idValue; // check this later
 }
 
 function printBinaryExpression(node, identation) {
@@ -280,8 +286,8 @@ function printWhileStatement(node, identation) {
 function printForStatement(node, identation) {
     // currently only let i =0 ; i< 20; i++ is supported
     const varName = node.initializer.declarations[0].name.escapedText; 
-    const initValue = node.initializer.declarations[0].initializer.text
-    const roofValue = node.condition.right.text;
+    const initValue = printTree(node.initializer.declarations[0].initializer, 0)
+    const roofValue = printTree(node.condition.right,0)
 
     // const init = printVariableDeclarationList(initializer.declarations, 0);
     // const cond = printTree(condition, 0);
