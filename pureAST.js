@@ -1,38 +1,58 @@
 const ts = require('typescript');
 
-let code = `
-const x = 12;
-class Greeter {
-    greeting: string;
-    
-    teste() {
-        console.log("Hello, " + this.greeting);
-    }
-}
-console.log('hello world')
-function giveMessage(message: string): string {
-    return "compiling message will be: " + message;
-}
+const filename = "tmp.ts";
 
-giveMessage("how are you");
-`;
+const program = ts.createProgram([filename], {});
+const sourceFile = program.getSourceFile(filename);
+const typeChecker = program.getTypeChecker()
 
-code = `
-class Greeter {
+// let code = `
+// const x = 12;
+// class Greeter {
+//     greeting: string;
     
-    teste() {
-        console.log("Hello");
-        const x = [1,2,3]
-        const y = x.length;
-    return 3333
-    }
-}
-`;
+//     teste() {
+//         console.log("Hello, " + this.greeting);
+//     }
+// }
+// console.log('hello world')
+// function giveMessage(message: string): string {
+//     return "compiling message will be: " + message;
+// }
+
+// giveMessage("how are you");
+// `;
+
+// code = `
+// class Greeter {
+    
+//     teste() {
+//         console.log("Hello");
+//         const x = [[12,3],2,3]
+//         const y = x.length;
+//     return 3333
+//     }
+// }
+// `;
+
+// const code = `
+// const x = [12,2,3]
+// const y = x.length;
+// `;
+
+// var sourceFile = ts.createSourceFile('tmp2.ts', code);
+
+// var program = ts.createProgram(['tmp2.ts'], {});
+
+// const typeChecker = program.getTypeChecker();
+
+global.sourceFile = sourceFile;
+global.checker = typeChecker
 
 // code = "const x = y.length";
 
 // global.code = code;
-let generatedCode = "";
+let generatedCode = ""
 
 const PropertyAccessReplacements = {
     'console.log': 'print'
@@ -50,9 +70,7 @@ const FunctionDefSupportedKindNames = {
     [ts.SyntaxKind.StringKeyword]: "string"
 };
 
-var sourceFile = ts.createSourceFile('temp.ts', code);
-
-global.sourceFile = sourceFile;
+;
 
 function getIden (num) {
     return "    ".repeat(num);
@@ -85,10 +103,14 @@ function printPropertyAccessExpression(node, identation) {
     const {expression, name} = node;
 
     const leftSide = node.expression.escapedText;
-    const rightSide = node.name.escapedText;
+    let rightSide = node.name.escapedText;
+
+    const idType = checker.getTypeAtLocation(node.expression);
 
     if (rightSide === "length") {
-        const type = node.expression.type;
+        if (checker.isArrayType(idType)) {
+            rightSide = "lenArray";
+        }
     }
 
     const rawExpression = leftSide + "." + rightSide;
@@ -109,21 +131,11 @@ function printExpressionStatement(expressionStatement, identation) {
 
     if (expressionStatement.kind === ts.SyntaxKind.CallExpression) {
         const {expression, arguments} = expressionStatement;
-
-        const parsedArgs = parseParameters(arguments, SupportedKindNames).map((a) => {
-            return '"' + a.name + '"'
-        }).join(", ");
-
-        const expressionResult = printExpressionStatement(expression);
-        const exprWithParam =  expressionResult + "(" + parsedArgs + ")";
-
-        return getIden(identation) + exprWithParam;
+        return printCallExpression(expressionStatement, identation);
     }
     // is node object prin
     if (expressionStatement.kind === ts.SyntaxKind.PropertyAccessExpression) {
-        // retrieve a name of potentially known function name on a platform
-        // return extractPropertyAccessExpression(expressionStatement);
-        return printTree(expressionStatement, identation)
+        return printPropertyAccessExpression(expressionStatement, identation)
     }
 
     if (expressionStatement.kind === ts.SyntaxKind.Identifier) {
@@ -246,6 +258,17 @@ function printVariableStatement(node, identation){
     return getIden(identation) + name + " = " + parsedValue;
 }
 
+function printCallExpression(node, identation) {
+    const {expression, arguments} = node;
+
+    const parsedExpression = printTree(expression, 0);
+    const parsedArgs = arguments.map((a) => {
+        return printTree(a, 0);
+    }).join(",")  
+
+    return getIden(identation) + parsedExpression + "(" + parsedArgs + ")";
+}
+
 
 function printClass(node, identation) {
     const className = node.name.escapedText;
@@ -278,7 +301,11 @@ function printTree(node, identation) {
         return printPropertyAccessExpression(node, identation);
     } else if (ts.isArrayLiteralExpression(node)) {
         return printArrayLiteralExpression(node);
+    } else if (ts.isCallExpression(node)) {
+        return printCallExpression(node, identation);
     }
+
+
 
     // switch(node) {
     //     case ts.isExpressionStatement(node):
