@@ -63,7 +63,18 @@ const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
     [ts.SyntaxKind.StringKeyword]: "String",
     [ts.SyntaxKind.NumberKeyword]: "Number",
-    [ts.SyntaxKind.PlusToken]: "+"
+    [ts.SyntaxKind.PlusToken]: "+",
+    [ts.SyntaxKind.LessThanToken]: "<",
+    [ts.SyntaxKind.LessThanEqualsToken]: "<=",
+    [ts.SyntaxKind.GreaterThanToken]: ">",
+    [ts.SyntaxKind.GreaterThanEqualsToken]: ">=",
+    [ts.SyntaxKind.EqualsEqualsToken]: "==",
+    [ts.SyntaxKind.EqualsEqualsEqualsToken]: "==",
+}
+
+const PostFixOperators = {
+    [ts.SyntaxKind.PlusPlusToken]: "++",
+    [ts.SyntaxKind.MinusMinusToken]: "--",
 }
 
 const FunctionDefSupportedKindNames = {
@@ -81,11 +92,10 @@ function getIdentifierValueKind(identifier) {
     // if (identifier.kind === ts.SyntaxKind.StringLiteral) {
     //     return `"${identifier.text}".to_owned()`;
     // }
-    if (identifier.kind === ts.SyntaxKind.Identifier) {
-        return "&" + identifier.escapedText
-    }
-
-    return "";
+    // if (identifier.kind === ts.SyntaxKind.Identifier) {
+    //     return "&" + identifier.escapedText
+    // }
+    return identifier.text ?? identifier.escapedText; // check this later
 }
 
 function printBinaryExpression({left, right, operatorToken}) {
@@ -95,7 +105,7 @@ function printBinaryExpression({left, right, operatorToken}) {
 
     const operator = SupportedKindNames[operatorToken.kind];
 
-    return leftVar +" "+ operator + " " + rightVar + ";\n";
+    return leftVar +" "+ operator + " " + rightVar;
 }
 
 
@@ -136,6 +146,10 @@ function printExpressionStatement(expressionStatement, identation) {
     // is node object prin
     if (expressionStatement.kind === ts.SyntaxKind.PropertyAccessExpression) {
         return printPropertyAccessExpression(expressionStatement, identation)
+    }
+    
+    if (expressionStatement.kind === ts.SyntaxKind.PostfixUnaryExpression) {
+        return printPostFixUnaryExpression(expressionStatement, identation);
     }
 
     if (expressionStatement.kind === ts.SyntaxKind.Identifier) {
@@ -287,8 +301,20 @@ function printWhileStatement(node, identation) {
     let expression = "";
     if (ts.SyntaxKind.TrueKeyword === loopExpression.kind) {
         expression = "True";
+    } else {
+        expression = printTree(loopExpression, 0);
     }
-    return getIden(identation) + "while True:\n" + node.statement.statements.map(st => printTree(st, identation+1)).join("\n");
+    
+    return getIden(identation) + "while "+ expression +":\n" + node.statement.statements.map(st => printTree(st, identation+1)).join("\n");
+}
+
+function printBreakStatement(node, identation) {
+    return getIden(identation) + "break";
+}
+
+function printPostFixUnaryExpression(node, identation) {
+    const {operand, operator} = node;
+    return getIden(identation) + getIdentifierValueKind(operand) + PostFixOperators[operator]; 
 }
 
 function printTree(node, identation) {
@@ -315,8 +341,11 @@ function printTree(node, identation) {
         return printCallExpression(node, identation);
     } else if (ts.isWhileStatement(node)) {
         return printWhileStatement(node, identation);
+    } else if (ts.isBinaryExpression(node)) {
+        return printBinaryExpression(node, identation);
+    } else if (ts.isBreakStatement(node)) {
+        return printBreakStatement(node, identation);
     }
-
 
 
     // switch(node) {

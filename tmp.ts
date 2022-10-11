@@ -5,12 +5,16 @@
 class Greeter {
     
     teste(ola:string) {
-        console.log("Hello");
-        const x = [[12,3],2,3]
-        const y = x.length;
-        while(true) {
-            console.log("Hello");
-        }
-return 3333
+        // console.log("Hello");
+        // const x = [[12,3],2,3]
+        // const y = x.length;
+        let i = 0;
+        i++;
+//         i++;
+//         while( i<=  4000) {
+//             console.log("Hello");
+//         break;
+//         }
+// return 3333
     }
 }
