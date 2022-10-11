@@ -6,52 +6,10 @@ const program = ts.createProgram([filename], {});
 const sourceFile = program.getSourceFile(filename);
 const typeChecker = program.getTypeChecker()
 
-// let code = `
-// const x = 12;
-// class Greeter {
-//     greeting: string;
-    
-//     teste() {
-//         console.log("Hello, " + this.greeting);
-//     }
-// }
-// console.log('hello world')
-// function giveMessage(message: string): string {
-//     return "compiling message will be: " + message;
-// }
-
-// giveMessage("how are you");
-// `;
-
-// code = `
-// class Greeter {
-    
-//     teste() {
-//         console.log("Hello");
-//         const x = [[12,3],2,3]
-//         const y = x.length;
-//     return 3333
-//     }
-// }
-// `;
-
-// const code = `
-// const x = [12,2,3]
-// const y = x.length;
-// `;
-
-// var sourceFile = ts.createSourceFile('tmp2.ts', code);
-
-// var program = ts.createProgram(['tmp2.ts'], {});
-
-// const typeChecker = program.getTypeChecker();
 
 global.sourceFile = sourceFile;
 global.checker = typeChecker
 
-// code = "const x = y.length";
-
-// global.code = code;
 let generatedCode = ""
 
 const PropertyAccessReplacements = {
@@ -101,18 +59,11 @@ function getIdentifierValueKind(identifier) {
 }
 
 function printBinaryExpression(node, identation) {
-    const {left, right, operatorToken} = node;
+    const {left, right, operatorToken} = node;;
 
-    let leftVar = getIdentifierValueKind(left);
-    let rightVar = getIdentifierValueKind(right);
+    const leftVar = printTree(left, 0)
 
-    if (leftVar === undefined) {
-        leftVar = printTree(left, 0)
-    }
-
-    if (leftVar === undefined) {
-        leftVar = printTree(right, 0)
-    }
+    const rightVar = printTree(right, 0)
 
     const operator = SupportedKindNames[operatorToken.kind];
 
@@ -223,11 +174,9 @@ function printFunction(node) {
         return "";
     }).filter((s)=>!!s).join("");
 
-//    console.log("====statements as str:", statementsAsString);
 
     functionDef += statementsAsString + "}";
 
-    //console.log("+++++++", functionDef);
     return functionDef;
 }
 
@@ -350,7 +299,29 @@ function printPostFixUnaryExpression(node, identation) {
     return getIden(identation) + getIdentifierValueKind(operand) + PostFixOperators[operator]; 
 }
 
+function printObjectLiteralExpression(node, identation) {
+    const objectOpening = "{";
+    const objectClosing = "}";
+    const objectBody = node.properties.map((p) => printTree(p)).join(", ");
 
+    return objectOpening + " " + objectBody + " " + objectClosing;
+}
+
+function printPropertyAssignment(node, identation) {
+    const {name, initializer} = node;
+    const nameAsString = printTree(name, 0);
+    const valueAsString = printTree(initializer, 0);
+
+    return nameAsString + ": " + valueAsString;
+}
+
+function printElementAccessExpression(node, identation) {
+    const {expression, argumentExpression} = node;
+    const expressionAsString = printTree(expression, 0);
+    const argumentAsString = printTree(argumentExpression, 0);
+
+    return expressionAsString + "[" + argumentAsString + "]";
+}
 
 function printTree(node, identation) {
 
@@ -386,8 +357,15 @@ function printTree(node, identation) {
         return printPostFixUnaryExpression(node, identation);
     } else if (ts.isVariableDeclarationList(node)) {
         return printVariableDeclarationList(node, identation); // statements are slightly different if inside a for
+    } else if (ts.isObjectLiteralExpression(node)) {
+        return printObjectLiteralExpression(node, identation);
+    } else if (ts.isPropertyAssignment(node)) {
+        return printPropertyAssignment(node, identation);
+    } else if (ts.isIdentifier(node)) {
+        return getIdentifierValueKind(node);
+    } else if (ts.isElementAccessExpression(node)) {
+        return printElementAccessExpression(node);
     }
-
 
     // switch(node) {
     //     case ts.isExpressionStatement(node):
