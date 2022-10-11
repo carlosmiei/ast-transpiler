@@ -323,6 +323,33 @@ function printElementAccessExpression(node, identation) {
     return expressionAsString + "[" + argumentAsString + "]";
 }
 
+function printIfStatement(node, identation) {
+    const expression = printTree(node.expression, 0)
+    const ifBody = node.thenStatement.statements.map((s) => printTree(s, identation+1)).join("\n");
+
+    const ifString=  'if';
+    const elseIfString = 'elif';
+    const elseString = 'else';
+
+    const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
+
+    const prefix = isElseIf ? elseIfString : ifString;
+
+    let ifComplete  =  getIden(identation) + prefix + " " + expression + ":\n" + ifBody + "\n";
+
+    const elseStatement =  node.elseStatement
+
+    if (elseStatement.kind === ts.SyntaxKind.Block) {
+        const elseBody = getIden(identation) + elseString + ':\n' + elseStatement.statements.map((s) => printTree(s, identation+1)).join("\n");
+        ifComplete += elseBody;
+    } else if (elseStatement.kind === ts.SyntaxKind.IfStatement) {
+        const elseBody = printIfStatement(elseStatement, identation);
+        ifComplete += elseBody;
+    }
+
+    return ifComplete;
+}
+
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
@@ -365,6 +392,8 @@ function printTree(node, identation) {
         return getIdentifierValueKind(node);
     } else if (ts.isElementAccessExpression(node)) {
         return printElementAccessExpression(node);
+    } else if (ts.isIfStatement(node)) {
+        return printIfStatement(node, identation);
     }
 
     // switch(node) {
