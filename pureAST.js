@@ -261,15 +261,17 @@ function printArrayLiteralExpression(node) {
     return "[[" + elements + "]]";
 }
 
+function printVariableDeclarationList(node,identation) {
+    const declaration = node.declarations[0];
+    const name = declaration.name.escapedText;
+    const parsedValue = printTree(declaration.initializer, 0);
+    return getIden(identation) + name + " = " + parsedValue;
+}
+
 function printVariableStatement(node, identation){
     const decList = node.declarationList;
-    // const isConst = decList.flags === 2;
-    const declaration = decList.declarations[0];
-    const name = declaration.name.escapedText;
+    return printVariableDeclarationList(decList, identation);
 
-    const parsedValue = printTree(declaration.initializer, 0);
-
-    return getIden(identation) + name + " = " + parsedValue;
 }
 
 function printCallExpression(node, identation) {
@@ -308,6 +310,19 @@ function printWhileStatement(node, identation) {
     return getIden(identation) + "while "+ expression +":\n" + node.statement.statements.map(st => printTree(st, identation+1)).join("\n");
 }
 
+function printForStatement(node, identation) {
+    // currently only let i =0 ; i< 20; i++ is supported
+    const varName = node.initializer.declarations[0].name.escapedText; 
+    const initValue = node.initializer.declarations[0].initializer.text
+    const roofValue = node.condition.right.text;
+
+    // const init = printVariableDeclarationList(initializer.declarations, 0);
+    // const cond = printTree(condition, 0);
+    // const inc = printTree(incrementor, 0);
+
+    return getIden(identation) + "for " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => printTree(st, identation+1)).join("\n");
+}
+
 function printBreakStatement(node, identation) {
     return getIden(identation) + "break";
 }
@@ -316,6 +331,8 @@ function printPostFixUnaryExpression(node, identation) {
     const {operand, operator} = node;
     return getIden(identation) + getIdentifierValueKind(operand) + PostFixOperators[operator]; 
 }
+
+
 
 function printTree(node, identation) {
 
@@ -345,6 +362,12 @@ function printTree(node, identation) {
         return printBinaryExpression(node, identation);
     } else if (ts.isBreakStatement(node)) {
         return printBreakStatement(node, identation);
+    } else if (ts.isForStatement(node)) {
+        return printForStatement(node, identation);
+    } else if (ts.isPostfixUnaryExpression(node)) {
+        return printPostFixUnaryExpression(node, identation);
+    } else if (ts.isVariableDeclarationList(node)) {
+        return printVariableDeclarationList(node, identation); // statements are slightly different if inside a for
     }
 
 
