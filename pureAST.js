@@ -159,7 +159,7 @@ function parseParameters(parameters, kindNames) {
 
                 return {
                     name: name.escapedText,
-                    type: kindNames[token.kind]
+                    type: (token !== undefined) ? kindNames[token.kind] : undefined
                 }
             })
             .filter(item => !!item);
@@ -206,7 +206,7 @@ function printMethodDeclaration(node, identation) {
     const parsedArgs = (parameters.length > 0) ? parseParameters(parameters, FunctionDefSupportedKindNames) : [];
 
     const parsedArgsAsString = parsedArgs.map((a) => {
-        return `${a.name}: ${a.type}`
+        return `${a.name}`
     }).join(", ");
 
     let functionDef = getIden(identation) +  "def " + escapedText
@@ -281,6 +281,16 @@ function printClass(node, identation) {
     return classInit + classBody;
 }
 
+function printWhileStatement(node, identation) {
+    const loopExpression = node.expression;
+
+    let expression = "";
+    if (ts.SyntaxKind.TrueKeyword === loopExpression.kind) {
+        expression = "True";
+    }
+    return getIden(identation) + "while True:\n" + node.statement.statements.map(st => printTree(st, identation+1)).join("\n");
+}
+
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
@@ -303,6 +313,8 @@ function printTree(node, identation) {
         return printArrayLiteralExpression(node);
     } else if (ts.isCallExpression(node)) {
         return printCallExpression(node, identation);
+    } else if (ts.isWhileStatement(node)) {
+        return printWhileStatement(node, identation);
     }
 
 

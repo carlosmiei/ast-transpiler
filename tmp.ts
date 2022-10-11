@@ -2,4 +2,15 @@
 // const x = "23123";
 // const y = x.length;
 
-console.log("teste", "dsfd", 3)
+class Greeter {
+    
+    teste(ola:string) {
+        console.log("Hello");
+        const x = [[12,3],2,3]
+        const y = x.length;
+        while(true) {
+            console.log("Hello");
+        }
+return 3333
+    }
+}
