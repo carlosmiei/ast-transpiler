@@ -29,6 +29,10 @@ const RIGHT_ARRAY_CLOSING = "]";
 const TRUE_KEYWORD = "True";
 const FALSE_KEYWORD = "False";
 const NEW_CORRESPODENT = "new";
+const THROW_CORRESPONDENT = "raise";
+const AWAIT_CORRESPONDENT = "await";
+const STATIC_CORRESPONDENT = "static";
+const ASYNC_CORRESPONDENT =  "async";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -46,6 +50,9 @@ const SupportedKindNames = {
     [ts.SyntaxKind.AmpersandAmpersandToken]: "and",
     [ts.SyntaxKind.ExclamationEqualsEqualsToken]: "!=",
     [ts.SyntaxKind.ExclamationEqualsToken]: "!=",
+    [ts.SyntaxKind.AsyncKeyword]: ASYNC_CORRESPONDENT,
+    [ts.SyntaxKind.AwaitKeyword]: AWAIT_CORRESPONDENT,
+    [ts.SyntaxKind.StaticKeyword]: STATIC_CORRESPONDENT,
 }
 
 const PostFixOperators = {
@@ -170,6 +177,16 @@ function parseParameters(parameters, kindNames) {
             .filter(item => !!item);
 }
 
+function printModifiers(node) {
+    const modifiers = node.modifiers;
+    if (modifiers === undefined) {
+        return "";
+    }
+
+    return modifiers.map(item => SupportedKindNames[item.kind]).join(" ") + " ";
+
+}
+
 function printFunction(node, identation) {
     const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
@@ -179,7 +196,7 @@ function printFunction(node, identation) {
         return `${a.name ?? a}`
     }).join(", ");
 
-    let functionDef = getIden(identation) +  "def " + escapedText
+    let functionDef = getIden(identation) + printModifiers(node) + "def " + escapedText
         + "(" + parsedArgsAsString + ")"
         + ":\n"
         // // NOTE - must have function RETURN TYPE in TS
@@ -211,7 +228,7 @@ function printMethodDeclaration(node, identation) {
         return `${a.name ?? a}`
     }).join(", ");
 
-    let functionDef = getIden(identation) +  "def " + escapedText
+    let functionDef = getIden(identation) + printModifiers(node) + "def " + escapedText
         + "(" + parsedArgsAsString + ")"
         + ":\n"
         // // NOTE - must have function RETURN TYPE in TS
@@ -394,6 +411,16 @@ function printNewExpression(node, identation) {
     return NEW_CORRESPODENT + " " + expression + LEFT_PARENTHESIS + args + RIGHT_PARENTHESIS;
 }
 
+function printThrowStatement(node, identation) {
+    const expression = printTree(node.expression, 0);
+    return getIden(identation) + THROW_CORRESPONDENT + " " + expression;
+}
+
+function printAwaitExpression(node, identation) {
+    const expression = printTree(node.expression, 0);
+    return getIden(identation) + AWAIT_CORRESPONDENT + " " + expression;
+}
+
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
@@ -449,6 +476,10 @@ function printTree(node, identation) {
         return printPrefixUnaryExpression(node, identation);
     } else if (ts.isNewExpression(node)) {
         return printNewExpression(node, identation);
+    } else if (ts.isThrowStatement(node)) {
+        return printThrowStatement(node, identation);
+    } else if (ts.isAwaitExpression(node)) {
+        return printAwaitExpression(node, identation);
     }
 
     // switch(node) {
