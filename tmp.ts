@@ -46,4 +46,9 @@ class Greeter {
         }
 //         return "yesss"
     }
+    
 }
+
+// function func(ola) {
+//     console.log("Hello");
+// }

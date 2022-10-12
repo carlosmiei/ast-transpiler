@@ -19,8 +19,15 @@ const PropertyAccessReplacements = {
 
 const UNDEFINED_CORRESPONDENT = "None";
 
+
+const OBJECT_OPENING = "{";
+const OBJECT_CLOSING = "}";
 const LEFT_PARENTHESIS = "(";
 const RIGHT_PARENTHESIS = ")";
+const LEFT_ARRAY_OPENING = "[";
+const RIGHT_ARRAY_CLOSING = "]";
+const TRUE_KEYWORD = "True";
+const FALSE_KEYWORD = "False";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -114,26 +121,26 @@ function printPropertyAccessExpression(node, identation) {
 
 function printExpressionStatement(expressionStatement, identation) {
 
-    if (expressionStatement.kind === ts.SyntaxKind.BinaryExpression) {
-        return printBinaryExpression(expressionStatement, identation);
-    }
+    // if (expressionStatement.kind === ts.SyntaxKind.BinaryExpression) {
+    //     return printBinaryExpression(expressionStatement, identation);
+    // }
 
-    if (expressionStatement.kind === ts.SyntaxKind.CallExpression) {
-        const {expression, arguments} = expressionStatement;
-        return printCallExpression(expressionStatement, identation);
-    }
-    // is node object prin
-    if (expressionStatement.kind === ts.SyntaxKind.PropertyAccessExpression) {
-        return printPropertyAccessExpression(expressionStatement, identation)
-    }
+    // if (expressionStatement.kind === ts.SyntaxKind.CallExpression) {
+    //     const {expression, arguments} = expressionStatement;
+    //     return printCallExpression(expressionStatement, identation);
+    // }
+    // // is node object prin
+    // if (expressionStatement.kind === ts.SyntaxKind.PropertyAccessExpression) {
+    //     return printPropertyAccessExpression(expressionStatement, identation)
+    // }
     
-    if (expressionStatement.kind === ts.SyntaxKind.PostfixUnaryExpression) {
-        return printPostFixUnaryExpression(expressionStatement, identation);
-    }
+    // if (expressionStatement.kind === ts.SyntaxKind.PostfixUnaryExpression) {
+    //     return printPostFixUnaryExpression(expressionStatement, identation);
+    // }
 
-    if (expressionStatement.kind === ts.SyntaxKind.Identifier) {
-        return expressionStatement.escapedText;
-    }
+    // if (expressionStatement.kind === ts.SyntaxKind.Identifier) {
+    //     return expressionStatement.escapedText;
+    // }
 }
 
 function parseParameters(parameters, kindNames) {
@@ -236,7 +243,7 @@ function printArrayLiteralExpression(node) {
     const elements = node.elements.map((e) => {
         return printTree(e);
     }).join(", ");
-    return "[[" + elements + "]]";
+    return LEFT_ARRAY_OPENING + elements + RIGHT_ARRAY_CLOSING;
 }
 
 function printVariableDeclarationList(node,identation) {
@@ -280,7 +287,7 @@ function printWhileStatement(node, identation) {
 
     let expression = "";
     if (ts.SyntaxKind.TrueKeyword === loopExpression.kind) {
-        expression = "True";
+        expression = TRUE_KEYWORD;
     } else {
         expression = printTree(loopExpression, 0);
     }
@@ -311,11 +318,9 @@ function printPostFixUnaryExpression(node, identation) {
 }
 
 function printObjectLiteralExpression(node, identation) {
-    const objectOpening = "{";
-    const objectClosing = "}";
     const objectBody = node.properties.map((p) => printTree(p)).join(", ");
 
-    return objectOpening + " " + objectBody + " " + objectClosing;
+    return OBJECT_OPENING + " " + objectBody + " " + OBJECT_CLOSING;
 }
 
 function printPropertyAssignment(node, identation) {
@@ -369,7 +374,8 @@ function printParenthesizedExpression(node, identation) {
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
-        return printExpressionStatement(node.expression, identation);
+        // return printExpressionStatement(node.expression, identation);
+        return printTree(node.expression, identation);
     } else if (ts.isFunctionDeclaration(node)){
         return printFunction(node, identation);
     } else if (ts.isClassDeclaration(node)) {
