@@ -19,7 +19,7 @@ const PropertyAccessReplacements = {
 
 const UNDEFINED_CORRESPONDENT = "None";
 
-
+const THIS_CORRESPONDENT = "self";
 const OBJECT_OPENING = "{";
 const OBJECT_CLOSING = "}";
 const LEFT_PARENTHESIS = "(";
@@ -43,6 +43,8 @@ const SupportedKindNames = {
     [ts.SyntaxKind.EqualsToken]: "=", 
     [ts.SyntaxKind.BarBarToken]: "or",
     [ts.SyntaxKind.AmpersandAmpersandToken]: "and",
+    [ts.SyntaxKind.ExclamationEqualsEqualsToken]: "!=",
+    [ts.SyntaxKind.ExclamationEqualsToken]: "!=",
 }
 
 const PostFixOperators = {
@@ -53,8 +55,6 @@ const PostFixOperators = {
 const FunctionDefSupportedKindNames = {
     [ts.SyntaxKind.StringKeyword]: "string"
 };
-
-;
 
 function getIden (num) {
     return "    ".repeat(num);
@@ -95,7 +95,7 @@ function printPropertyAccessExpression(node, identation) {
     
     let leftSide = expression?.escapedText;
     if (expression.kind === ts.SyntaxKind.ThisKeyword) {
-        leftSide = "self";
+        leftSide = THIS_CORRESPONDENT;
     }
     let rightSide = node.name.escapedText;
 
@@ -165,35 +165,33 @@ function parseParameters(parameters, kindNames) {
             .filter(item => !!item);
 }
 
-function printFunction(node) {
+function printFunction(node, identation) {
     const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
-    const parsedArgs = parseParameters(parameters, FunctionDefSupportedKindNames);
+    let parsedArgs = (parameters.length > 0) ? parseParameters(parameters, FunctionDefSupportedKindNames) : [];
 
     const parsedArgsAsString = parsedArgs.map((a) => {
-        return `${a.name}: ${a.type}`
+        return `${a.name ?? a}`
     }).join(", ");
 
-    let functionDef = "pub fn " + escapedText
+    let functionDef = getIden(identation) +  "def " + escapedText
         + "(" + parsedArgsAsString + ")"
-        + "->"
-        // NOTE - must have function RETURN TYPE in TS
-        + SupportedKindNames[returnType.kind]
-        +" {\n";
+        + ":\n"
+        // // NOTE - must have function RETURN TYPE in TS
+        // + SupportedKindNames[returnType.kind]
+        // +" {\n";
 
+    const funcBodyIdentation = identation + 1
     const statementsAsString = body.statements.map((s) => {
         if (s.kind === ts.SyntaxKind.ReturnStatement) {
-//            console.log("this function returns data");
-            const exprString = printExpressionStatement(s.expression);
-            return "  return " + exprString
+            return getIden(funcBodyIdentation )  + "return " + printTree(s.expression, 0);
         }
 
-        // unknown stuff at this point
-        return "";
-    }).filter((s)=>!!s).join("");
+        return printTree(s, funcBodyIdentation);
 
+    }).filter((s)=>!!s).join("\n");
 
-    functionDef += statementsAsString + "}";
+    functionDef += statementsAsString;
 
     return functionDef;
 }
@@ -285,12 +283,7 @@ function printClass(node, identation) {
 function printWhileStatement(node, identation) {
     const loopExpression = node.expression;
 
-    let expression = "";
-    if (ts.SyntaxKind.TrueKeyword === loopExpression.kind) {
-        expression = TRUE_KEYWORD;
-    } else {
-        expression = printTree(loopExpression, 0);
-    }
+    const expression = printTree(loopExpression, 0);
     
     return getIden(identation) + "while "+ expression +":\n" + node.statement.statements.map(st => printTree(st, identation+1)).join("\n");
 }
@@ -371,6 +364,20 @@ function printParenthesizedExpression(node, identation) {
     return getIden(identation) + LEFT_PARENTHESIS + printTree(node.expression, 0) + RIGHT_PARENTHESIS;
 }
 
+function printBooleanLiteral(node) {
+    if (ts.SyntaxKind.TrueKeyword === node.kind) {
+        return TRUE_KEYWORD;
+    }
+    return FALSE_KEYWORD;
+}
+
+function printTryStatement(node, identation) {
+    const tryBody = node.tryBlock.statements.map((s) => printTree(s, identation+1)).join("\n");
+    const catchBody = node.catchClause.block.statements.map((s) => printTree(s, identation+1)).join("\n");
+
+    return getIden(identation) + "try:\n" + tryBody + "\n" + getIden(identation) + "except:\n" + catchBody;
+}
+
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
@@ -418,6 +425,10 @@ function printTree(node, identation) {
         return printIfStatement(node, identation);
     } else if (ts.isParenthesizedExpression(node)) {
         return printParenthesizedExpression(node, identation);
+    } else if (ts.isBooleanLiteral(node)) {
+        return printBooleanLiteral(node);
+    } else if (ts.isTryStatement(node)){
+        return printTryStatement(node, identation);
     }
 
     // switch(node) {
