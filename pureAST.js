@@ -28,6 +28,7 @@ const LEFT_ARRAY_OPENING = "[";
 const RIGHT_ARRAY_CLOSING = "]";
 const TRUE_KEYWORD = "True";
 const FALSE_KEYWORD = "False";
+const NEW_CORRESPODENT = "new";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -50,6 +51,10 @@ const SupportedKindNames = {
 const PostFixOperators = {
     [ts.SyntaxKind.PlusPlusToken]: "++",
     [ts.SyntaxKind.MinusMinusToken]: "--",
+}
+
+const PrefixFixOperators = {
+    [ts.SyntaxKind.ExclamationToken]: "not",
 }
 
 const FunctionDefSupportedKindNames = {
@@ -307,7 +312,12 @@ function printBreakStatement(node, identation) {
 
 function printPostFixUnaryExpression(node, identation) {
     const {operand, operator} = node;
-    return getIden(identation) + getIdentifierValueKind(operand) + PostFixOperators[operator]; 
+    return getIden(identation) + printTree(operand, 0) + PostFixOperators[operator]; 
+}
+
+function printPrefixUnaryExpression(node, identation) {
+    const {operand, operator} = node;
+    return getIden(identation) + PrefixFixOperators[operator] + " " + printTree(operand, 0); 
 }
 
 function printObjectLiteralExpression(node, identation) {
@@ -378,6 +388,12 @@ function printTryStatement(node, identation) {
     return getIden(identation) + "try:\n" + tryBody + "\n" + getIden(identation) + "except:\n" + catchBody;
 }
 
+function printNewExpression(node, identation) {
+    const expression =  printTree(node.expression, 0)
+    const args = node.arguments.map(n => printTree(n, 0)).join(",")
+    return NEW_CORRESPODENT + " " + expression + LEFT_PARENTHESIS + args + RIGHT_PARENTHESIS;
+}
+
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
@@ -429,6 +445,10 @@ function printTree(node, identation) {
         return printBooleanLiteral(node);
     } else if (ts.isTryStatement(node)){
         return printTryStatement(node, identation);
+    } else if (ts.isPrefixUnaryExpression(node)) {
+        return printPrefixUnaryExpression(node, identation);
+    } else if (ts.isNewExpression(node)) {
+        return printNewExpression(node, identation);
     }
 
     // switch(node) {
