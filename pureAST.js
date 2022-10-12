@@ -19,6 +19,9 @@ const PropertyAccessReplacements = {
 
 const UNDEFINED_CORRESPONDENT = "None";
 
+const LEFT_PARENTHESIS = "(";
+const RIGHT_PARENTHESIS = ")";
+
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
     [ts.SyntaxKind.StringKeyword]: "String",
@@ -31,6 +34,8 @@ const SupportedKindNames = {
     [ts.SyntaxKind.EqualsEqualsToken]: "==",
     [ts.SyntaxKind.EqualsEqualsEqualsToken]: "==",
     [ts.SyntaxKind.EqualsToken]: "=", 
+    [ts.SyntaxKind.BarBarToken]: "or",
+    [ts.SyntaxKind.AmpersandAmpersandToken]: "and",
 }
 
 const PostFixOperators = {
@@ -94,9 +99,9 @@ function printPropertyAccessExpression(node, identation) {
     let rawExpression = leftSide + "." + rightSide;
     
     if (rightSide === "length") {
-        if (checker.isArrayType(idType)) {
+        // if (checker.isArrayType(idType)) {
             rawExpression =  "len(" + leftSide + ")";
-        }
+        // }
     }
 
 
@@ -322,6 +327,7 @@ function printPropertyAssignment(node, identation) {
 }
 
 function printElementAccessExpression(node, identation) {
+    // example x['test']
     const {expression, argumentExpression} = node;
     const expressionAsString = printTree(expression, 0);
     const argumentAsString = printTree(argumentExpression, 0);
@@ -343,17 +349,21 @@ function printIfStatement(node, identation) {
 
     let ifComplete  =  getIden(identation) + prefix + " " + expression + ":\n" + ifBody + "\n";
 
-    const elseStatement =  node.elseStatement
+    const elseStatement = node.elseStatement
 
-    if (elseStatement.kind === ts.SyntaxKind.Block) {
+    if (elseStatement?.kind === ts.SyntaxKind.Block) {
         const elseBody = getIden(identation) + elseString + ':\n' + elseStatement.statements.map((s) => printTree(s, identation+1)).join("\n");
         ifComplete += elseBody;
-    } else if (elseStatement.kind === ts.SyntaxKind.IfStatement) {
+    } else if (elseStatement?.kind === ts.SyntaxKind.IfStatement) {
         const elseBody = printIfStatement(elseStatement, identation);
         ifComplete += elseBody;
     }
 
     return ifComplete;
+}
+
+function printParenthesizedExpression(node, identation) {
+    return getIden(identation) + LEFT_PARENTHESIS + printTree(node.expression, 0) + RIGHT_PARENTHESIS;
 }
 
 function printTree(node, identation) {
@@ -400,6 +410,8 @@ function printTree(node, identation) {
         return printElementAccessExpression(node);
     } else if (ts.isIfStatement(node)) {
         return printIfStatement(node, identation);
+    } else if (ts.isParenthesizedExpression(node)) {
+        return printParenthesizedExpression(node, identation);
     }
 
     // switch(node) {
@@ -427,4 +439,4 @@ function printTree(node, identation) {
 }
 
 const res = printTree(sourceFile,-1);
-console.log("-compiled-->\n", res);
+console.log("-compiled-->\n" + res);
