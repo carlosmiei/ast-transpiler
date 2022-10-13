@@ -12,12 +12,25 @@ global.checker = typeChecker
 
 let generatedCode = ""
 
+// python property replacement
 const PropertyAccessReplacements = {
+    // right side 
     'this': 'self',
-    'console.log': 'print'
+    'push': 'append',
+    'toUpperCase': 'upper',
+    'toLowerCase': 'lower',
+    'parseFloat': 'float',
+    'parseInt': 'int',
+    'indexOf': 'find',
+    // both sides
+    'console.log': 'print',
+    'JSON.stringify': 'json.dumps',
+    'JSON.parse': 'json.loads',
+    'Math.log': 'math.log',
+    'process.exit': 'sys.exit',
 }
 
-const DEFAULT_IDENTATION = "";
+const DEFAULT_IDENTATION = "    ";
 const UNDEFINED_CORRESPONDENT = "None";
 
 const THIS_CORRESPONDENT = "self";
@@ -110,6 +123,7 @@ function printPropertyAccessExpression(node, identation) {
     leftSide = PropertyAccessReplacements[leftSide] ?? leftSide;
     
     let rawExpression = leftSide + "." + rightSide;
+    
     
     if (rightSide === "length") {
         // if (checker.isArrayType(idType)) {
@@ -274,7 +288,18 @@ function printVariableStatement(node, identation){
 }
 
 function printCallExpression(node, identation) {
+
     const {expression, arguments} = node;
+
+    const expressionText = expression.getText();
+
+    let finalExpression = ""
+    switch (expressionText) {
+        case "Array.isArray":
+            finalExpression = "isinstance(" + printTree(arguments[0], 0) + ", list)";
+        case "Math.floor":
+            finalExpression = "int(math.floor(" + printTree(arguments[0], 0) + "))";
+    }
 
     const parsedExpression = printTree(expression, 0);
     const parsedArgs = arguments.map((a) => {
