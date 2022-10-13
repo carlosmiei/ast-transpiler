@@ -27,6 +27,7 @@ const PropertyAccessReplacements = {
     'JSON.stringify': 'json.dumps',
     'JSON.parse': 'json.loads',
     'Math.log': 'math.log',
+    'Math.abs': 'abs',
     'process.exit': 'sys.exit',
 }
 
@@ -124,13 +125,15 @@ function printPropertyAccessExpression(node, identation) {
     
     let rawExpression = leftSide + "." + rightSide;
     
+
     
     if (rightSide === "length") {
         // if (checker.isArrayType(idType)) {
             rawExpression =  "len(" + leftSide + ")";
         // }
+    } else if (rightSide === "toString") {
+        rawExpression = "str(" + leftSide + ")";
     }
-
 
     if (PropertyAccessReplacements[rawExpression]) {
         return getIden(identation) + PropertyAccessReplacements[rawExpression];
@@ -287,18 +290,42 @@ function printVariableStatement(node, identation){
 
 }
 
+function printOutOfOrderCallExpressionIfAny(node, identation) {
+    const expressionText = node.expression.getText();
+    const arguments = node.arguments;
+    let finalExpression = undefined;
+    switch (expressionText) {
+        case "Array.isArray":
+            finalExpression = "isinstance(" + printTree(arguments[0], 0) + ", list)";
+            break;
+        case "Math.floor":
+            finalExpression = "int(math.floor(" + printTree(arguments[0], 0) + "))";
+            break;
+        case "Object.keys":
+            finalExpression = "list(" + printTree(arguments[0], 0) + ".keys())";
+            break;
+        case "Object.values":
+            finalExpression = "list(" + printTree(arguments[0], 0) + ".values())";
+            break;
+        case "Math.round":
+            finalExpression = "int(math.round(" + printTree(arguments[0], 0) + "))";
+        case "Math.ceil":
+            finalExpression = "int(math.ceil(" + printTree(arguments[0], 0) + "))";
+    }
+    if (finalExpression) {
+        return getIden(identation) + finalExpression;
+    }
+    return undefined
+}
+
 function printCallExpression(node, identation) {
 
     const {expression, arguments} = node;
 
-    const expressionText = expression.getText();
+    let finalExpression = printOutOfOrderCallExpressionIfAny(node, identation);
 
-    let finalExpression = ""
-    switch (expressionText) {
-        case "Array.isArray":
-            finalExpression = "isinstance(" + printTree(arguments[0], 0) + ", list)";
-        case "Math.floor":
-            finalExpression = "int(math.floor(" + printTree(arguments[0], 0) + "))";
+    if (finalExpression) {
+        return getIden(identation) + finalExpression;
     }
 
     const parsedExpression = printTree(expression, 0);
