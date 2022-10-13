@@ -17,6 +17,7 @@ const PropertyAccessReplacements = {
     'console.log': 'print'
 }
 
+const DEFAULT_IDENTATION = "";
 const UNDEFINED_CORRESPONDENT = "None";
 
 const THIS_CORRESPONDENT = "self";
@@ -69,17 +70,10 @@ const FunctionDefSupportedKindNames = {
 };
 
 function getIden (num) {
-    return "    ".repeat(num);
+    return DEFAULT_IDENTATION.repeat(num);
 }
 
-
 function getIdentifierValueKind(identifier) {
-    // if (identifier.kind === ts.SyntaxKind.StringLiteral) {
-    //     return `"${identifier.text}".to_owned()`;
-    // }
-    // if (identifier.kind === ts.SyntaxKind.Identifier) {
-    //     return "&" + identifier.escapedText
-    // }
     const idValue = identifier.text ?? identifier.escapedText;
 
     if (idValue === "undefined") {
@@ -421,6 +415,14 @@ function printAwaitExpression(node, identation) {
     return getIden(identation) + AWAIT_CORRESPONDENT + " " + expression;
 }
 
+function printConditionalExpression(node, identation) {
+    const condition = printTree(node.condition, 0);
+    const whenTrue = printTree(node.whenTrue, 0);
+    const whenFalse = printTree(node.whenFalse, 0);
+
+    return getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
+}
+
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
@@ -480,6 +482,8 @@ function printTree(node, identation) {
         return printThrowStatement(node, identation);
     } else if (ts.isAwaitExpression(node)) {
         return printAwaitExpression(node, identation);
+    } else if (ts.isConditionalExpression(node)) {
+        return printConditionalExpression(node, identation);
     }
 
     // switch(node) {
