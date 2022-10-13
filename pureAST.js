@@ -48,6 +48,7 @@ const THROW_CORRESPONDENT = "raise";
 const AWAIT_CORRESPONDENT = "await";
 const STATIC_CORRESPONDENT = "static";
 const ASYNC_CORRESPONDENT =  "async";
+const EXTENDS_CORRESPONDENT = "extends";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -340,8 +341,16 @@ function printCallExpression(node, identation) {
 
 function printClass(node, identation) {
     const className = node.name.escapedText;
-    const classInit = "class " + className + ":\n";
-    
+    const heritageClauses = node.heritageClauses;
+
+    let classInit = "";
+    if (heritageClauses !== undefined) {
+        const classExtends = heritageClauses[0].types[0].expression.escapedText;
+        classInit = getIden(identation) + "class " + className + "(" + classExtends + "):\n";
+    } else {
+        classInit = getIden(identation) + "class " + className + ":\n";
+    }
+
     const classBody = node.members.map((m)=> {
         return printTree(m, identation+1);
     }).join("\n") 
