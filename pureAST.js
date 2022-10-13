@@ -66,6 +66,7 @@ const SupportedKindNames = {
     [ts.SyntaxKind.ExclamationEqualsEqualsToken]: "!=",
     [ts.SyntaxKind.ExclamationEqualsToken]: "!=",
     [ts.SyntaxKind.AsyncKeyword]: ASYNC_CORRESPONDENT,
+
     [ts.SyntaxKind.AwaitKeyword]: AWAIT_CORRESPONDENT,
     [ts.SyntaxKind.StaticKeyword]: STATIC_CORRESPONDENT,
 }
@@ -384,9 +385,9 @@ function printPrefixUnaryExpression(node, identation) {
 }
 
 function printObjectLiteralExpression(node, identation) {
-    const objectBody = node.properties.map((p) => printTree(p)).join(", ");
+    const objectBody = node.properties.map((p) => printTree(p, identation+1)).join(",\n" + getIden(identation+1));
 
-    return OBJECT_OPENING + " " + objectBody + " " + OBJECT_CLOSING;
+    return getIden(identation) + OBJECT_OPENING + "\n" + getIden(identation+1) + objectBody + "\n" +  getIden(identation+1) + OBJECT_CLOSING;
 }
 
 function printPropertyAssignment(node, identation) {
@@ -394,7 +395,7 @@ function printPropertyAssignment(node, identation) {
     const nameAsString = printTree(name, 0);
     const valueAsString = printTree(initializer, 0);
 
-    return nameAsString + ": " + valueAsString;
+    return getIden(identation) + nameAsString + ": " + valueAsString;
 }
 
 function printElementAccessExpression(node, identation) {
