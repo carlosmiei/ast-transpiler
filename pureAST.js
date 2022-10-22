@@ -34,7 +34,8 @@ const PropertyAccessReplacements = {
 const DEFAULT_IDENTATION = "    ";
 const UNDEFINED_CORRESPONDENT = "None";
 
-const THIS_CORRESPONDENT = "self";
+const THIS_TOKEN = "self";
+const RETURN_TOKEN = "return";
 const OBJECT_OPENING = "{";
 const OBJECT_CLOSING = "}";
 const LEFT_PARENTHESIS = "(";
@@ -49,6 +50,7 @@ const AWAIT_CORRESPONDENT = "await";
 const STATIC_CORRESPONDENT = "static";
 const ASYNC_CORRESPONDENT =  "async";
 const EXTENDS_CORRESPONDENT = "extends";
+const NOT_CORRESPONDENT = "not";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -78,7 +80,7 @@ const PostFixOperators = {
 }
 
 const PrefixFixOperators = {
-    [ts.SyntaxKind.ExclamationToken]: "not",
+    [ts.SyntaxKind.ExclamationToken]: NOT_CORRESPONDENT,
 }
 
 const FunctionDefSupportedKindNames = {
@@ -115,10 +117,11 @@ function printPropertyAccessExpression(node, identation) {
 
     const expression = node.expression;
     
-    let leftSide = expression?.escapedText;
-    if (expression.kind === ts.SyntaxKind.ThisKeyword) {
-        leftSide = THIS_CORRESPONDENT;
-    }
+    // let leftSide = expression?.escapedText;
+    // if (expression.kind === ts.SyntaxKind.ThisKeyword) {
+    //     leftSide = THIS_CORRESPONDENT;
+    // }
+    let leftSide = printTree(expression, 0);
     let rightSide = node.name.escapedText;
 
     const idType = checker.getTypeAtLocation(node.expression);
@@ -145,27 +148,6 @@ function printPropertyAccessExpression(node, identation) {
 }
 
 function printExpressionStatement(expressionStatement, identation) {
-
-    // if (expressionStatement.kind === ts.SyntaxKind.BinaryExpression) {
-    //     return printBinaryExpression(expressionStatement, identation);
-    // }
-
-    // if (expressionStatement.kind === ts.SyntaxKind.CallExpression) {
-    //     const {expression, arguments} = expressionStatement;
-    //     return printCallExpression(expressionStatement, identation);
-    // }
-    // // is node object prin
-    // if (expressionStatement.kind === ts.SyntaxKind.PropertyAccessExpression) {
-    //     return printPropertyAccessExpression(expressionStatement, identation)
-    // }
-    
-    // if (expressionStatement.kind === ts.SyntaxKind.PostfixUnaryExpression) {
-    //     return printPostFixUnaryExpression(expressionStatement, identation);
-    // }
-
-    // if (expressionStatement.kind === ts.SyntaxKind.Identifier) {
-    //     return expressionStatement.escapedText;
-    // }
 }
 
 function parseParameters(parameters, kindNames) {
@@ -250,10 +232,6 @@ function printMethodDeclaration(node, identation) {
 
     const funcBodyIdentation = identation + 1
     const statementsAsString = body.statements.map((s) => {
-        if (s.kind === ts.SyntaxKind.ReturnStatement) {
-            return getIden(funcBodyIdentation )  + "return " + printTree(s.expression, 0);
-        }
-
         return printTree(s, funcBodyIdentation);
 
     }).filter((s)=>!!s).join("\n");
@@ -332,7 +310,7 @@ function printCallExpression(node, identation) {
 
     const parsedExpression = printTree(expression, 0);
     const parsedArgs = arguments.map((a) => {
-        return printTree(a, 0);
+        return printTree(a, identation).trim();
     }).join(",")  
 
     return getIden(identation) + parsedExpression + "(" + parsedArgs + ")";
@@ -394,15 +372,15 @@ function printPrefixUnaryExpression(node, identation) {
 }
 
 function printObjectLiteralExpression(node, identation) {
-    const objectBody = node.properties.map((p) => printTree(p, identation+1)).join(",\n" + getIden(identation+1));
+    const objectBody = node.properties.map((p) => printTree(p, identation+1)).join(",\n");
 
-    return getIden(identation) + OBJECT_OPENING + "\n" + getIden(identation+1) + objectBody + "\n" +  getIden(identation+1) + OBJECT_CLOSING;
+    return  OBJECT_OPENING + "\n" + objectBody + "\n" +  getIden(identation) + OBJECT_CLOSING;
 }
 
 function printPropertyAssignment(node, identation) {
     const {name, initializer} = node;
     const nameAsString = printTree(name, 0);
-    const valueAsString = printTree(initializer, 0);
+    const valueAsString = printTree(initializer, identation);
 
     return getIden(identation) + nameAsString + ": " + valueAsString;
 }
@@ -485,6 +463,16 @@ function printConditionalExpression(node, identation) {
     return getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
 }
 
+function printAsExpression(node, identation) {
+    return printTree(node.expression, identation)
+}
+
+function printReturnStatement(node, identation) {
+    const exp =  node.expression
+    const rightPart = exp ? (' ' + printTree(exp, identation)) : '';
+    return getIden(identation) + RETURN_TOKEN + ' ' + rightPart.trim();
+}
+
 function printTree(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
@@ -534,6 +522,9 @@ function printTree(node, identation) {
         return printParenthesizedExpression(node, identation);
     } else if (ts.isBooleanLiteral(node)) {
         return printBooleanLiteral(node);
+    } else if (ts.SyntaxKind.ThisKeyword === node.kind) {
+        // return printToken(node, identation)
+        return THIS_TOKEN;
     } else if (ts.isTryStatement(node)){
         return printTryStatement(node, identation);
     } else if (ts.isPrefixUnaryExpression(node)) {
@@ -546,6 +537,10 @@ function printTree(node, identation) {
         return printAwaitExpression(node, identation);
     } else if (ts.isConditionalExpression(node)) {
         return printConditionalExpression(node, identation);
+    } else if (ts.isAsExpression(node)) {
+        return printAsExpression(node, identation);
+    } else if (ts.isReturnStatement(node)) {
+        return printReturnStatement(node, identation);
     }
 
     // switch(node) {
