@@ -51,6 +51,7 @@ const STATIC_CORRESPONDENT = "static";
 const ASYNC_CORRESPONDENT =  "async";
 const EXTENDS_CORRESPONDENT = "extends";
 const NOT_CORRESPONDENT = "not";
+const SUPER_TOKEN = "super()";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -105,11 +106,11 @@ function printBinaryExpression(node, identation) {
 
     const leftVar = printTree(left, 0)
 
-    const rightVar = printTree(right, 0)
+    const rightVar = printTree(right, identation)
 
     const operator = SupportedKindNames[operatorToken.kind];
 
-    return getIden(identation) + leftVar +" "+ operator + " " + rightVar;
+    return getIden(identation) + leftVar +" "+ operator + " " + rightVar.trim();
 }
 
 
@@ -236,7 +237,7 @@ function printMethodDeclaration(node, identation) {
 
     }).filter((s)=>!!s).join("\n");
 
-    functionDef += statementsAsString;
+    functionDef += statementsAsString + '\n';
 
     return functionDef;
 }
@@ -260,8 +261,8 @@ function printArrayLiteralExpression(node) {
 function printVariableDeclarationList(node,identation) {
     const declaration = node.declarations[0];
     const name = declaration.name.escapedText;
-    const parsedValue = printTree(declaration.initializer, 0);
-    return getIden(identation) + name + " = " + parsedValue;
+    const parsedValue = printTree(declaration.initializer, identation);
+    return getIden(identation) + name + " = " + parsedValue.trim();
 }
 
 function printVariableStatement(node, identation){
@@ -382,7 +383,7 @@ function printPropertyAssignment(node, identation) {
     const nameAsString = printTree(name, 0);
     const valueAsString = printTree(initializer, identation);
 
-    return getIden(identation) + nameAsString + ": " + valueAsString;
+    return getIden(identation) + nameAsString + ": " + valueAsString.trim();
 }
 
 function printElementAccessExpression(node, identation) {
@@ -525,7 +526,10 @@ function printTree(node, identation) {
     } else if (ts.SyntaxKind.ThisKeyword === node.kind) {
         // return printToken(node, identation)
         return THIS_TOKEN;
-    } else if (ts.isTryStatement(node)){
+    } else if (ts.SyntaxKind.SuperKeyword === node.kind) {
+        // return printToken(node, identation)
+        return SUPER_TOKEN;
+    }else if (ts.isTryStatement(node)){
         return printTryStatement(node, identation);
     } else if (ts.isPrefixUnaryExpression(node)) {
         return printPrefixUnaryExpression(node, identation);
