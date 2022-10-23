@@ -65,7 +65,8 @@ const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
     [ts.SyntaxKind.StringKeyword]: "String",
     [ts.SyntaxKind.NumberKeyword]: "Number",
-    [ts.SyntaxKind.MinusMinusToken]: "-",
+    [ts.SyntaxKind.MinusMinusToken]: "--",
+    [ts.SyntaxKind.MinusToken]: "-",
     [ts.SyntaxKind.SlashToken]: "/",
     [ts.SyntaxKind.AsteriskToken]: "*",
     [ts.SyntaxKind.InKeyword]: "in",
@@ -95,6 +96,7 @@ const PostFixOperators = {
 
 const PrefixFixOperators = {
     [ts.SyntaxKind.ExclamationToken]: NOT_CORRESPONDENT,
+    [ts.SyntaxKind.MinusToken]: "-",
 }
 
 const FunctionDefSupportedKindNames = {
@@ -112,6 +114,20 @@ function getIdentifierValueKind(identifier) {
         return UNDEFINED_CORRESPONDENT;
     }
     return idValue; // check this later
+}
+
+function shouldRemoveParenthesisFromCallExpression(node) {
+
+    if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
+        const propertyAccessExpression = node.expression;
+        const propertyAccessExpressionName = propertyAccessExpression.name.text;
+        if (propertyAccessExpressionName === "length") { // add more exceptions here
+            return true; 
+        }
+    }
+
+    return false;
+
 }
 
 function printBinaryExpression(node, identation) {
@@ -261,7 +277,7 @@ function printMethodDeclaration(node, identation) {
 }
 
 function printStringLiteral(node) {
-    return '"' + node.text + '"';
+    return "'" + node.text + "'";
 }
 
 function printNumericLiteral(node) {
@@ -320,6 +336,8 @@ function printOutOfOrderCallExpressionIfAny(node, identation) {
 function printCallExpression(node, identation) {
 
     const {expression, arguments} = node;
+    
+    const removeParenthesis = shouldRemoveParenthesisFromCallExpression(node);
 
     let finalExpression = printOutOfOrderCallExpressionIfAny(node, identation);
 
@@ -328,11 +346,16 @@ function printCallExpression(node, identation) {
     }
 
     const parsedExpression = printTree(expression, 0);
-    const parsedArgs = arguments.map((a) => {
-        return printTree(a, identation).trim();
-    }).join(",")  
-
-    return getIden(identation) + parsedExpression + "(" + parsedArgs + ")";
+    
+    let parsedCall = getIden(identation) + parsedExpression;
+    if (removeParenthesis) {
+        const parsedArgs = arguments.map((a) => {
+            return printTree(a, identation).trim();
+        }).join(",")
+        parsedCall+= "(" + parsedArgs + ")";
+    
+    }    
+    return parsedCall;
 }
 
 
@@ -387,7 +410,7 @@ function printPostFixUnaryExpression(node, identation) {
 
 function printPrefixUnaryExpression(node, identation) {
     const {operand, operator} = node;
-    return getIden(identation) + PrefixFixOperators[operator] + " " + printTree(operand, 0); 
+    return getIden(identation) + PrefixFixOperators[operator] + printTree(operand, 0); 
 }
 
 function printObjectLiteralExpression(node, identation) {
