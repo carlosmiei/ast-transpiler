@@ -11,8 +11,6 @@ const typeChecker = program.getTypeChecker()
 global.src = sourceFile;
 global.checker = typeChecker
 
-let generatedCode = ""
-
 // python property replacement
 const PropertyAccessReplacements = {
     // right side 
@@ -60,6 +58,7 @@ const ASYNC_CORRESPONDENT =  "async";
 const EXTENDS_CORRESPONDENT = "extends";
 const NOT_CORRESPONDENT = "not";
 const SUPER_TOKEN = "super()";
+const PROPERTY_ACCESS_TOKEN = ".";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -71,7 +70,7 @@ const SupportedKindNames = {
     [ts.SyntaxKind.AsteriskToken]: "*",
     [ts.SyntaxKind.InKeyword]: "in",
     [ts.SyntaxKind.PlusToken]: "+",
-    [ts.SyntaxKind.PercentToken]: "mod",
+    [ts.SyntaxKind.PercentToken]: "%",
     [ts.SyntaxKind.LessThanToken]: "<",
     [ts.SyntaxKind.LessThanEqualsToken]: "<=",
     [ts.SyntaxKind.GreaterThanToken]: ">",
@@ -121,7 +120,9 @@ function shouldRemoveParenthesisFromCallExpression(node) {
     if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
         const propertyAccessExpression = node.expression;
         const propertyAccessExpressionName = propertyAccessExpression.name.text;
-        if (propertyAccessExpressionName === "length") { // add more exceptions here
+        if (propertyAccessExpressionName === "length"
+            || propertyAccessExpressionName === "toString")
+        { // add more exceptions here
             return true; 
         }
     }
@@ -130,12 +131,22 @@ function shouldRemoveParenthesisFromCallExpression(node) {
 
 }
 
+function printInstanceOfExpression(node, identation) {
+    const left = printNode(node.left, 0);
+    const right = printNode(node.right, 0);
+    return getIden(identation) + `isinstance(${left}, ${right})`;
+}
+
 function printBinaryExpression(node, identation) {
-    const {left, right, operatorToken} = node;;
+    const {left, right, operatorToken} = node;
 
-    const leftVar = printTree(left, 0)
+    if (operatorToken.kind == ts.SyntaxKind.InstanceOfKeyword) {
+        return printInstanceOfExpression(node, identation);
+    }
 
-    const rightVar = printTree(right, identation)
+    const leftVar = printNode(left, 0)
+
+    const rightVar = printNode(right, identation)
 
     const operator = SupportedKindNames[operatorToken.kind];
 
@@ -146,22 +157,19 @@ function printBinaryExpression(node, identation) {
 function printPropertyAccessExpression(node, identation) {
 
     const expression = node.expression;
-    
-    // let leftSide = expression?.escapedText;
-    // if (expression.kind === ts.SyntaxKind.ThisKeyword) {
-    //     leftSide = THIS_CORRESPONDENT;
-    // }
-    let leftSide = printTree(expression, 0);
+
+    let leftSide = printNode(expression, 0);
     let rightSide = node.name.escapedText;
 
     const idType = checker.getTypeAtLocation(node.expression);
 
     leftSide = PropertyAccessReplacements[leftSide] ?? leftSide;
+    // checking "toString" insde the object will return the builtin toString method :X
+    rightSide = (rightSide !== 'toString' && rightSide !== 'length' && PropertyAccessReplacements[rightSide]) ? PropertyAccessReplacements[rightSide] : rightSide;
     
-    let rawExpression = leftSide + "." + rightSide;
+    let rawExpression = leftSide + PROPERTY_ACCESS_TOKEN + rightSide;
     
 
-    
     if (rightSide === "length") {
         // if (checker.isArrayType(idType)) {
             rawExpression =  "len(" + leftSide + ")";
@@ -175,9 +183,6 @@ function printPropertyAccessExpression(node, identation) {
     }
 
     return getIden(identation) + rawExpression;
-}
-
-function printExpressionStatement(expressionStatement, identation) {
 }
 
 function parseParameters(parameters, kindNames) {
@@ -231,10 +236,10 @@ function printFunction(node, identation) {
     const funcBodyIdentation = identation + 1
     const statementsAsString = body.statements.map((s) => {
         if (s.kind === ts.SyntaxKind.ReturnStatement) {
-            return getIden(funcBodyIdentation )  + "return " + printTree(s.expression, 0);
+            return getIden(funcBodyIdentation )  + "return " + printNode(s.expression, 0);
         }
 
-        return printTree(s, funcBodyIdentation);
+        return printNode(s, funcBodyIdentation);
 
     }).filter((s)=>!!s).join("\n");
 
@@ -267,7 +272,7 @@ function printMethodDeclaration(node, identation) {
 
     const funcBodyIdentation = identation + 1
     const statementsAsString = body.statements.map((s) => {
-        return printTree(s, funcBodyIdentation);
+        return printNode(s, funcBodyIdentation);
 
     }).filter((s)=>!!s).join("\n");
 
@@ -277,7 +282,7 @@ function printMethodDeclaration(node, identation) {
 }
 
 function printStringLiteral(node) {
-    return "'" + node.text + "'";
+    return "'" + node.text.replace("'", "\\'") + "'";
 }
 
 function printNumericLiteral(node) {
@@ -287,16 +292,16 @@ function printNumericLiteral(node) {
 function printArrayLiteralExpression(node) {
 
     const elements = node.elements.map((e) => {
-        return printTree(e);
+        return printNode(e);
     }).join(", ");
     return LEFT_ARRAY_OPENING + elements + RIGHT_ARRAY_CLOSING;
 }
 
 function printVariableDeclarationList(node,identation) {
     const declaration = node.declarations[0];
-    const name = declaration.name.escapedText;
-    const parsedValue = printTree(declaration.initializer, identation);
-    return getIden(identation) + name + " = " + parsedValue.trim();
+    // const name = declaration.name.escapedText;
+    const parsedValue = printNode(declaration.initializer, identation);
+    return getIden(identation) + printNode(declaration.name) + " = " + parsedValue.trim();
 }
 
 function printVariableStatement(node, identation){
@@ -311,21 +316,21 @@ function printOutOfOrderCallExpressionIfAny(node, identation) {
     let finalExpression = undefined;
     switch (expressionText) {
         case "Array.isArray":
-            finalExpression = "isinstance(" + printTree(arguments[0], 0) + ", list)";
+            finalExpression = "isinstance(" + printNode(arguments[0], 0) + ", list)";
             break;
         case "Math.floor":
-            finalExpression = "int(math.floor(" + printTree(arguments[0], 0) + "))";
+            finalExpression = "int(math.floor(" + printNode(arguments[0], 0) + "))";
             break;
         case "Object.keys":
-            finalExpression = "list(" + printTree(arguments[0], 0) + ".keys())";
+            finalExpression = "list(" + printNode(arguments[0], 0) + ".keys())";
             break;
         case "Object.values":
-            finalExpression = "list(" + printTree(arguments[0], 0) + ".values())";
+            finalExpression = "list(" + printNode(arguments[0], 0) + ".values())";
             break;
         case "Math.round":
-            finalExpression = "int(math.round(" + printTree(arguments[0], 0) + "))";
+            finalExpression = "int(math.round(" + printNode(arguments[0], 0) + "))";
         case "Math.ceil":
-            finalExpression = "int(math.ceil(" + printTree(arguments[0], 0) + "))";
+            finalExpression = "int(math.ceil(" + printNode(arguments[0], 0) + "))";
     }
     if (finalExpression) {
         return getIden(identation) + finalExpression;
@@ -345,12 +350,12 @@ function printCallExpression(node, identation) {
         return getIden(identation) + finalExpression;
     }
 
-    const parsedExpression = printTree(expression, 0);
+    const parsedExpression = printNode(expression, 0);
     
     let parsedCall = getIden(identation) + parsedExpression;
-    if (removeParenthesis) {
+    if (!removeParenthesis) {
         const parsedArgs = arguments.map((a) => {
-            return printTree(a, identation).trim();
+            return printNode(a, identation).trim();
         }).join(",")
         parsedCall+= "(" + parsedArgs + ")";
     
@@ -372,7 +377,7 @@ function printClass(node, identation) {
     }
 
     const classBody = node.members.map((m)=> {
-        return printTree(m, identation+1);
+        return printNode(m, identation+1);
     }).join("\n") 
 
     return classInit + classBody;
@@ -381,22 +386,18 @@ function printClass(node, identation) {
 function printWhileStatement(node, identation) {
     const loopExpression = node.expression;
 
-    const expression = printTree(loopExpression, 0);
+    const expression = printNode(loopExpression, 0);
     
-    return getIden(identation) + "while "+ expression +":\n" + node.statement.statements.map(st => printTree(st, identation+1)).join("\n");
+    return getIden(identation) + "while "+ expression +":\n" + node.statement.statements.map(st => printNode(st, identation+1)).join("\n");
 }
 
 function printForStatement(node, identation) {
     // currently only let i =0 ; i< 20; i++ is supported
     const varName = node.initializer.declarations[0].name.escapedText; 
-    const initValue = printTree(node.initializer.declarations[0].initializer, 0)
-    const roofValue = printTree(node.condition.right,0)
+    const initValue = printNode(node.initializer.declarations[0].initializer, 0)
+    const roofValue = printNode(node.condition.right,0)
 
-    // const init = printVariableDeclarationList(initializer.declarations, 0);
-    // const cond = printTree(condition, 0);
-    // const inc = printTree(incrementor, 0);
-
-    return getIden(identation) + "for " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => printTree(st, identation+1)).join("\n");
+    return getIden(identation) + "for " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => printNode(st, identation+1)).join("\n");
 }
 
 function printBreakStatement(node, identation) {
@@ -405,43 +406,50 @@ function printBreakStatement(node, identation) {
 
 function printPostFixUnaryExpression(node, identation) {
     const {operand, operator} = node;
-    return getIden(identation) + printTree(operand, 0) + PostFixOperators[operator]; 
+    return getIden(identation) + printNode(operand, 0) + PostFixOperators[operator]; 
 }
 
 function printPrefixUnaryExpression(node, identation) {
     const {operand, operator} = node;
-    return getIden(identation) + PrefixFixOperators[operator] + printTree(operand, 0); 
+    return getIden(identation) + PrefixFixOperators[operator] + printNode(operand, 0); 
 }
 
 function printObjectLiteralExpression(node, identation) {
-    const objectBody = node.properties.map((p) => printTree(p, identation+1)).join(",\n");
+    const objectBody = node.properties.map((p) => printNode(p, identation+1)).join(",\n");
 
     return  OBJECT_OPENING + "\n" + objectBody + "\n" +  getIden(identation) + OBJECT_CLOSING;
 }
 
 function printPropertyAssignment(node, identation) {
     const {name, initializer} = node;
-    const nameAsString = printTree(name, 0);
-    const valueAsString = printTree(initializer, identation);
+    const nameAsString = printNode(name, 0);
+    const valueAsString = printNode(initializer, identation);
 
     return getIden(identation) + nameAsString + ": " + valueAsString.trim();
+}
+
+function printElementAccessExpressionExceptionIfAny(node) {
+    if (node.expression.kind === SyntaxKind.ThisKeyword) {
+        return "getattr(self, " + printNode(node.argumentExpression, 0) + ")";
+    }
 }
 
 function printElementAccessExpression(node, identation) {
     // example x['test']
     const {expression, argumentExpression} = node;
 
-    if (expression.kind === SyntaxKind.ThisKeyword) {
-        return "getattr(self, " + printTree(argumentExpression, 0) + ")";
+    const exception = printElementAccessExpressionExceptionIfAny(node);
+    if (exception) {
+        return exception;
     }
-    const expressionAsString = printTree(expression, 0);
-    const argumentAsString = printTree(argumentExpression, 0);
+    const expressionAsString = printNode(expression, 0);
+    const argumentAsString = printNode(argumentExpression, 0);
     return expressionAsString + "[" + argumentAsString + "]";
 }
 
 function printIfStatement(node, identation) {
-    const expression = printTree(node.expression, 0)
-    const ifBody = node.thenStatement.statements.map((s) => printTree(s, identation+1)).join("\n");
+    const expression = printNode(node.expression, 0)
+    const ifBody = node.thenStatement.statements.map((s) => printNode(s, identation+1)).join("\n");
 
     const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
 
@@ -452,7 +460,7 @@ function printIfStatement(node, identation) {
     const elseStatement = node.elseStatement
 
     if (elseStatement?.kind === ts.SyntaxKind.Block) {
-        const elseBody = getIden(identation) + ELSE_TOKEN + ':\n' + elseStatement.statements.map((s) => printTree(s, identation+1)).join("\n");
+        const elseBody = getIden(identation) + ELSE_TOKEN + ':\n' + elseStatement.statements.map((s) => printNode(s, identation+1)).join("\n");
         ifComplete += elseBody;
     } else if (elseStatement?.kind === ts.SyntaxKind.IfStatement) {
         const elseBody = printIfStatement(elseStatement, identation);
@@ -463,7 +471,7 @@ function printIfStatement(node, identation) {
 }
 
 function printParenthesizedExpression(node, identation) {
-    return getIden(identation) + LEFT_PARENTHESIS + printTree(node.expression, 0) + RIGHT_PARENTHESIS;
+    return getIden(identation) + LEFT_PARENTHESIS + printNode(node.expression, 0) + RIGHT_PARENTHESIS;
 }
 
 function printBooleanLiteral(node) {
@@ -474,51 +482,56 @@ function printBooleanLiteral(node) {
 }
 
 function printTryStatement(node, identation) {
-    const tryBody = node.tryBlock.statements.map((s) => printTree(s, identation+1)).join("\n");
-    const catchBody = node.catchClause.block.statements.map((s) => printTree(s, identation+1)).join("\n");
+    const tryBody = node.tryBlock.statements.map((s) => printNode(s, identation+1)).join("\n");
+    const catchBody = node.catchClause.block.statements.map((s) => printNode(s, identation+1)).join("\n");
 
     return getIden(identation) + "try:\n" + tryBody + "\n" + getIden(identation) + "except:\n" + catchBody;
 }
 
 function printNewExpression(node, identation) {
-    const expression =  printTree(node.expression, 0)
-    const args = node.arguments.map(n => printTree(n, 0)).join(",")
+    const expression =  printNode(node.expression, 0)
+    const args = node.arguments.map(n => printNode(n, 0)).join(",")
     return expression + LEFT_PARENTHESIS + args + RIGHT_PARENTHESIS;
 }
 
 function printThrowStatement(node, identation) {
-    const expression = printTree(node.expression, 0);
+    const expression = printNode(node.expression, 0);
     return getIden(identation) + THROW_CORRESPONDENT + " " + expression;
 }
 
 function printAwaitExpression(node, identation) {
-    const expression = printTree(node.expression, 0);
+    const expression = printNode(node.expression, 0);
     return getIden(identation) + AWAIT_CORRESPONDENT + " " + expression;
 }
 
 function printConditionalExpression(node, identation) {
-    const condition = printTree(node.condition, 0);
-    const whenTrue = printTree(node.whenTrue, 0);
-    const whenFalse = printTree(node.whenFalse, 0);
+    const condition = printNode(node.condition, 0);
+    const whenTrue = printNode(node.whenTrue, 0);
+    const whenFalse = printNode(node.whenFalse, 0);
 
     return getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
 }
 
 function printAsExpression(node, identation) {
-    return printTree(node.expression, identation)
+    return printNode(node.expression, identation)
 }
 
 function printReturnStatement(node, identation) {
     const exp =  node.expression
-    const rightPart = exp ? (' ' + printTree(exp, identation)) : '';
+    const rightPart = exp ? (' ' + printNode(exp, identation)) : '';
     return getIden(identation) + RETURN_TOKEN + ' ' + rightPart.trim();
 }
 
-function printTree(node, identation) {
+function printArrayBindingPattern(node, identation) {
+    const elements = node.elements.map((e) => printNode(e.name, identation)).join(", ");
+    return getIden(identation) + LEFT_ARRAY_OPENING + elements + RIGHT_ARRAY_CLOSING;
+}
+
+function printNode(node, identation) {
 
     if(ts.isExpressionStatement(node)) {
         // return printExpressionStatement(node.expression, identation);
-        return printTree(node.expression, identation);
+        return printNode(node.expression, identation);
     } else if (ts.isFunctionDeclaration(node)){
         return printFunction(node, identation);
     } else if (ts.isClassDeclaration(node)) {
@@ -583,11 +596,13 @@ function printTree(node, identation) {
         return printAsExpression(node, identation);
     } else if (ts.isReturnStatement(node)) {
         return printReturnStatement(node, identation);
+    } else if (ts.isArrayBindingPattern(node)) {
+        return printArrayBindingPattern(node, identation);
     }
 
     if (node.statements) {
         const transformedStatements = node.statements.map((m)=> {
-            return printTree(m, identation + 1);
+            return printNode(m, identation + 1);
         });
 
         return transformedStatements.join("\n");
@@ -595,5 +610,5 @@ function printTree(node, identation) {
     return "";
 }
 
-const res = printTree(sourceFile,-1);
+const res = printNode(sourceFile,-1);
 console.log(res);
