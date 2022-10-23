@@ -31,7 +31,7 @@ const PropertyAccessReplacements = {
 }
 
 const DEFAULT_IDENTATION = "    ";
-const UNDEFINED_CORRESPONDENT = "None";
+const UNDEFINED_TOKEN = "None";
 
 const IF_TOKEN = "if";
 const ELSE_TOKEN = "else";
@@ -51,12 +51,12 @@ const RIGHT_ARRAY_CLOSING = "]";
 const TRUE_KEYWORD = "True";
 const FALSE_KEYWORD = "False";
 const NEW_CORRESPODENT = "new";
-const THROW_CORRESPONDENT = "raise";
-const AWAIT_CORRESPONDENT = "await";
-const STATIC_CORRESPONDENT = "static";
-const ASYNC_CORRESPONDENT =  "async";
-const EXTENDS_CORRESPONDENT = "extends";
-const NOT_CORRESPONDENT = "not";
+const THROW_TOKEN = "raise";
+const AWAIT_TOKEN = "await";
+const STATIC_TOKEN = "static";
+const ASYNC_TOKEN =  "async";
+const EXTENDS_TOKEN = "extends";
+const NOT_TOKEN = "not";
 const SUPER_TOKEN = "super()";
 const PROPERTY_ACCESS_TOKEN = ".";
 
@@ -83,9 +83,9 @@ const SupportedKindNames = {
     [ts.SyntaxKind.AmpersandAmpersandToken]: "and",
     [ts.SyntaxKind.ExclamationEqualsEqualsToken]: "!=",
     [ts.SyntaxKind.ExclamationEqualsToken]: "!=",
-    [ts.SyntaxKind.AsyncKeyword]: ASYNC_CORRESPONDENT,
-    [ts.SyntaxKind.AwaitKeyword]: AWAIT_CORRESPONDENT,
-    [ts.SyntaxKind.StaticKeyword]: STATIC_CORRESPONDENT,
+    [ts.SyntaxKind.AsyncKeyword]: ASYNC_TOKEN,
+    [ts.SyntaxKind.AwaitKeyword]: AWAIT_TOKEN,
+    [ts.SyntaxKind.StaticKeyword]: STATIC_TOKEN,
 }
 
 const PostFixOperators = {
@@ -94,7 +94,7 @@ const PostFixOperators = {
 }
 
 const PrefixFixOperators = {
-    [ts.SyntaxKind.ExclamationToken]: NOT_CORRESPONDENT,
+    [ts.SyntaxKind.ExclamationToken]: NOT_TOKEN,
     [ts.SyntaxKind.MinusToken]: "-",
 }
 
@@ -110,7 +110,7 @@ function getIdentifierValueKind(identifier) {
     const idValue = identifier.text ?? identifier.escapedText;
 
     if (idValue === "undefined") {
-        return UNDEFINED_CORRESPONDENT;
+        return UNDEFINED_TOKEN;
     }
     return idValue; // check this later
 }
@@ -363,7 +363,6 @@ function printCallExpression(node, identation) {
     return parsedCall;
 }
 
-
 function printClass(node, identation) {
     const className = node.name.escapedText;
     const heritageClauses = node.heritageClauses;
@@ -496,12 +495,12 @@ function printNewExpression(node, identation) {
 
 function printThrowStatement(node, identation) {
     const expression = printNode(node.expression, 0);
-    return getIden(identation) + THROW_CORRESPONDENT + " " + expression;
+    return getIden(identation) + THROW_TOKEN + " " + expression;
 }
 
 function printAwaitExpression(node, identation) {
     const expression = printNode(node.expression, 0);
-    return getIden(identation) + AWAIT_CORRESPONDENT + " " + expression;
+    return getIden(identation) + AWAIT_TOKEN + " " + expression;
 }
 
 function printConditionalExpression(node, identation) {
