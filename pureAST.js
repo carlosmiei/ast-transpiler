@@ -7,7 +7,7 @@ const sourceFile = program.getSourceFile(filename);
 const typeChecker = program.getTypeChecker()
 
 
-global.sourceFile = sourceFile;
+global.src = sourceFile;
 global.checker = typeChecker
 
 let generatedCode = ""
@@ -34,7 +34,14 @@ const PropertyAccessReplacements = {
 const DEFAULT_IDENTATION = "    ";
 const UNDEFINED_CORRESPONDENT = "None";
 
+const IF_TOKEN = "if";
+const ELSE_TOKEN = "else";
+const ELSEIF_TOKEN = "elif";
 const THIS_TOKEN = "self";
+const SLASH_TOKEN = "/";
+const ASTERISK_TOKEN = "*";
+const PLUS_TOKEN = "+";
+const MINUS_TOKEN = "-";
 const RETURN_TOKEN = "return";
 const OBJECT_OPENING = "{";
 const OBJECT_CLOSING = "}";
@@ -57,7 +64,11 @@ const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
     [ts.SyntaxKind.StringKeyword]: "String",
     [ts.SyntaxKind.NumberKeyword]: "Number",
+    [ts.SyntaxKind.MinusMinusToken]: "-",
+    [ts.SyntaxKind.SlashToken]: "/",
+    [ts.SyntaxKind.AsteriskToken]: "*",
     [ts.SyntaxKind.PlusToken]: "+",
+    [ts.SyntaxKind.PercentToken]: "mod",
     [ts.SyntaxKind.LessThanToken]: "<",
     [ts.SyntaxKind.LessThanEqualsToken]: "<=",
     [ts.SyntaxKind.GreaterThanToken]: ">",
@@ -65,12 +76,12 @@ const SupportedKindNames = {
     [ts.SyntaxKind.EqualsEqualsToken]: "==",
     [ts.SyntaxKind.EqualsEqualsEqualsToken]: "==",
     [ts.SyntaxKind.EqualsToken]: "=", 
+    [ts.SyntaxKind.PlusEqualsToken]: "+=",
     [ts.SyntaxKind.BarBarToken]: "or",
     [ts.SyntaxKind.AmpersandAmpersandToken]: "and",
     [ts.SyntaxKind.ExclamationEqualsEqualsToken]: "!=",
     [ts.SyntaxKind.ExclamationEqualsToken]: "!=",
     [ts.SyntaxKind.AsyncKeyword]: ASYNC_CORRESPONDENT,
-
     [ts.SyntaxKind.AwaitKeyword]: AWAIT_CORRESPONDENT,
     [ts.SyntaxKind.StaticKeyword]: STATIC_CORRESPONDENT,
 }
@@ -215,6 +226,11 @@ function printFunction(node, identation) {
 }
 
 function printMethodDeclaration(node, identation) {
+
+    // get comments
+    const commentPosition = ts.getCommentRange(node)
+    const comment = src.getFullText().slice(commentPosition.pos, commentPosition.end);
+
     const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
     let parsedArgs = (parameters.length > 0) ? parseParameters(parameters, FunctionDefSupportedKindNames) : [];
@@ -399,20 +415,16 @@ function printIfStatement(node, identation) {
     const expression = printTree(node.expression, 0)
     const ifBody = node.thenStatement.statements.map((s) => printTree(s, identation+1)).join("\n");
 
-    const ifString=  'if';
-    const elseIfString = 'elif';
-    const elseString = 'else';
-
     const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
 
-    const prefix = isElseIf ? elseIfString : ifString;
+    const prefix = isElseIf ? ELSEIF_TOKEN : IF_TOKEN;
 
     let ifComplete  =  getIden(identation) + prefix + " " + expression + ":\n" + ifBody + "\n";
 
     const elseStatement = node.elseStatement
 
     if (elseStatement?.kind === ts.SyntaxKind.Block) {
-        const elseBody = getIden(identation) + elseString + ':\n' + elseStatement.statements.map((s) => printTree(s, identation+1)).join("\n");
+        const elseBody = getIden(identation) + ELSE_TOKEN + ':\n' + elseStatement.statements.map((s) => printTree(s, identation+1)).join("\n");
         ifComplete += elseBody;
     } else if (elseStatement?.kind === ts.SyntaxKind.IfStatement) {
         const elseBody = printIfStatement(elseStatement, identation);
@@ -524,10 +536,8 @@ function printTree(node, identation) {
     } else if (ts.isBooleanLiteral(node)) {
         return printBooleanLiteral(node);
     } else if (ts.SyntaxKind.ThisKeyword === node.kind) {
-        // return printToken(node, identation)
         return THIS_TOKEN;
     } else if (ts.SyntaxKind.SuperKeyword === node.kind) {
-        // return printToken(node, identation)
         return SUPER_TOKEN;
     }else if (ts.isTryStatement(node)){
         return printTryStatement(node, identation);
@@ -547,20 +557,6 @@ function printTree(node, identation) {
         return printReturnStatement(node, identation);
     }
 
-    // switch(node) {
-    //     case ts.isExpressionStatement(node):
-    //         return printExpressionStatement(node.expression, identation);
-    //     case ts.isFunctionDeclaration(node):
-    //         return printFunction(node, identation);
-    //     case ts.isClassDeclaration(node):
-    //         return printClass(node, identation);
-    //     case ts.isVariableStatement(node):
-    //         return printVariableStatement(node, identation);
-    //     case ts.isMethodDeclaration(node):
-    //         return printMethodDeclaration(node, identation);
-    // }
-
-
     if (node.statements) {
         const transformedStatements = node.statements.map((m)=> {
             return printTree(m, identation + 1);
@@ -572,4 +568,4 @@ function printTree(node, identation) {
 }
 
 const res = printTree(sourceFile,-1);
-console.log("-compiled-->\n" + res);
+console.log(res);
