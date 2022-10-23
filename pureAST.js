@@ -1,3 +1,4 @@
+const { SyntaxKind } = require('typescript');
 const ts = require('typescript');
 
 const filename = "tmp.ts";
@@ -67,6 +68,7 @@ const SupportedKindNames = {
     [ts.SyntaxKind.MinusMinusToken]: "-",
     [ts.SyntaxKind.SlashToken]: "/",
     [ts.SyntaxKind.AsteriskToken]: "*",
+    [ts.SyntaxKind.InKeyword]: "in",
     [ts.SyntaxKind.PlusToken]: "+",
     [ts.SyntaxKind.PercentToken]: "mod",
     [ts.SyntaxKind.LessThanToken]: "<",
@@ -405,9 +407,12 @@ function printPropertyAssignment(node, identation) {
 function printElementAccessExpression(node, identation) {
     // example x['test']
     const {expression, argumentExpression} = node;
+
+    if (expression.kind === SyntaxKind.ThisKeyword) {
+        return "getattr(self, " + printTree(argumentExpression, 0) + ")";
+    }
     const expressionAsString = printTree(expression, 0);
     const argumentAsString = printTree(argumentExpression, 0);
-
     return expressionAsString + "[" + argumentAsString + "]";
 }
 
