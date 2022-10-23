@@ -460,7 +460,7 @@ function printTryStatement(node, identation) {
 function printNewExpression(node, identation) {
     const expression =  printTree(node.expression, 0)
     const args = node.arguments.map(n => printTree(n, 0)).join(",")
-    return NEW_CORRESPODENT + " " + expression + LEFT_PARENTHESIS + args + RIGHT_PARENTHESIS;
+    return expression + LEFT_PARENTHESIS + args + RIGHT_PARENTHESIS;
 }
 
 function printThrowStatement(node, identation) {
