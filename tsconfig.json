@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+    "types": [
+        "node"
+    ],
+        "moduleResolution": "node",
+        "module": "es2022",
+        "outDir": "./dist",
+        "allowJs": true,
+        "target": "es6"
+    },
+        "include": [
+        "./src/**/*"
+    ]
+}

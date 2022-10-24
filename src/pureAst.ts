@@ -1,12 +1,12 @@
-const { SyntaxKind } = require('typescript');
-const ts = require('typescript');
+import { SyntaxKind } from 'typescript';
+import * as ts from 'typescript';
+
 
 const filename = "tmp.ts";
 
 const program = ts.createProgram([filename], {});
 const sourceFile = program.getSourceFile(filename);
 const typeChecker = program.getTypeChecker()
-
 
 global.src = sourceFile;
 global.checker = typeChecker
@@ -32,7 +32,6 @@ const PropertyAccessReplacements = {
 
 const DEFAULT_IDENTATION = "    ";
 const UNDEFINED_TOKEN = "None";
-
 const IF_TOKEN = "if";
 const ELSE_TOKEN = "else";
 const ELSEIF_TOKEN = "elif";
@@ -59,6 +58,12 @@ const EXTENDS_TOKEN = "extends";
 const NOT_TOKEN = "not";
 const SUPER_TOKEN = "super()";
 const PROPERTY_ACCESS_TOKEN = ".";
+const TRY_TOKEN = "try:";
+const CATCH_TOKEN = "except";
+const CATCH_OPEN = "";
+const CATCH_CLOSE = ":";
+const TRY_CONDITION_OPEN_TOKEN = "";
+const BREAK_TOKEN = "break";
 
 const SupportedKindNames = {
     [ts.SyntaxKind.StringLiteral]: "StringLiteral",
@@ -161,7 +166,7 @@ function printPropertyAccessExpression(node, identation) {
     let leftSide = printNode(expression, 0);
     let rightSide = node.name.escapedText;
 
-    const idType = checker.getTypeAtLocation(node.expression);
+    const idType = global.checker.getTypeAtLocation(node.expression);
 
     leftSide = PropertyAccessReplacements[leftSide] ?? leftSide;
     // checking "toString" insde the object will return the builtin toString method :X
@@ -200,7 +205,7 @@ function parseParameters(parameters, kindNames) {
                 const token = item.type;
 
                 return {
-                    name: name.escapedText,
+                    name: (name as any).escapedText,
                     type: (token !== undefined) ? kindNames[token.kind] : undefined
                 }
             })
@@ -252,7 +257,7 @@ function printMethodDeclaration(node, identation) {
 
     // get comments
     const commentPosition = ts.getCommentRange(node)
-    const comment = src.getFullText().slice(commentPosition.pos, commentPosition.end);
+    const comment = global.src.getFullText().slice(commentPosition.pos, commentPosition.end);
 
     const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
@@ -312,25 +317,25 @@ function printVariableStatement(node, identation){
 
 function printOutOfOrderCallExpressionIfAny(node, identation) {
     const expressionText = node.expression.getText();
-    const arguments = node.arguments;
+    const args = node.arguments;
     let finalExpression = undefined;
     switch (expressionText) {
         case "Array.isArray":
-            finalExpression = "isinstance(" + printNode(arguments[0], 0) + ", list)";
+            finalExpression = "isinstance(" + printNode(args[0], 0) + ", list)";
             break;
         case "Math.floor":
-            finalExpression = "int(math.floor(" + printNode(arguments[0], 0) + "))";
+            finalExpression = "int(math.floor(" + printNode(args[0], 0) + "))";
             break;
         case "Object.keys":
-            finalExpression = "list(" + printNode(arguments[0], 0) + ".keys())";
+            finalExpression = "list(" + printNode(args[0], 0) + ".keys())";
             break;
         case "Object.values":
-            finalExpression = "list(" + printNode(arguments[0], 0) + ".values())";
+            finalExpression = "list(" + printNode(args[0], 0) + ".values())";
             break;
         case "Math.round":
-            finalExpression = "int(math.round(" + printNode(arguments[0], 0) + "))";
+            finalExpression = "int(math.round(" + printNode(args[0], 0) + "))";
         case "Math.ceil":
-            finalExpression = "int(math.ceil(" + printNode(arguments[0], 0) + "))";
+            finalExpression = "int(math.ceil(" + printNode(args[0], 0) + "))";
     }
     if (finalExpression) {
         return getIden(identation) + finalExpression;
@@ -340,7 +345,8 @@ function printOutOfOrderCallExpressionIfAny(node, identation) {
 
 function printCallExpression(node, identation) {
 
-    const {expression, arguments} = node;
+    const expression = node.expression
+    const args = node.arguments;
     
     const removeParenthesis = shouldRemoveParenthesisFromCallExpression(node);
 
@@ -354,7 +360,7 @@ function printCallExpression(node, identation) {
     
     let parsedCall = getIden(identation) + parsedExpression;
     if (!removeParenthesis) {
-        const parsedArgs = arguments.map((a) => {
+        const parsedArgs = args.map((a) => {
             return printNode(a, identation).trim();
         }).join(",")
         parsedCall+= "(" + parsedArgs + ")";
@@ -400,7 +406,7 @@ function printForStatement(node, identation) {
 }
 
 function printBreakStatement(node, identation) {
-    return getIden(identation) + "break";
+    return getIden(identation) + BREAK_TOKEN;
 }
 
 function printPostFixUnaryExpression(node, identation) {
@@ -483,8 +489,8 @@ function printBooleanLiteral(node) {
 function printTryStatement(node, identation) {
     const tryBody = node.tryBlock.statements.map((s) => printNode(s, identation+1)).join("\n");
     const catchBody = node.catchClause.block.statements.map((s) => printNode(s, identation+1)).join("\n");
-
-    return getIden(identation) + "try:\n" + tryBody + "\n" + getIden(identation) + "except:\n" + catchBody;
+    const catchDeclaration = " Exception as " + node.catchClause.variableDeclaration.name.escapedText;
+    return getIden(identation) + TRY_TOKEN + "\n" + tryBody + "\n" + getIden(identation) + CATCH_TOKEN + CATCH_OPEN + catchDeclaration + CATCH_CLOSE + "\n" + catchBody;
 }
 
 function printNewExpression(node, identation) {
@@ -526,7 +532,7 @@ function printArrayBindingPattern(node, identation) {
     return getIden(identation) + LEFT_ARRAY_OPENING + elements + RIGHT_ARRAY_CLOSING;
 }
 
-function printNode(node, identation) {
+function printNode(node, identation = 0) {
 
     if(ts.isExpressionStatement(node)) {
         // return printExpressionStatement(node.expression, identation);
@@ -568,12 +574,12 @@ function printNode(node, identation) {
     } else if (ts.isIdentifier(node)) {
         return getIdentifierValueKind(node);
     } else if (ts.isElementAccessExpression(node)) {
-        return printElementAccessExpression(node);
+        return printElementAccessExpression(node, identation);
     } else if (ts.isIfStatement(node)) {
         return printIfStatement(node, identation);
     } else if (ts.isParenthesizedExpression(node)) {
         return printParenthesizedExpression(node, identation);
-    } else if (ts.isBooleanLiteral(node)) {
+    } else if ((ts as any).isBooleanLiteral(node)) {
         return printBooleanLiteral(node);
     } else if (ts.SyntaxKind.ThisKeyword === node.kind) {
         return THIS_TOKEN;
