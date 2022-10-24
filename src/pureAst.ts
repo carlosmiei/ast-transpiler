@@ -1,6 +1,6 @@
-import { SyntaxKind } from 'typescript';
-import * as ts from 'typescript';
+import ts from 'typescript';
 
+const SyntaxKind = ts.SyntaxKind;
 
 const filename = "tmp.ts";
 
@@ -30,590 +30,618 @@ const PropertyAccessReplacements = {
     'process.exit': 'sys.exit',
 }
 
-const DEFAULT_IDENTATION = "    ";
-const UNDEFINED_TOKEN = "None";
-const IF_TOKEN = "if";
-const ELSE_TOKEN = "else";
-const ELSEIF_TOKEN = "elif";
-const THIS_TOKEN = "self";
-const SLASH_TOKEN = "/";
-const ASTERISK_TOKEN = "*";
-const PLUS_TOKEN = "+";
-const MINUS_TOKEN = "-";
-const RETURN_TOKEN = "return";
-const OBJECT_OPENING = "{";
-const OBJECT_CLOSING = "}";
-const LEFT_PARENTHESIS = "(";
-const RIGHT_PARENTHESIS = ")";
-const LEFT_ARRAY_OPENING = "[";
-const RIGHT_ARRAY_CLOSING = "]";
-const TRUE_KEYWORD = "True";
-const FALSE_KEYWORD = "False";
-const NEW_CORRESPODENT = "new";
-const THROW_TOKEN = "raise";
-const AWAIT_TOKEN = "await";
-const STATIC_TOKEN = "static";
-const ASYNC_TOKEN =  "async";
-const EXTENDS_TOKEN = "extends";
-const NOT_TOKEN = "not";
-const SUPER_TOKEN = "super()";
-const PROPERTY_ACCESS_TOKEN = ".";
-const TRY_TOKEN = "try:";
-const CATCH_TOKEN = "except";
-const CATCH_OPEN = "";
-const CATCH_CLOSE = ":";
-const TRY_CONDITION_OPEN_TOKEN = "";
-const BREAK_TOKEN = "break";
-
-const SupportedKindNames = {
-    [ts.SyntaxKind.StringLiteral]: "StringLiteral",
-    [ts.SyntaxKind.StringKeyword]: "String",
-    [ts.SyntaxKind.NumberKeyword]: "Number",
-    [ts.SyntaxKind.MinusMinusToken]: "--",
-    [ts.SyntaxKind.MinusToken]: "-",
-    [ts.SyntaxKind.SlashToken]: "/",
-    [ts.SyntaxKind.AsteriskToken]: "*",
-    [ts.SyntaxKind.InKeyword]: "in",
-    [ts.SyntaxKind.PlusToken]: "+",
-    [ts.SyntaxKind.PercentToken]: "%",
-    [ts.SyntaxKind.LessThanToken]: "<",
-    [ts.SyntaxKind.LessThanEqualsToken]: "<=",
-    [ts.SyntaxKind.GreaterThanToken]: ">",
-    [ts.SyntaxKind.GreaterThanEqualsToken]: ">=",
-    [ts.SyntaxKind.EqualsEqualsToken]: "==",
-    [ts.SyntaxKind.EqualsEqualsEqualsToken]: "==",
-    [ts.SyntaxKind.EqualsToken]: "=", 
-    [ts.SyntaxKind.PlusEqualsToken]: "+=",
-    [ts.SyntaxKind.BarBarToken]: "or",
-    [ts.SyntaxKind.AmpersandAmpersandToken]: "and",
-    [ts.SyntaxKind.ExclamationEqualsEqualsToken]: "!=",
-    [ts.SyntaxKind.ExclamationEqualsToken]: "!=",
-    [ts.SyntaxKind.AsyncKeyword]: ASYNC_TOKEN,
-    [ts.SyntaxKind.AwaitKeyword]: AWAIT_TOKEN,
-    [ts.SyntaxKind.StaticKeyword]: STATIC_TOKEN,
-}
-
-const PostFixOperators = {
-    [ts.SyntaxKind.PlusPlusToken]: "++",
-    [ts.SyntaxKind.MinusMinusToken]: "--",
-}
-
-const PrefixFixOperators = {
-    [ts.SyntaxKind.ExclamationToken]: NOT_TOKEN,
-    [ts.SyntaxKind.MinusToken]: "-",
-}
 
 const FunctionDefSupportedKindNames = {
     [ts.SyntaxKind.StringKeyword]: "string"
 };
 
-function getIden (num) {
-    return DEFAULT_IDENTATION.repeat(num);
-}
+class BaseTranspiler {
+    DEFAULT_IDENTATION = "    ";
+    UNDEFINED_TOKEN = "None";
+    IF_TOKEN = "if";
+    ELSE_TOKEN = "else";
+    ELSEIF_TOKEN = "elif";
+    THIS_TOKEN = "self";
+    SLASH_TOKEN = "/";
+    ASTERISK_TOKEN = "*";
+    PLUS_TOKEN = "+";
+    MINUS_TOKEN = "-";
+    EQUALS_TOKEN = "="
+    EQUALS_EQUALS_TOKEN = "=="
+    EXCLAMATION_EQUALS_TOKEN = "!=";
+    AMPERSTAND_APERSAND_TOKEN = "and";
+    PLUS_EQUALS = "+=";
+    BAR_BAR_TOKEN = "or";
+    PERCENT_TOKEN = "%";
+    RETURN_TOKEN = "return";
+    OBJECT_OPENING = "{";
+    OBJECT_CLOSING = "}";
+    LEFT_PARENTHESIS = "(";
+    RIGHT_PARENTHESIS = ")";
+    LEFT_ARRAY_OPENING = "[";
+    RIGHT_ARRAY_CLOSING = "]";
+    TRUE_KEYWORD = "True";
+    FALSE_KEYWORD = "False";
+    NEW_CORRESPODENT = "new";
+    THROW_TOKEN = "raise";
+    AWAIT_TOKEN = "await";
+    STATIC_TOKEN = "static";
+    ASYNC_TOKEN =  "async";
+    EXTENDS_TOKEN = "extends";
+    NOT_TOKEN = "not";
+    SUPER_TOKEN = "super()";
+    PROPERTY_ACCESS_TOKEN = ".";
+    TRY_TOKEN = "try:";
+    CATCH_TOKEN = "except";
+    CATCH_OPEN = "";
+    CATCH_CLOSE = ":";
+    TRY_CONDITION_OPEN_TOKEN = "";
+    BREAK_TOKEN = "break";
+    IN_TOKEN = "in";
+    LESS_THAN_TOKEN = "<";
+    GREATER_THAN_TOKEN = ">";
+    GREATER_THAN_EQUALS_TOKEN = ">=";
+    LESS_THAN_EQUALS_TOKEN = "<=";
+    PLUS_PLUS_TOKEN = "++";
+    MINUS_MINUS_TOKEN = "--";
 
-function getIdentifierValueKind(identifier) {
-    const idValue = identifier.text ?? identifier.escapedText;
+    SupportedKindNames = {};
+    PostFixOperators = {};
+    PrefixFixOperators = {};
+    FunctionDefSupportedKindNames = {};
 
-    if (idValue === "undefined") {
-        return UNDEFINED_TOKEN;
+    constructor(config) {
+        Object.assign (this, config);
+
+        this.initSupportedKindNames()
+
     }
-    return idValue; // check this later
-}
 
-function shouldRemoveParenthesisFromCallExpression(node) {
+    initSupportedKindNames() {
+        this.SupportedKindNames = {
+            [ts.SyntaxKind.StringLiteral]: "StringLiteral",
+            [ts.SyntaxKind.StringKeyword]: "String",
+            [ts.SyntaxKind.NumberKeyword]: "Number",
+            [ts.SyntaxKind.MinusMinusToken]: this.MINUS_MINUS_TOKEN,
+            [ts.SyntaxKind.MinusToken]: this.MINUS_TOKEN,
+            [ts.SyntaxKind.SlashToken]: this.SLASH_TOKEN,
+            [ts.SyntaxKind.AsteriskToken]: this.ASTERISK_TOKEN,
+            [ts.SyntaxKind.InKeyword]: this.IN_TOKEN,
+            [ts.SyntaxKind.PlusToken]: this.PLUS_TOKEN,
+            [ts.SyntaxKind.PercentToken]: this.PERCENT_TOKEN,
+            [ts.SyntaxKind.LessThanToken]: this.LESS_THAN_TOKEN,
+            [ts.SyntaxKind.LessThanEqualsToken]: this.LESS_THAN_EQUALS_TOKEN,
+            [ts.SyntaxKind.GreaterThanToken]: this.GREATER_THAN_TOKEN,
+            [ts.SyntaxKind.GreaterThanEqualsToken]: this.GREATER_THAN_EQUALS_TOKEN,
+            [ts.SyntaxKind.EqualsEqualsToken]: this.EQUALS_EQUALS_TOKEN,
+            [ts.SyntaxKind.EqualsEqualsEqualsToken]: this.EQUALS_EQUALS_TOKEN,
+            [ts.SyntaxKind.EqualsToken]: this.EQUALS_TOKEN, 
+            [ts.SyntaxKind.PlusEqualsToken]: this.PLUS_EQUALS,
+            [ts.SyntaxKind.BarBarToken]: this.BAR_BAR_TOKEN,
+            [ts.SyntaxKind.AmpersandAmpersandToken]: this.AMPERSTAND_APERSAND_TOKEN,
+            [ts.SyntaxKind.ExclamationEqualsEqualsToken]: this.EXCLAMATION_EQUALS_TOKEN,
+            [ts.SyntaxKind.ExclamationEqualsToken]: this.EXCLAMATION_EQUALS_TOKEN,
+            [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
+            [ts.SyntaxKind.AwaitKeyword]: this.AWAIT_TOKEN,
+            [ts.SyntaxKind.StaticKeyword]: this.STATIC_TOKEN,
+        }
 
-    if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
-        const propertyAccessExpression = node.expression;
-        const propertyAccessExpressionName = propertyAccessExpression.name.text;
-        if (propertyAccessExpressionName === "length"
-            || propertyAccessExpressionName === "toString")
-        { // add more exceptions here
-            return true; 
+        this.PostFixOperators = {
+            [ts.SyntaxKind.PlusPlusToken]: this.PLUS_PLUS_TOKEN,
+            [ts.SyntaxKind.MinusMinusToken]: this.MINUS_MINUS_TOKEN,
+        }
+        
+        this.PrefixFixOperators = {
+            [ts.SyntaxKind.ExclamationToken]: this.NOT_TOKEN,
+            [ts.SyntaxKind.MinusToken]: this.MINUS_TOKEN,
         }
     }
 
-    return false;
-
-}
-
-function printInstanceOfExpression(node, identation) {
-    const left = printNode(node.left, 0);
-    const right = printNode(node.right, 0);
-    return getIden(identation) + `isinstance(${left}, ${right})`;
-}
-
-function printBinaryExpression(node, identation) {
-    const {left, right, operatorToken} = node;
-
-    if (operatorToken.kind == ts.SyntaxKind.InstanceOfKeyword) {
-        return printInstanceOfExpression(node, identation);
+    getIden (num) {
+        return this.DEFAULT_IDENTATION.repeat(num);
     }
 
-    const leftVar = printNode(left, 0)
+    getIdentifierValueKind(identifier) {
+        const idValue = identifier.text ?? identifier.escapedText;
 
-    const rightVar = printNode(right, identation)
-
-    const operator = SupportedKindNames[operatorToken.kind];
-
-    return getIden(identation) + leftVar +" "+ operator + " " + rightVar.trim();
-}
-
-
-function printPropertyAccessExpression(node, identation) {
-
-    const expression = node.expression;
-
-    let leftSide = printNode(expression, 0);
-    let rightSide = node.name.escapedText;
-
-    const idType = global.checker.getTypeAtLocation(node.expression);
-
-    leftSide = PropertyAccessReplacements[leftSide] ?? leftSide;
-    // checking "toString" insde the object will return the builtin toString method :X
-    rightSide = (rightSide !== 'toString' && rightSide !== 'length' && PropertyAccessReplacements[rightSide]) ? PropertyAccessReplacements[rightSide] : rightSide;
-    
-    let rawExpression = leftSide + PROPERTY_ACCESS_TOKEN + rightSide;
-    
-
-    if (rightSide === "length") {
-        // if (checker.isArrayType(idType)) {
-            rawExpression =  "len(" + leftSide + ")";
-        // }
-    } else if (rightSide === "toString") {
-        rawExpression = "str(" + leftSide + ")";
+        if (idValue === "undefined") {
+            return this.UNDEFINED_TOKEN;
+        }
+        return idValue; // check this later
     }
 
-    if (PropertyAccessReplacements[rawExpression]) {
-        return getIden(identation) + PropertyAccessReplacements[rawExpression];
+    shouldRemoveParenthesisFromCallExpression(node) {
+
+        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
+            const propertyAccessExpression = node.expression;
+            const propertyAccessExpressionName = propertyAccessExpression.name.text;
+            if (propertyAccessExpressionName === "length"
+                || propertyAccessExpressionName === "toString")
+            { // add more exceptions here
+                return true; 
+            }
+        }
+
+        return false;
+
     }
 
-    return getIden(identation) + rawExpression;
-}
+    printInstanceOfExpression(node, identation) {
+        const left = this.printNode(node.left, 0);
+        const right = this.printNode(node.right, 0);
+        return this.getIden(identation) + `isinstance(${left}, ${right})`;
+    }
 
-function parseParameters(parameters, kindNames) {
-    return parameters
-            .map((item) => {
-                if (ts.isToken(item)) {
-                    return {
-                        name: item.text,
-                        type: kindNames[item.kind]
+    printBinaryExpression(node, identation) {
+        const {left, right, operatorToken} = node;
+
+        if (operatorToken.kind == ts.SyntaxKind.InstanceOfKeyword) {
+            return this.printInstanceOfExpression(node, identation);
+        }
+
+        const leftVar = this.printNode(left, 0)
+
+        const rightVar = this.printNode(right, identation)
+
+        const operator = this.SupportedKindNames[operatorToken.kind];
+
+        return this.getIden(identation) + leftVar +" "+ operator + " " + rightVar.trim();
+    }
+
+
+    printPropertyAccessExpression(node, identation) {
+
+        const expression = node.expression;
+
+        let leftSide = this.printNode(expression, 0);
+        let rightSide = node.name.escapedText;
+
+        const idType = global.checker.getTypeAtLocation(node.expression);
+
+        leftSide = PropertyAccessReplacements[leftSide] ?? leftSide;
+        // checking "toString" insde the object will return the builtin toString method :X
+        rightSide = (rightSide !== 'toString' && rightSide !== 'length' && PropertyAccessReplacements[rightSide]) ? PropertyAccessReplacements[rightSide] : rightSide;
+        
+        let rawExpression = leftSide + this.PROPERTY_ACCESS_TOKEN + rightSide;
+        
+
+        if (rightSide === "length") {
+            // if (checker.isArrayType(idType)) {
+                rawExpression =  "len(" + leftSide + ")";
+            // }
+        } else if (rightSide === "toString") {
+            rawExpression = "str(" + leftSide + ")";
+        }
+
+        if (PropertyAccessReplacements[rawExpression]) {
+            return this.getIden(identation) + PropertyAccessReplacements[rawExpression];
+        }
+
+        return this.getIden(identation) + rawExpression;
+    }
+
+    parseParameters(parameters, kindNames) {
+        return parameters
+                .map((item) => {
+                    if (ts.isToken(item)) {
+                        return {
+                            name: item.text,
+                            type: kindNames[item.kind]
+                        }
                     }
-                }
 
-                const name = ts.getNameOfDeclaration(item);
+                    const name = ts.getNameOfDeclaration(item);
 
-                const token = item.type;
+                    const token = item.type;
 
-                return {
-                    name: (name as any).escapedText,
-                    type: (token !== undefined) ? kindNames[token.kind] : undefined
-                }
-            })
-            .filter(item => !!item);
-}
+                    return {
+                        name: (name as any).escapedText,
+                        type: (token !== undefined) ? kindNames[token.kind] : undefined
+                    }
+                })
+                .filter(item => !!item);
+    }
 
-function printModifiers(node) {
-    const modifiers = node.modifiers;
-    if (modifiers === undefined) {
+    printModifiers(node) {
+        const modifiers = node.modifiers;
+        if (modifiers === undefined) {
+            return "";
+        }
+
+        return modifiers.map(item => this.SupportedKindNames[item.kind]).join(" ") + " ";
+
+    }
+
+    printFunction(node, identation) {
+        const { name:{ escapedText }, parameters, body, type: returnType} = node;
+
+        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, FunctionDefSupportedKindNames) : [];
+
+        const parsedArgsAsString = parsedArgs.map((a) => {
+            return `${a.name ?? a}`
+        }).join(", ");
+
+        let functionDef = this.getIden(identation) + this.printModifiers(node) + "def " + escapedText
+            + "(" + parsedArgsAsString + ")"
+            + ":\n"
+            // // NOTE - must have RETURN TYPE in TS
+            // + SupportedKindNames[returnType.kind]
+            // +" {\n";
+
+        const funcBodyIdentation = identation + 1
+        const statementsAsString = body.statements.map((s) => {
+            return this.printNode(s, funcBodyIdentation);
+        }).filter((s)=>!!s).join("\n");
+
+        functionDef += statementsAsString;
+
+        return functionDef;
+    }
+
+    printMethodDeclaration(node, identation) {
+
+        // get comments
+        const commentPosition = ts.getCommentRange(node)
+        const comment = global.src.getFullText().slice(commentPosition.pos, commentPosition.end);
+
+        const { name:{ escapedText }, parameters, body, type: returnType} = node;
+
+        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, FunctionDefSupportedKindNames) : [];
+
+        parsedArgs.unshift("self")
+        const parsedArgsAsString = parsedArgs.map((a) => {
+            return `${a.name ?? a}`
+        }).join(", ");
+
+        let functionDef = this.getIden(identation) + this.printModifiers(node) + "def " + escapedText
+            + "(" + parsedArgsAsString + ")"
+            + ":\n"
+            // // NOTE - must have RETURN TYPE in TS
+            // + SupportedKindNames[returnType.kind]
+            // +" {\n";
+
+        const funcBodyIdentation = identation + 1
+        const statementsAsString = body.statements.map((s) => {
+            return this.printNode(s, funcBodyIdentation);
+
+        }).filter((s)=>!!s).join("\n");
+
+        functionDef += statementsAsString + '\n';
+
+        return functionDef;
+    }
+
+    printStringLiteral(node) {
+        return "'" + node.text.replace("'", "\\'") + "'";
+    }
+
+    printNumericLiteral(node) {
+        return node.text;
+    }
+
+    printArrayLiteralExpression(node) {
+
+        const elements = node.elements.map((e) => {
+            return this.printNode(e);
+        }).join(", ");
+        return this.LEFT_ARRAY_OPENING + elements + this.RIGHT_ARRAY_CLOSING;
+    }
+
+    printVariableDeclarationList(node,identation) {
+        const declaration = node.declarations[0];
+        // const name = declaration.name.escapedText;
+        const parsedValue = this.printNode(declaration.initializer, identation);
+        return this.getIden(identation) + this.printNode(declaration.name) + " = " + parsedValue.trim();
+    }
+
+    printVariableStatement(node, identation){
+        const decList = node.declarationList;
+        return this.printVariableDeclarationList(decList, identation);
+
+    }
+
+    printOutOfOrderCallExpressionIfAny(node, identation) {
+        const expressionText = node.expression.getText();
+        const args = node.arguments;
+        let finalExpression = undefined;
+        switch (expressionText) {
+            case "Array.isArray":
+                finalExpression = "isinstance(" + this.printNode(args[0], 0) + ", list)";
+                break;
+            case "Math.floor":
+                finalExpression = "int(math.floor(" + this.printNode(args[0], 0) + "))";
+                break;
+            case "Object.keys":
+                finalExpression = "list(" + this.printNode(args[0], 0) + ".keys())";
+                break;
+            case "Object.values":
+                finalExpression = "list(" + this.printNode(args[0], 0) + ".values())";
+                break;
+            case "Math.round":
+                finalExpression = "int(math.round(" + this.printNode(args[0], 0) + "))";
+            case "Math.ceil":
+                finalExpression = "int(math.ceil(" + this.printNode(args[0], 0) + "))";
+        }
+        if (finalExpression) {
+            return this.getIden(identation) + finalExpression;
+        }
+        return undefined
+    }
+
+    printCallExpression(node, identation) {
+
+        const expression = node.expression
+        const args = node.arguments;
+        
+        const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
+
+        let finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
+
+        if (finalExpression) {
+            return this.getIden(identation) + finalExpression;
+        }
+
+        const parsedExpression = this.printNode(expression, 0);
+        
+        let parsedCall = this.getIden(identation) + parsedExpression;
+        if (!removeParenthesis) {
+            const parsedArgs = args.map((a) => {
+                return this.printNode(a, identation).trim();
+            }).join(",")
+            parsedCall+= "(" + parsedArgs + ")";
+        
+        }    
+        return parsedCall;
+    }
+
+    printClass(node, identation) {
+        const className = node.name.escapedText;
+        const heritageClauses = node.heritageClauses;
+
+        let classInit = "";
+        if (heritageClauses !== undefined) {
+            const classExtends = heritageClauses[0].types[0].expression.escapedText;
+            classInit = this.getIden(identation) + "class " + className + "(" + classExtends + "):\n";
+        } else {
+            classInit = this.getIden(identation) + "class " + className + ":\n";
+        }
+
+        const classBody = node.members.map((m)=> {
+            return this.printNode(m, identation+1);
+        }).join("\n") 
+
+        return classInit + classBody;
+    }
+
+    printWhileStatement(node, identation) {
+        const loopExpression = node.expression;
+
+        const expression = this.printNode(loopExpression, 0);
+        
+        return this.getIden(identation) + "while "+ expression +":\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
+    }
+
+    printForStatement(node, identation) {
+        // currently only let i =0 ; i< 20; i++ is supported
+        const varName = node.initializer.declarations[0].name.escapedText; 
+        const initValue = this.printNode(node.initializer.declarations[0].initializer, 0)
+        const roofValue = this.printNode(node.condition.right,0)
+
+        return this.getIden(identation) + "for " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
+    }
+
+    printBreakStatement(node, identation) {
+        return this.getIden(identation) + this.BREAK_TOKEN;
+    }
+
+    printPostFixUnaryExpression(node, identation) {
+        const {operand, operator} = node;
+        return this.getIden(identation) + this.printNode(operand, 0) + this.PostFixOperators[operator]; 
+    }
+
+    printPrefixUnaryExpression(node, identation) {
+        const {operand, operator} = node;
+        return this.getIden(identation) + this.PrefixFixOperators[operator] + this.printNode(operand, 0); 
+    }
+
+    printObjectLiteralExpression(node, identation) {
+        const objectBody = node.properties.map((p) => this.printNode(p, identation+1)).join(",\n");
+
+        return  this.OBJECT_OPENING + "\n" + objectBody + "\n" +  this.getIden(identation) + this.OBJECT_CLOSING;
+    }
+
+    printPropertyAssignment(node, identation) {
+        const {name, initializer} = node;
+        const nameAsString = this.printNode(name, 0);
+        const valueAsString = this.printNode(initializer, identation);
+
+        return this.getIden(identation) + nameAsString + ": " + valueAsString.trim();
+    }
+
+    printElementAccessExpressionExceptionIfAny(node) {
+        if (node.expression.kind === SyntaxKind.ThisKeyword) {
+            return "getattr(self, " + this.printNode(node.argumentExpression, 0) + ")";
+        }
+    }
+
+    printElementAccessExpression(node, identation) {
+        // example x['test']
+        const {expression, argumentExpression} = node;
+
+        const exception = this.printElementAccessExpressionExceptionIfAny(node);
+        if (exception) {
+            return exception;
+        }
+        const expressionAsString = this.printNode(expression, 0);
+        const argumentAsString = this.printNode(argumentExpression, 0);
+        return expressionAsString + "[" + argumentAsString + "]";
+    }
+
+    printIfStatement(node, identation) {
+        const expression = this.printNode(node.expression, 0)
+        const ifBody = node.thenStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n");
+
+        const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
+
+        const prefix = isElseIf ? this.ELSEIF_TOKEN : this.IF_TOKEN;
+
+        let ifComplete  =  this.getIden(identation) + prefix + " " + expression + ":\n" + ifBody + "\n";
+
+        const elseStatement = node.elseStatement
+
+        if (elseStatement?.kind === ts.SyntaxKind.Block) {
+            const elseBody = this.getIden(identation) + this.ELSE_TOKEN + ':\n' + elseStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n");
+            ifComplete += elseBody;
+        } else if (elseStatement?.kind === ts.SyntaxKind.IfStatement) {
+            const elseBody = this.printIfStatement(elseStatement, identation);
+            ifComplete += elseBody;
+        }
+
+        return ifComplete;
+    }
+
+    printParenthesizedExpression(node, identation) {
+        return this.getIden(identation) + this.LEFT_PARENTHESIS + this.printNode(node.expression, 0) + this.RIGHT_PARENTHESIS;
+    }
+
+    printBooleanLiteral(node) {
+        if (ts.SyntaxKind.TrueKeyword === node.kind) {
+            return this.TRUE_KEYWORD;
+        }
+        return this.FALSE_KEYWORD;
+    }
+
+    printTryStatement(node, identation) {
+        const tryBody = node.tryBlock.statements.map((s) => this.printNode(s, identation+1)).join("\n");
+        const catchBody = node.catchClause.block.statements.map((s) => this.printNode(s, identation+1)).join("\n");
+        const catchDeclaration = " Exception as " + node.catchClause.variableDeclaration.name.escapedText;
+        return this.getIden(identation) + this.TRY_TOKEN + "\n" + tryBody + "\n" + this.getIden(identation) + this.CATCH_TOKEN + this.CATCH_OPEN + catchDeclaration + this.CATCH_CLOSE + "\n" + catchBody;
+    }
+
+    printNewExpression(node, identation) {
+        const expression =  this.printNode(node.expression, 0)
+        const args = node.arguments.map(n => this.printNode(n, 0)).join(",")
+        return expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
+    }
+
+    printThrowStatement(node, identation) {
+        const expression = this.printNode(node.expression, 0);
+        return this.getIden(identation) + this.THROW_TOKEN + " " + expression;
+    }
+
+    printAwaitExpression(node, identation) {
+        const expression = this.printNode(node.expression, 0);
+        return this.getIden(identation) + this.AWAIT_TOKEN + " " + expression;
+    }
+
+    printConditionalExpression(node, identation) {
+        const condition = this.printNode(node.condition, 0);
+        const whenTrue = this.printNode(node.whenTrue, 0);
+        const whenFalse = this.printNode(node.whenFalse, 0);
+
+        return this.getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
+    }
+
+    printAsExpression(node, identation) {
+        return this.printNode(node.expression, identation)
+    }
+
+    printReturnStatement(node, identation) {
+        const exp =  node.expression
+        const rightPart = exp ? (' ' + this.printNode(exp, identation)) : '';
+        return this.getIden(identation) + this.RETURN_TOKEN + ' ' + rightPart.trim();
+    }
+
+    printArrayBindingPattern(node, identation) {
+        const elements = node.elements.map((e) => this.printNode(e.name, identation)).join(", ");
+        return this.getIden(identation) + this.LEFT_ARRAY_OPENING + elements + this.RIGHT_ARRAY_CLOSING;
+    }
+
+    printNode(node, identation = 0) {
+
+        if(ts.isExpressionStatement(node)) {
+            // return printExpressionStatement(node.expression, identation);
+            return this.printNode(node.expression, identation);
+        } else if (ts.isFunctionDeclaration(node)){
+            return this.printFunction(node, identation);
+        } else if (ts.isClassDeclaration(node)) {
+            return this.printClass(node, identation) 
+        } else if (ts.isVariableStatement(node)) {
+            return this.printVariableStatement(node, identation);
+        } else if (ts.isMethodDeclaration(node)) {
+            return this.printMethodDeclaration(node, identation) 
+        } else if (ts.isStringLiteral(node)) {
+            return this.printStringLiteral(node);
+        } else if (ts.isNumericLiteral(node)) {
+            return this.printNumericLiteral(node);
+        } else if (ts.isPropertyAccessExpression(node)) {
+            return this.printPropertyAccessExpression(node, identation);
+        } else if (ts.isArrayLiteralExpression(node)) {
+            return this.printArrayLiteralExpression(node);
+        } else if (ts.isCallExpression(node)) {
+            return this.printCallExpression(node, identation);
+        } else if (ts.isWhileStatement(node)) {
+            return this.printWhileStatement(node, identation);
+        } else if (ts.isBinaryExpression(node)) {
+            return this.printBinaryExpression(node, identation);
+        } else if (ts.isBreakStatement(node)) {
+            return this.printBreakStatement(node, identation);
+        } else if (ts.isForStatement(node)) {
+            return this.printForStatement(node, identation);
+        } else if (ts.isPostfixUnaryExpression(node)) {
+            return this.printPostFixUnaryExpression(node, identation);
+        } else if (ts.isVariableDeclarationList(node)) {
+            return this.printVariableDeclarationList(node, identation); // statements are slightly different if inside a for
+        } else if (ts.isObjectLiteralExpression(node)) {
+            return this.printObjectLiteralExpression(node, identation);
+        } else if (ts.isPropertyAssignment(node)) {
+            return this.printPropertyAssignment(node, identation);
+        } else if (ts.isIdentifier(node)) {
+            return this.getIdentifierValueKind(node);
+        } else if (ts.isElementAccessExpression(node)) {
+            return this.printElementAccessExpression(node, identation);
+        } else if (ts.isIfStatement(node)) {
+            return this.printIfStatement(node, identation);
+        } else if (ts.isParenthesizedExpression(node)) {
+            return this.printParenthesizedExpression(node, identation);
+        } else if ((ts as any).isBooleanLiteral(node)) {
+            return this.printBooleanLiteral(node);
+        } else if (ts.SyntaxKind.ThisKeyword === node.kind) {
+            return this.THIS_TOKEN;
+        } else if (ts.SyntaxKind.SuperKeyword === node.kind) {
+            return this.SUPER_TOKEN;
+        }else if (ts.isTryStatement(node)){
+            return this.printTryStatement(node, identation);
+        } else if (ts.isPrefixUnaryExpression(node)) {
+            return this.printPrefixUnaryExpression(node, identation);
+        } else if (ts.isNewExpression(node)) {
+            return this.printNewExpression(node, identation);
+        } else if (ts.isThrowStatement(node)) {
+            return this.printThrowStatement(node, identation);
+        } else if (ts.isAwaitExpression(node)) {
+            return this.printAwaitExpression(node, identation);
+        } else if (ts.isConditionalExpression(node)) {
+            return this.printConditionalExpression(node, identation);
+        } else if (ts.isAsExpression(node)) {
+            return this.printAsExpression(node, identation);
+        } else if (ts.isReturnStatement(node)) {
+            return this.printReturnStatement(node, identation);
+        } else if (ts.isArrayBindingPattern(node)) {
+            return this.printArrayBindingPattern(node, identation);
+        }
+
+        if (node.statements) {
+            const transformedStatements = node.statements.map((m)=> {
+                return this.printNode(m, identation + 1);
+            });
+
+            return transformedStatements.join("\n");
+        }
         return "";
     }
 
-    return modifiers.map(item => SupportedKindNames[item.kind]).join(" ") + " ";
-
 }
 
-function printFunction(node, identation) {
-    const { name:{ escapedText }, parameters, body, type: returnType} = node;
-
-    let parsedArgs = (parameters.length > 0) ? parseParameters(parameters, FunctionDefSupportedKindNames) : [];
-
-    const parsedArgsAsString = parsedArgs.map((a) => {
-        return `${a.name ?? a}`
-    }).join(", ");
-
-    let functionDef = getIden(identation) + printModifiers(node) + "def " + escapedText
-        + "(" + parsedArgsAsString + ")"
-        + ":\n"
-        // // NOTE - must have function RETURN TYPE in TS
-        // + SupportedKindNames[returnType.kind]
-        // +" {\n";
-
-    const funcBodyIdentation = identation + 1
-    const statementsAsString = body.statements.map((s) => {
-        if (s.kind === ts.SyntaxKind.ReturnStatement) {
-            return getIden(funcBodyIdentation )  + "return " + printNode(s.expression, 0);
-        }
-
-        return printNode(s, funcBodyIdentation);
-
-    }).filter((s)=>!!s).join("\n");
-
-    functionDef += statementsAsString;
-
-    return functionDef;
+export {
+    BaseTranspiler
 }
-
-function printMethodDeclaration(node, identation) {
-
-    // get comments
-    const commentPosition = ts.getCommentRange(node)
-    const comment = global.src.getFullText().slice(commentPosition.pos, commentPosition.end);
-
-    const { name:{ escapedText }, parameters, body, type: returnType} = node;
-
-    let parsedArgs = (parameters.length > 0) ? parseParameters(parameters, FunctionDefSupportedKindNames) : [];
-
-    parsedArgs.unshift("self")
-    const parsedArgsAsString = parsedArgs.map((a) => {
-        return `${a.name ?? a}`
-    }).join(", ");
-
-    let functionDef = getIden(identation) + printModifiers(node) + "def " + escapedText
-        + "(" + parsedArgsAsString + ")"
-        + ":\n"
-        // // NOTE - must have function RETURN TYPE in TS
-        // + SupportedKindNames[returnType.kind]
-        // +" {\n";
-
-    const funcBodyIdentation = identation + 1
-    const statementsAsString = body.statements.map((s) => {
-        return printNode(s, funcBodyIdentation);
-
-    }).filter((s)=>!!s).join("\n");
-
-    functionDef += statementsAsString + '\n';
-
-    return functionDef;
-}
-
-function printStringLiteral(node) {
-    return "'" + node.text.replace("'", "\\'") + "'";
-}
-
-function printNumericLiteral(node) {
-    return node.text;
-}
-
-function printArrayLiteralExpression(node) {
-
-    const elements = node.elements.map((e) => {
-        return printNode(e);
-    }).join(", ");
-    return LEFT_ARRAY_OPENING + elements + RIGHT_ARRAY_CLOSING;
-}
-
-function printVariableDeclarationList(node,identation) {
-    const declaration = node.declarations[0];
-    // const name = declaration.name.escapedText;
-    const parsedValue = printNode(declaration.initializer, identation);
-    return getIden(identation) + printNode(declaration.name) + " = " + parsedValue.trim();
-}
-
-function printVariableStatement(node, identation){
-    const decList = node.declarationList;
-    return printVariableDeclarationList(decList, identation);
-
-}
-
-function printOutOfOrderCallExpressionIfAny(node, identation) {
-    const expressionText = node.expression.getText();
-    const args = node.arguments;
-    let finalExpression = undefined;
-    switch (expressionText) {
-        case "Array.isArray":
-            finalExpression = "isinstance(" + printNode(args[0], 0) + ", list)";
-            break;
-        case "Math.floor":
-            finalExpression = "int(math.floor(" + printNode(args[0], 0) + "))";
-            break;
-        case "Object.keys":
-            finalExpression = "list(" + printNode(args[0], 0) + ".keys())";
-            break;
-        case "Object.values":
-            finalExpression = "list(" + printNode(args[0], 0) + ".values())";
-            break;
-        case "Math.round":
-            finalExpression = "int(math.round(" + printNode(args[0], 0) + "))";
-        case "Math.ceil":
-            finalExpression = "int(math.ceil(" + printNode(args[0], 0) + "))";
-    }
-    if (finalExpression) {
-        return getIden(identation) + finalExpression;
-    }
-    return undefined
-}
-
-function printCallExpression(node, identation) {
-
-    const expression = node.expression
-    const args = node.arguments;
-    
-    const removeParenthesis = shouldRemoveParenthesisFromCallExpression(node);
-
-    let finalExpression = printOutOfOrderCallExpressionIfAny(node, identation);
-
-    if (finalExpression) {
-        return getIden(identation) + finalExpression;
-    }
-
-    const parsedExpression = printNode(expression, 0);
-    
-    let parsedCall = getIden(identation) + parsedExpression;
-    if (!removeParenthesis) {
-        const parsedArgs = args.map((a) => {
-            return printNode(a, identation).trim();
-        }).join(",")
-        parsedCall+= "(" + parsedArgs + ")";
-    
-    }    
-    return parsedCall;
-}
-
-function printClass(node, identation) {
-    const className = node.name.escapedText;
-    const heritageClauses = node.heritageClauses;
-
-    let classInit = "";
-    if (heritageClauses !== undefined) {
-        const classExtends = heritageClauses[0].types[0].expression.escapedText;
-        classInit = getIden(identation) + "class " + className + "(" + classExtends + "):\n";
-    } else {
-        classInit = getIden(identation) + "class " + className + ":\n";
-    }
-
-    const classBody = node.members.map((m)=> {
-        return printNode(m, identation+1);
-    }).join("\n") 
-
-    return classInit + classBody;
-}
-
-function printWhileStatement(node, identation) {
-    const loopExpression = node.expression;
-
-    const expression = printNode(loopExpression, 0);
-    
-    return getIden(identation) + "while "+ expression +":\n" + node.statement.statements.map(st => printNode(st, identation+1)).join("\n");
-}
-
-function printForStatement(node, identation) {
-    // currently only let i =0 ; i< 20; i++ is supported
-    const varName = node.initializer.declarations[0].name.escapedText; 
-    const initValue = printNode(node.initializer.declarations[0].initializer, 0)
-    const roofValue = printNode(node.condition.right,0)
-
-    return getIden(identation) + "for " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => printNode(st, identation+1)).join("\n");
-}
-
-function printBreakStatement(node, identation) {
-    return getIden(identation) + BREAK_TOKEN;
-}
-
-function printPostFixUnaryExpression(node, identation) {
-    const {operand, operator} = node;
-    return getIden(identation) + printNode(operand, 0) + PostFixOperators[operator]; 
-}
-
-function printPrefixUnaryExpression(node, identation) {
-    const {operand, operator} = node;
-    return getIden(identation) + PrefixFixOperators[operator] + printNode(operand, 0); 
-}
-
-function printObjectLiteralExpression(node, identation) {
-    const objectBody = node.properties.map((p) => printNode(p, identation+1)).join(",\n");
-
-    return  OBJECT_OPENING + "\n" + objectBody + "\n" +  getIden(identation) + OBJECT_CLOSING;
-}
-
-function printPropertyAssignment(node, identation) {
-    const {name, initializer} = node;
-    const nameAsString = printNode(name, 0);
-    const valueAsString = printNode(initializer, identation);
-
-    return getIden(identation) + nameAsString + ": " + valueAsString.trim();
-}
-
-function printElementAccessExpressionExceptionIfAny(node) {
-    if (node.expression.kind === SyntaxKind.ThisKeyword) {
-        return "getattr(self, " + printNode(node.argumentExpression, 0) + ")";
-    }
-}
-
-function printElementAccessExpression(node, identation) {
-    // example x['test']
-    const {expression, argumentExpression} = node;
-
-    const exception = printElementAccessExpressionExceptionIfAny(node);
-    if (exception) {
-        return exception;
-    }
-    const expressionAsString = printNode(expression, 0);
-    const argumentAsString = printNode(argumentExpression, 0);
-    return expressionAsString + "[" + argumentAsString + "]";
-}
-
-function printIfStatement(node, identation) {
-    const expression = printNode(node.expression, 0)
-    const ifBody = node.thenStatement.statements.map((s) => printNode(s, identation+1)).join("\n");
-
-    const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
-
-    const prefix = isElseIf ? ELSEIF_TOKEN : IF_TOKEN;
-
-    let ifComplete  =  getIden(identation) + prefix + " " + expression + ":\n" + ifBody + "\n";
-
-    const elseStatement = node.elseStatement
-
-    if (elseStatement?.kind === ts.SyntaxKind.Block) {
-        const elseBody = getIden(identation) + ELSE_TOKEN + ':\n' + elseStatement.statements.map((s) => printNode(s, identation+1)).join("\n");
-        ifComplete += elseBody;
-    } else if (elseStatement?.kind === ts.SyntaxKind.IfStatement) {
-        const elseBody = printIfStatement(elseStatement, identation);
-        ifComplete += elseBody;
-    }
-
-    return ifComplete;
-}
-
-function printParenthesizedExpression(node, identation) {
-    return getIden(identation) + LEFT_PARENTHESIS + printNode(node.expression, 0) + RIGHT_PARENTHESIS;
-}
-
-function printBooleanLiteral(node) {
-    if (ts.SyntaxKind.TrueKeyword === node.kind) {
-        return TRUE_KEYWORD;
-    }
-    return FALSE_KEYWORD;
-}
-
-function printTryStatement(node, identation) {
-    const tryBody = node.tryBlock.statements.map((s) => printNode(s, identation+1)).join("\n");
-    const catchBody = node.catchClause.block.statements.map((s) => printNode(s, identation+1)).join("\n");
-    const catchDeclaration = " Exception as " + node.catchClause.variableDeclaration.name.escapedText;
-    return getIden(identation) + TRY_TOKEN + "\n" + tryBody + "\n" + getIden(identation) + CATCH_TOKEN + CATCH_OPEN + catchDeclaration + CATCH_CLOSE + "\n" + catchBody;
-}
-
-function printNewExpression(node, identation) {
-    const expression =  printNode(node.expression, 0)
-    const args = node.arguments.map(n => printNode(n, 0)).join(",")
-    return expression + LEFT_PARENTHESIS + args + RIGHT_PARENTHESIS;
-}
-
-function printThrowStatement(node, identation) {
-    const expression = printNode(node.expression, 0);
-    return getIden(identation) + THROW_TOKEN + " " + expression;
-}
-
-function printAwaitExpression(node, identation) {
-    const expression = printNode(node.expression, 0);
-    return getIden(identation) + AWAIT_TOKEN + " " + expression;
-}
-
-function printConditionalExpression(node, identation) {
-    const condition = printNode(node.condition, 0);
-    const whenTrue = printNode(node.whenTrue, 0);
-    const whenFalse = printNode(node.whenFalse, 0);
-
-    return getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
-}
-
-function printAsExpression(node, identation) {
-    return printNode(node.expression, identation)
-}
-
-function printReturnStatement(node, identation) {
-    const exp =  node.expression
-    const rightPart = exp ? (' ' + printNode(exp, identation)) : '';
-    return getIden(identation) + RETURN_TOKEN + ' ' + rightPart.trim();
-}
-
-function printArrayBindingPattern(node, identation) {
-    const elements = node.elements.map((e) => printNode(e.name, identation)).join(", ");
-    return getIden(identation) + LEFT_ARRAY_OPENING + elements + RIGHT_ARRAY_CLOSING;
-}
-
-function printNode(node, identation = 0) {
-
-    if(ts.isExpressionStatement(node)) {
-        // return printExpressionStatement(node.expression, identation);
-        return printNode(node.expression, identation);
-    } else if (ts.isFunctionDeclaration(node)){
-        return printFunction(node, identation);
-    } else if (ts.isClassDeclaration(node)) {
-        return printClass(node, identation) 
-    } else if (ts.isVariableStatement(node)) {
-        return printVariableStatement(node, identation);
-    } else if (ts.isMethodDeclaration(node)) {
-        return printMethodDeclaration(node, identation) 
-    } else if (ts.isStringLiteral(node)) {
-        return printStringLiteral(node);
-    } else if (ts.isNumericLiteral(node)) {
-        return printNumericLiteral(node);
-    } else if (ts.isPropertyAccessExpression(node)) {
-        return printPropertyAccessExpression(node, identation);
-    } else if (ts.isArrayLiteralExpression(node)) {
-        return printArrayLiteralExpression(node);
-    } else if (ts.isCallExpression(node)) {
-        return printCallExpression(node, identation);
-    } else if (ts.isWhileStatement(node)) {
-        return printWhileStatement(node, identation);
-    } else if (ts.isBinaryExpression(node)) {
-        return printBinaryExpression(node, identation);
-    } else if (ts.isBreakStatement(node)) {
-        return printBreakStatement(node, identation);
-    } else if (ts.isForStatement(node)) {
-        return printForStatement(node, identation);
-    } else if (ts.isPostfixUnaryExpression(node)) {
-        return printPostFixUnaryExpression(node, identation);
-    } else if (ts.isVariableDeclarationList(node)) {
-        return printVariableDeclarationList(node, identation); // statements are slightly different if inside a for
-    } else if (ts.isObjectLiteralExpression(node)) {
-        return printObjectLiteralExpression(node, identation);
-    } else if (ts.isPropertyAssignment(node)) {
-        return printPropertyAssignment(node, identation);
-    } else if (ts.isIdentifier(node)) {
-        return getIdentifierValueKind(node);
-    } else if (ts.isElementAccessExpression(node)) {
-        return printElementAccessExpression(node, identation);
-    } else if (ts.isIfStatement(node)) {
-        return printIfStatement(node, identation);
-    } else if (ts.isParenthesizedExpression(node)) {
-        return printParenthesizedExpression(node, identation);
-    } else if ((ts as any).isBooleanLiteral(node)) {
-        return printBooleanLiteral(node);
-    } else if (ts.SyntaxKind.ThisKeyword === node.kind) {
-        return THIS_TOKEN;
-    } else if (ts.SyntaxKind.SuperKeyword === node.kind) {
-        return SUPER_TOKEN;
-    }else if (ts.isTryStatement(node)){
-        return printTryStatement(node, identation);
-    } else if (ts.isPrefixUnaryExpression(node)) {
-        return printPrefixUnaryExpression(node, identation);
-    } else if (ts.isNewExpression(node)) {
-        return printNewExpression(node, identation);
-    } else if (ts.isThrowStatement(node)) {
-        return printThrowStatement(node, identation);
-    } else if (ts.isAwaitExpression(node)) {
-        return printAwaitExpression(node, identation);
-    } else if (ts.isConditionalExpression(node)) {
-        return printConditionalExpression(node, identation);
-    } else if (ts.isAsExpression(node)) {
-        return printAsExpression(node, identation);
-    } else if (ts.isReturnStatement(node)) {
-        return printReturnStatement(node, identation);
-    } else if (ts.isArrayBindingPattern(node)) {
-        return printArrayBindingPattern(node, identation);
-    }
-
-    if (node.statements) {
-        const transformedStatements = node.statements.map((m)=> {
-            return printNode(m, identation + 1);
-        });
-
-        return transformedStatements.join("\n");
-    }
-    return "";
-}
-
-const res = printNode(sourceFile,-1);
-console.log(res);
