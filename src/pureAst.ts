@@ -75,6 +75,7 @@ class BaseTranspiler {
     PROPERTY_ASSIGNMENT_TOKEN = ":";
 
     IF_COND_CLOSE = ":";
+    IF_COND_OPEN = "(";
     IF_CLOSE = "";
 
     SupportedKindNames = {};
@@ -458,7 +459,7 @@ class BaseTranspiler {
 
         const prefix = isElseIf ? this.ELSEIF_TOKEN : this.IF_TOKEN;
 
-        let ifComplete  =  this.getIden(identation) + prefix + " " + expression + this.IF_COND_CLOSE + "\n" + ifBody + "\n" + this.IF_CLOSE;
+        let ifComplete  =  this.getIden(identation) + prefix + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + "\n" + ifBody + "\n" + this.IF_CLOSE;
 
         const elseStatement = node.elseStatement
 
