@@ -11,26 +11,6 @@ const typeChecker = program.getTypeChecker()
 global.src = sourceFile;
 global.checker = typeChecker
 
-// python property replacement
-const PropertyAccessReplacements = {
-    // right side 
-    'this': 'self',
-    'push': 'append',
-    'toUpperCase': 'upper',
-    'toLowerCase': 'lower',
-    'parseFloat': 'float',
-    'parseInt': 'int',
-    'indexOf': 'find',
-    // both sides
-    'console.log': 'print',
-    'JSON.stringify': 'json.dumps',
-    'JSON.parse': 'json.loads',
-    'Math.log': 'math.log',
-    'Math.abs': 'abs',
-    'process.exit': 'sys.exit',
-}
-
-
 const FunctionDefSupportedKindNames = {
     [ts.SyntaxKind.StringKeyword]: "string"
 };
@@ -85,19 +65,32 @@ class BaseTranspiler {
     PLUS_PLUS_TOKEN = "++";
     MINUS_MINUS_TOKEN = "--";
 
+    WHILE_TOKEN = "while";
+    WHILE_COND_OPEN = "";
+    WHILE_COND_CLOSE = ":";
+    WHILE_CLOSE = "";
+
+    FOR_TOKEN = "for"
+
+    PROPERTY_ASSIGNMENT_TOKEN = ":";
+
+    IF_COND_CLOSE = ":";
+    IF_CLOSE = "";
+
     SupportedKindNames = {};
     PostFixOperators = {};
     PrefixFixOperators = {};
     FunctionDefSupportedKindNames = {};
+    PropertyAccessReplacements = {};
 
     constructor(config) {
         Object.assign (this, config);
 
-        this.initSupportedKindNames()
+        this.initOperators()
 
     }
 
-    initSupportedKindNames() {
+    initOperators() {
         this.SupportedKindNames = {
             [ts.SyntaxKind.StringLiteral]: "StringLiteral",
             [ts.SyntaxKind.StringKeyword]: "String",
@@ -198,9 +191,9 @@ class BaseTranspiler {
 
         const idType = global.checker.getTypeAtLocation(node.expression);
 
-        leftSide = PropertyAccessReplacements[leftSide] ?? leftSide;
+        leftSide = this.PropertyAccessReplacements[leftSide] ?? leftSide;
         // checking "toString" insde the object will return the builtin toString method :X
-        rightSide = (rightSide !== 'toString' && rightSide !== 'length' && PropertyAccessReplacements[rightSide]) ? PropertyAccessReplacements[rightSide] : rightSide;
+        rightSide = (rightSide !== 'toString' && rightSide !== 'length' && this.PropertyAccessReplacements[rightSide]) ? this.PropertyAccessReplacements[rightSide] : rightSide;
         
         let rawExpression = leftSide + this.PROPERTY_ACCESS_TOKEN + rightSide;
         
@@ -213,8 +206,8 @@ class BaseTranspiler {
             rawExpression = "str(" + leftSide + ")";
         }
 
-        if (PropertyAccessReplacements[rawExpression]) {
-            return this.getIden(identation) + PropertyAccessReplacements[rawExpression];
+        if (this.PropertyAccessReplacements[rawExpression]) {
+            return this.getIden(identation) + this.PropertyAccessReplacements[rawExpression];
         }
 
         return this.getIden(identation) + rawExpression;
@@ -341,31 +334,7 @@ class BaseTranspiler {
     }
 
     printOutOfOrderCallExpressionIfAny(node, identation) {
-        const expressionText = node.expression.getText();
-        const args = node.arguments;
-        let finalExpression = undefined;
-        switch (expressionText) {
-            case "Array.isArray":
-                finalExpression = "isinstance(" + this.printNode(args[0], 0) + ", list)";
-                break;
-            case "Math.floor":
-                finalExpression = "int(math.floor(" + this.printNode(args[0], 0) + "))";
-                break;
-            case "Object.keys":
-                finalExpression = "list(" + this.printNode(args[0], 0) + ".keys())";
-                break;
-            case "Object.values":
-                finalExpression = "list(" + this.printNode(args[0], 0) + ".values())";
-                break;
-            case "Math.round":
-                finalExpression = "int(math.round(" + this.printNode(args[0], 0) + "))";
-            case "Math.ceil":
-                finalExpression = "int(math.ceil(" + this.printNode(args[0], 0) + "))";
-        }
-        if (finalExpression) {
-            return this.getIden(identation) + finalExpression;
-        }
-        return undefined
+        return undefined; // stub to override
     }
 
     printCallExpression(node, identation) {
@@ -418,7 +387,13 @@ class BaseTranspiler {
 
         const expression = this.printNode(loopExpression, 0);
         
-        return this.getIden(identation) + "while "+ expression +":\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
+        return this.getIden(identation) +
+                    this.WHILE_TOKEN + " " +
+                    this.WHILE_COND_OPEN +
+                    expression + 
+                    this.WHILE_COND_CLOSE + "\n" + 
+                    node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") +
+                    this.WHILE_CLOSE;
     }
 
     printForStatement(node, identation) {
@@ -427,7 +402,7 @@ class BaseTranspiler {
         const initValue = this.printNode(node.initializer.declarations[0].initializer, 0)
         const roofValue = this.printNode(node.condition.right,0)
 
-        return this.getIden(identation) + "for " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
+        return this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
     }
 
     printBreakStatement(node, identation) {
@@ -455,13 +430,11 @@ class BaseTranspiler {
         const nameAsString = this.printNode(name, 0);
         const valueAsString = this.printNode(initializer, identation);
 
-        return this.getIden(identation) + nameAsString + ": " + valueAsString.trim();
+        return this.getIden(identation) + nameAsString +  this.PROPERTY_ASSIGNMENT_TOKEN + " " + valueAsString.trim();
     }
 
     printElementAccessExpressionExceptionIfAny(node) {
-        if (node.expression.kind === SyntaxKind.ThisKeyword) {
-            return "getattr(self, " + this.printNode(node.argumentExpression, 0) + ")";
-        }
+        return undefined; // stub to override
     }
 
     printElementAccessExpression(node, identation) {
@@ -485,18 +458,17 @@ class BaseTranspiler {
 
         const prefix = isElseIf ? this.ELSEIF_TOKEN : this.IF_TOKEN;
 
-        let ifComplete  =  this.getIden(identation) + prefix + " " + expression + ":\n" + ifBody + "\n";
+        let ifComplete  =  this.getIden(identation) + prefix + " " + expression + this.IF_COND_CLOSE + "\n" + ifBody + "\n" + this.IF_CLOSE;
 
         const elseStatement = node.elseStatement
 
         if (elseStatement?.kind === ts.SyntaxKind.Block) {
-            const elseBody = this.getIden(identation) + this.ELSE_TOKEN + ':\n' + elseStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n");
+            const elseBody = this.getIden(identation) + this.ELSE_TOKEN +  this.IF_COND_CLOSE + '\n' + elseStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n") + this.IF_CLOSE;
             ifComplete += elseBody;
         } else if (elseStatement?.kind === ts.SyntaxKind.IfStatement) {
             const elseBody = this.printIfStatement(elseStatement, identation);
             ifComplete += elseBody;
         }
-
         return ifComplete;
     }
 
@@ -557,6 +529,14 @@ class BaseTranspiler {
         return this.getIden(identation) + this.LEFT_ARRAY_OPENING + elements + this.RIGHT_ARRAY_CLOSING;
     }
 
+    myBase() {
+        console.log("myBase");
+    }
+
+    callMethod() {
+        this.myBase()
+    }
+
     printNode(node, identation = 0) {
 
         if(ts.isExpressionStatement(node)) {
@@ -575,7 +555,7 @@ class BaseTranspiler {
         } else if (ts.isNumericLiteral(node)) {
             return this.printNumericLiteral(node);
         } else if (ts.isPropertyAccessExpression(node)) {
-            return this.printPropertyAccessExpression(node, identation);
+            return this.printPropertyAccessExpression(node, identation); 
         } else if (ts.isArrayLiteralExpression(node)) {
             return this.printArrayLiteralExpression(node);
         } else if (ts.isCallExpression(node)) {
