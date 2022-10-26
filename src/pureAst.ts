@@ -79,7 +79,10 @@ class BaseTranspiler {
 
     LINE_TERMINATOR = "";
 
+    FUNCTION_TOKEN="def";
+    FUNCTION_DEF_OPEN = ":";
     FUNCTION_CLOSE = "";
+
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -143,13 +146,17 @@ class BaseTranspiler {
         return this.DEFAULT_IDENTATION.repeat(num);
     }
 
-    getIdentifierValueKind(identifier) {
-        const idValue = identifier.text ?? identifier.escapedText;
+    transformIdentifier(identifier) {
+        return identifier;
+    }
+
+    printIdentifier(node) {
+        const idValue = node.text ?? node.escapedText;
 
         if (idValue === "undefined") {
             return this.UNDEFINED_TOKEN;
         }
-        return idValue; // check this later
+        return this.transformIdentifier(idValue); // check this later
     }
 
     shouldRemoveParenthesisFromCallExpression(node) {
@@ -222,26 +229,31 @@ class BaseTranspiler {
         return this.getIden(identation) + rawExpression;
     }
 
-    parseParameters(parameters, kindNames) {
-        return parameters
-                .map((item) => {
-                    if (ts.isToken(item)) {
-                        return {
-                            name: item.text,
-                            type: kindNames[item.kind]
-                        }
-                    }
+    // parseParameters(parameters) {
+    //     // return parameters
+    //     //         .map((item) => {
+    //     //             if (ts.isToken(item)) {
+    //     //                 return {
+    //     //                     name: item.text,
+    //     //                     type: kindNames[item.kind]
+    //     //                 }
+    //     //             }
 
-                    const name = ts.getNameOfDeclaration(item);
+    //     //             const name = ts.getNameOfDeclaration(item);
 
-                    const token = item.type;
+    //     //             const token = item.type;
 
-                    return {
-                        name: (name as any).escapedText,
-                        type: (token !== undefined) ? kindNames[token.kind] : undefined
-                    }
-                })
-                .filter(item => !!item);
+    //     //             return {
+    //     //                 name: (name as any).escapedText,
+    //     //                 type: (token !== undefined) ? kindNames[token.kind] : undefined
+    //     //             }
+    //     //         })
+    //     //         .filter(item => !!item);
+    // }
+
+    printParameter(node) {
+        const name = this.printNode(node.name, 0);
+        return name;
     }
 
     printModifiers(node) {
@@ -255,15 +267,17 @@ class BaseTranspiler {
     }
 
     transformFunctionComment(comment) {
-        debugger;
-        return ""; // to override
+        return comment; // to override
     }
 
-    printFunctionComment(node) {
+    printFunctionComment(node, identation) {
         const fullText = global.src.getFullText();
         const commentsRange = ts.getLeadingCommentRanges(fullText, node.pos)[0];
         const commentText = fullText.slice(commentsRange.pos, commentsRange.end);
-        return this.transformFunctionComment(commentText);
+        if (commentText) {
+            return this.getIden(identation) + this.transformFunctionComment(commentText) + "\n";
+        }
+        return "";
     }
 
     printFunctionBody(node, identation) {
@@ -275,17 +289,14 @@ class BaseTranspiler {
     }
 
     printFunctionDefinition(node, identation) {
-        const { name:{ escapedText }, parameters, body, type: returnType} = node;
+        const name = node.name.escapedText;
 
-        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
+        const parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
 
-        const parsedArgsAsString = parsedArgs.map((a) => {
-            return `${a.name ?? a}`
-        }).join(", ");
-
-        let functionDef = this.getIden(identation) + this.printModifiers(node) + "def " + escapedText
-            + "(" + parsedArgsAsString + ")"
-            + ":\n"
+        let functionDef = this.getIden(identation) + this.printModifiers(node) + this.FUNCTION_TOKEN + " " + name
+            + "(" + parsedArgs + ")"
+            + this.FUNCTION_DEF_OPEN
+            + "\n"
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
@@ -297,7 +308,7 @@ class BaseTranspiler {
 
         let functionDef = this.printFunctionDefinition(node, identation);
 
-        const leadingComments = this.printFunctionComment(node.body.statements[0]);
+        const leadingComments = this.printFunctionComment(node.body.statements[0], identation+1);
        
         const funcBody = this.printFunctionBody(node.body, identation+1);
 
@@ -312,22 +323,20 @@ class BaseTranspiler {
     }
 
     printMethodDefinition(node, identation) {
-        const { name:{ escapedText }, parameters, body, type: returnType} = node;
+        const name = node.name.escapedText;
 
-        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
+        let parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
+        parsedArgs = "self, " + parsedArgs;
 
-        parsedArgs.unshift("self")
-        const parsedArgsAsString = parsedArgs.map((a) => {
-            return `${a.name ?? a}`
-        }).join(", ");
-
-        let functionDef = this.getIden(identation) + this.printModifiers(node) + "def " + escapedText
-            + "(" + parsedArgsAsString + ")"
-            + ":\n"
+        let methodDef = this.getIden(identation) + this.printModifiers(node) + this.FUNCTION_TOKEN + " " + name
+            + "(" + parsedArgs + ")"
+            + this.FUNCTION_DEF_OPEN
+            + "\n"
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
-        return functionDef;
+
+        return methodDef;
 
     }
 
@@ -335,7 +344,7 @@ class BaseTranspiler {
 
         const methodClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
 
-        const leadingComments = this.printFunctionComment(node.body.statements[0]);
+        const leadingComments = this.printFunctionComment(node.body.statements[0], identation+1);
 
         let methodDef = this.printMethodDefinition(node, identation);
         
@@ -634,7 +643,7 @@ class BaseTranspiler {
         } else if (ts.isPropertyAssignment(node)) {
             return this.printPropertyAssignment(node, identation);
         } else if (ts.isIdentifier(node)) {
-            return this.getIdentifierValueKind(node);
+            return this.printIdentifier(node);
         } else if (ts.isElementAccessExpression(node)) {
             return this.printElementAccessExpression(node, identation);
         } else if (ts.isIfStatement(node)) {
@@ -665,6 +674,8 @@ class BaseTranspiler {
             return this.printReturnStatement(node, identation);
         } else if (ts.isArrayBindingPattern(node)) {
             return this.printArrayBindingPattern(node, identation);
+        } else if (ts.isParameter(node)) {
+            return this.printParameter(node);
         }
 
         if (node.statements) {

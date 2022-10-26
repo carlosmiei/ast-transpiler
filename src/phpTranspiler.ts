@@ -33,7 +33,9 @@ const config = {
     'RIGHT_ARRAY_CLOSING':")",
     'OBJECT_OPENING':"array(",
     'OBJECT_CLOSING':")",
-
+    'FUNCTION_TOKEN': 'function',
+    'FUNCTION_DEF_OPEN': '{',
+    'FUNCTION_CLOSE': '}',
 }
 
 export class PhpTranspiler extends BaseTranspiler {
@@ -43,34 +45,9 @@ export class PhpTranspiler extends BaseTranspiler {
         this.initConfig();
     }
 
-    getIdentifierValueKind(identifier) {
-        const idValue = identifier.text ?? identifier.escapedText;
-
-        if (idValue === "undefined") {
-            return this.UNDEFINED_TOKEN;
-        }
-        return "$" + idValue; // check this later
+    transformIdentifier(identifier) {
+        return "$" + identifier;
     }
-
-    printFunctionDefinition(node, identation) {
-        const { name:{ escapedText }, parameters, body, type: returnType} = node;
-
-        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
-
-        const parsedArgsAsString = parsedArgs.map((a) => {
-            return `${a.name ?? a}`
-        }).join(", ");
-
-        let functionDef = this.getIden(identation) + this.printModifiers(node) + "function " + escapedText
-            + "(" + parsedArgsAsString + ")"
-            + "{\n"
-            // // NOTE - must have RETURN TYPE in TS
-            // + SupportedKindNames[returnType.kind]
-            // +" {\n";
-
-        return functionDef;
-    }
-
 
     initConfig() {
     }

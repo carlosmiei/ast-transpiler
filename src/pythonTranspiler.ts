@@ -87,7 +87,6 @@ export class PythonTranspiler extends BaseTranspiler {
     }
 
     transformFunctionComment(comment) {
-        debugger;
         console.log(comment)
         return ""; // to override
     }
