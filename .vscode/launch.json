@@ -1,0 +1,16 @@
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//       {
+//         "name": "Launch Program",
+//         "runtimeExecutable": "ts-node",
+//         // "cwd": "${workspaceFolder}/packages/api",
+//         "request": "launch",
+//         "skipFiles": ["<node_internals>/**"],
+//         "type": "node",
+//         // "args": ["build/index.js"],
+//         // "runtimeArgs": [ "-r", "ts-node/register" ],
+//         "outputCapture": "std"
+//       }
+//     ]
+//    }

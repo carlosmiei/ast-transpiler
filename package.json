@@ -1,7 +1,14 @@
 {
+  "type": "module",
+  "scripts": {
+    "start": "node --loader ts-node/esm src/start.ts",
+    "start-py": "node --loader ts-node/esm src/pythonTranspiler.ts",
+    "start2": " ts-node-esm src/start.ts"
+  },
   "devDependencies": {
     "@types/node": "^18.11.4",
-    "ts-morph": "^16.0.0"
+    "ts-morph": "^16.0.0",
+    "ts-node": "^10.9.1"
   },
   "dependencies": {
     "typescript": "^4.8.4"

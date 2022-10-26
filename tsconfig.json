@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
-    "types": [
-        "node"
-    ],
-        "moduleResolution": "node",
+        "moduleResolution": "nodenext",
+        "baseUrl": "./src",
         "module": "es2022",
         "outDir": "./dist",
-        "allowJs": true,
-        "target": "es6"
+        "allowJs": false,
+        "target": "ES2017",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true
     },
         "include": [
         "./src/**/*"

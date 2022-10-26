@@ -1,29 +1,20 @@
 import { BaseTranspiler } from "./pureAst.js";
 import ts from 'typescript';
-
 const SyntaxKind = ts.SyntaxKind;
-
 const filename = "tmp.ts";
-
-
 const config = {
-    // 'DEFAULT_IDENTATION': 'WORKED'
-}
-
+// 'DEFAULT_IDENTATION': 'WORKED'
+};
 const program = ts.createProgram([filename], {});
 const sourceFile = program.getSourceFile(filename);
-const typeChecker = program.getTypeChecker()
-
+const typeChecker = program.getTypeChecker();
 global.src = sourceFile;
-global.checker = typeChecker
-
+global.checker = typeChecker;
 export class PythonTranspiler extends BaseTranspiler {
     constructor() {
         super(config);
-
         this.initConfig();
     }
-
     initConfig() {
         this.PropertyAccessReplacements = {
             // right side 
@@ -41,9 +32,8 @@ export class PythonTranspiler extends BaseTranspiler {
             'Math.log': 'math.log',
             'Math.abs': 'abs',
             'process.exit': 'sys.exit',
-        }
+        };
     }
-
     printOutOfOrderCallExpressionIfAny(node, identation) {
         const expressionText = node.expression.getText();
         const args = node.arguments;
@@ -69,25 +59,20 @@ export class PythonTranspiler extends BaseTranspiler {
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;
         }
-        return undefined
+        return undefined;
     }
-
     printElementAccessExpressionExceptionIfAny(node) {
         if (node.expression.kind === SyntaxKind.ThisKeyword) {
             return "getattr(self, " + this.printNode(node.argumentExpression, 0) + ")";
         }
     }
-
     printForStatement(node, identation) {
-        const varName = node.initializer.declarations[0].name.escapedText; 
-        const initValue = this.printNode(node.initializer.declarations[0].initializer, 0)
-        const roofValue = this.printNode(node.condition.right,0)
-
-        return this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
+        const varName = node.initializer.declarations[0].name.escapedText;
+        const initValue = this.printNode(node.initializer.declarations[0].initializer, 0);
+        const roofValue = this.printNode(node.condition.right, 0);
+        return this.getIden(identation) + this.FOR_TOKEN + " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation + 1)).join("\n");
     }
 }
-
-
 // const transpiler = new PythonTranspiler();
 // const res = transpiler.printNode(sourceFile)
 // console.log(res)
