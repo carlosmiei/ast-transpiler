@@ -526,7 +526,6 @@ class BaseTranspiler {
             const elseBody = this.printIfStatement(elseStatement, identation);
             ifComplete += elseBody;
         }
-        // debugger;
         return ifComplete;
     }
 
