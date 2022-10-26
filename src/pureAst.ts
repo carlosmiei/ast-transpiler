@@ -12,10 +12,6 @@ const typeChecker = program.getTypeChecker()
 global.src = sourceFile;
 global.checker = typeChecker
 
-const FunctionDefSupportedKindNames = {
-    [ts.SyntaxKind.StringKeyword]: "string"
-};
-
 class BaseTranspiler {
     DEFAULT_IDENTATION = "    ";
     UNDEFINED_TOKEN = "None";
@@ -80,7 +76,9 @@ class BaseTranspiler {
     IF_CLOSE = "";
     IF_OPEN = "";
     ELSE_OPEN_TOKEN = ":";
-    ELSE_CLOSE_TOKEN = ""
+    ELSE_CLOSE_TOKEN = "";
+
+    LINE_TERMINATOR = "";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -133,6 +131,11 @@ class BaseTranspiler {
             [ts.SyntaxKind.ExclamationToken]: this.NOT_TOKEN,
             [ts.SyntaxKind.MinusToken]: this.MINUS_TOKEN,
         }
+
+        this.FunctionDefSupportedKindNames = {
+            [ts.SyntaxKind.StringKeyword]: "string"
+        };
+        
     }
 
     getIden (num) {
@@ -250,10 +253,11 @@ class BaseTranspiler {
 
     }
 
-    printFunction(node, identation) {
+    printFunctionDeclaration(node, identation) {
+        // debugger;
         const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
-        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, FunctionDefSupportedKindNames) : [];
+        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
 
         const parsedArgsAsString = parsedArgs.map((a) => {
             return `${a.name ?? a}`
@@ -272,7 +276,6 @@ class BaseTranspiler {
         }).filter((s)=>!!s).join("\n");
 
         functionDef += statementsAsString;
-
         return functionDef;
     }
 
@@ -284,7 +287,7 @@ class BaseTranspiler {
 
         const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
-        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, FunctionDefSupportedKindNames) : [];
+        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
 
         parsedArgs.unshift("self")
         const parsedArgsAsString = parsedArgs.map((a) => {
@@ -329,7 +332,7 @@ class BaseTranspiler {
         const declaration = node.declarations[0];
         // const name = declaration.name.escapedText;
         const parsedValue = this.printNode(declaration.initializer, identation);
-        return this.getIden(identation) + this.printNode(declaration.name) + " = " + parsedValue.trim();
+        return this.getIden(identation) + this.printNode(declaration.name) + " = " + parsedValue.trim() + this.LINE_TERMINATOR;
     }
 
     printVariableStatement(node, identation){
@@ -463,10 +466,12 @@ class BaseTranspiler {
 
         const prefix = isElseIf ? this.ELSEIF_TOKEN : this.IF_TOKEN;
 
+        const ifOrElseIfIdentation = isElseIf && this.IF_CLOSE ? " " : this.getIden(identation);
+
         const ifEnd = this.IF_CLOSE ? this.getIden(identation) + this.IF_CLOSE : "";
 
         let ifOpen = this.IF_OPEN ? " " + this.IF_OPEN : "";
-        let ifComplete  =  this.getIden(identation) + prefix + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + "\n" + ifEnd;
+        let ifComplete  =  ifOrElseIfIdentation + prefix + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + "\n" + ifEnd;
 
         const elseStatement = node.elseStatement
 
@@ -557,9 +562,9 @@ class BaseTranspiler {
 
         if(ts.isExpressionStatement(node)) {
             // return printExpressionStatement(node.expression, identation);
-            return this.printNode(node.expression, identation);
+            return this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
         } else if (ts.isFunctionDeclaration(node)){
-            return this.printFunction(node, identation);
+            return this.printFunctionDeclaration(node, identation);
         } else if (ts.isClassDeclaration(node)) {
             return this.printClass(node, identation) 
         } else if (ts.isVariableStatement(node)) {

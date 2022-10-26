@@ -13,7 +13,7 @@ global.src = sourceFile;
 global.checker = typeChecker
 
 const config = {
-    'ELSEIF_TOKEN': 'else if',
+    'ELSEIF_TOKEN': 'elseif',
     'THIS_TOKEN': '$this',
     'AMPERSTAND_APERSAND_TOKEN': '&&',
     'BAR_BAR_TOKEN': '||',
@@ -28,6 +28,7 @@ const config = {
     'NOT_TOKEN': '!',
     'ELSE_OPEN_TOKEN': ' {',
     'ELSE_CLOSE_TOKEN': '}',
+    'LINE_TERMINATOR': ';'
 
 }
 
@@ -45,6 +46,32 @@ export class PhpTranspiler extends BaseTranspiler {
             return this.UNDEFINED_TOKEN;
         }
         return "$" + idValue; // check this later
+    }
+
+    printFunctionDeclaration(node, identation) {
+        const { name:{ escapedText }, parameters, body, type: returnType} = node;
+
+        let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
+
+        const parsedArgsAsString = parsedArgs.map((a) => {
+            return `${a.name ?? a}`
+        }).join(", ");
+
+        let functionDef = this.getIden(identation) + this.printModifiers(node) + "function " + escapedText
+            + "(" + parsedArgsAsString + ")"
+            + "{\n"
+            // // NOTE - must have RETURN TYPE in TS
+            // + SupportedKindNames[returnType.kind]
+            // +" {\n";
+
+        const funcBodyIdentation = identation + 1
+        const statementsAsString = body.statements.map((s) => {
+            return this.printNode(s, funcBodyIdentation);
+        }).filter((s)=>!!s).join("\n");
+
+        functionDef += statementsAsString + "\n" + this.getIden(identation) + "}";
+
+        return functionDef;
     }
 
 

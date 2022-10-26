@@ -20,7 +20,7 @@ const pythonTransformer = new PythonTranspiler();
 const phpTransformer = new PhpTranspiler();
 
 const pythonRes = pythonTransformer.printNode(sourceFile, -1);
-const phpRes = `<php?\n ${phpTransformer.printNode(sourceFile, -1)}\n?>`;
+const phpRes = `<?php\n ${phpTransformer.printNode(sourceFile, -1)}\n?>`;
 
 
 writeFileSync(PHP_OUTPUT, phpRes);
