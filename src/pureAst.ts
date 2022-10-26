@@ -89,6 +89,7 @@ class BaseTranspiler {
     PrefixFixOperators = {};
     FunctionDefSupportedKindNames = {};
     PropertyAccessReplacements = {};
+    FuncModifiers = {}
 
     constructor(config) {
         Object.assign (this, config);
@@ -139,6 +140,12 @@ class BaseTranspiler {
         this.FunctionDefSupportedKindNames = {
             [ts.SyntaxKind.StringKeyword]: "string"
         };
+
+        this.FuncModifiers = {
+            [ts.SyntaxKind.AsyncKeyword]: "async",
+            [ts.SyntaxKind.PublicKeyword]: "public",
+            [ts.SyntaxKind.PrivateKeyword]: "private",
+        }
         
     }
 
@@ -229,28 +236,6 @@ class BaseTranspiler {
         return this.getIden(identation) + rawExpression;
     }
 
-    // parseParameters(parameters) {
-    //     // return parameters
-    //     //         .map((item) => {
-    //     //             if (ts.isToken(item)) {
-    //     //                 return {
-    //     //                     name: item.text,
-    //     //                     type: kindNames[item.kind]
-    //     //                 }
-    //     //             }
-
-    //     //             const name = ts.getNameOfDeclaration(item);
-
-    //     //             const token = item.type;
-
-    //     //             return {
-    //     //                 name: (name as any).escapedText,
-    //     //                 type: (token !== undefined) ? kindNames[token.kind] : undefined
-    //     //             }
-    //     //         })
-    //     //         .filter(item => !!item);
-    // }
-
     printParameter(node) {
         const name = this.printNode(node.name, 0);
         return name;
@@ -262,8 +247,7 @@ class BaseTranspiler {
             return "";
         }
 
-        return modifiers.map(item => this.SupportedKindNames[item.kind]).join(" ") + " ";
-
+        return modifiers.map(modifier => this.FuncModifiers[modifier.kind]).join(" ");
     }
 
     transformFunctionComment(comment) {
@@ -293,7 +277,7 @@ class BaseTranspiler {
 
         const parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
 
-        let functionDef = this.getIden(identation) + this.printModifiers(node) + this.FUNCTION_TOKEN + " " + name
+        let functionDef = this.getIden(identation) + this.printModifiers(node) + " " + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
             + this.FUNCTION_DEF_OPEN
             + "\n"
