@@ -85,6 +85,14 @@ export class PythonTranspiler extends BaseTranspiler {
 
         return this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
     }
+
+    transformFunctionComment(comment) {
+        debugger;
+        console.log(comment)
+        return ""; // to override
+    }
+
+
 }
 
 

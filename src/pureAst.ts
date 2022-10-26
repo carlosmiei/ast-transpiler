@@ -1,4 +1,3 @@
-import { debug } from 'console';
 import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
@@ -79,6 +78,8 @@ class BaseTranspiler {
     ELSE_CLOSE_TOKEN = "";
 
     LINE_TERMINATOR = "";
+
+    FUNCTION_CLOSE = "";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -253,8 +254,27 @@ class BaseTranspiler {
 
     }
 
-    printFunctionDeclaration(node, identation) {
-        // debugger;
+    transformFunctionComment(comment) {
+        debugger;
+        return ""; // to override
+    }
+
+    printFunctionComment(node) {
+        const fullText = global.src.getFullText();
+        const commentsRange = ts.getLeadingCommentRanges(fullText, node.pos)[0];
+        const commentText = fullText.slice(commentsRange.pos, commentsRange.end);
+        return this.transformFunctionComment(commentText);
+    }
+
+    printFunctionBody(node, identation) {
+        const statementsAsString = node.statements.map((s) => {
+            return this.printNode(s, identation);
+
+        }).filter((s)=>!!s).join("\n");
+        return statementsAsString;
+    }
+
+    printFunctionDefinition(node, identation) {
         const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
         let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
@@ -270,21 +290,28 @@ class BaseTranspiler {
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
 
-        const funcBodyIdentation = identation + 1
-        const statementsAsString = body.statements.map((s) => {
-            return this.printNode(s, funcBodyIdentation);
-        }).filter((s)=>!!s).join("\n");
-
-        functionDef += statementsAsString;
         return functionDef;
     }
 
-    printMethodDeclaration(node, identation) {
+    printFunctionDeclaration(node, identation) {
 
-        // get comments
-        const commentPosition = ts.getCommentRange(node)
-        const comment = global.src.getFullText().slice(commentPosition.pos, commentPosition.end);
+        let functionDef = this.printFunctionDefinition(node, identation);
 
+        const leadingComments = this.printFunctionComment(node.body.statements[0]);
+       
+        const funcBody = this.printFunctionBody(node.body, identation+1);
+
+        const funcClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
+
+        functionDef += leadingComments;
+        functionDef += funcBody;
+        functionDef += "\n";
+        functionDef += funcClose;
+
+        return functionDef;
+    }
+
+    printMethodDefinition(node, identation) {
         const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
         let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
@@ -300,16 +327,26 @@ class BaseTranspiler {
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
-
-        const funcBodyIdentation = identation + 1
-        const statementsAsString = body.statements.map((s) => {
-            return this.printNode(s, funcBodyIdentation);
-
-        }).filter((s)=>!!s).join("\n");
-
-        functionDef += statementsAsString + '\n';
-
         return functionDef;
+
+    }
+
+    printMethodDeclaration(node, identation) {
+
+        const methodClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
+
+        const leadingComments = this.printFunctionComment(node.body.statements[0]);
+
+        let methodDef = this.printMethodDefinition(node, identation);
+        
+        const funcBody = this.printFunctionBody(node.body, identation+1);
+        
+        methodDef += leadingComments;
+        methodDef += funcBody;
+        methodDef += "\n";
+        methodDef += methodClose;
+
+        return methodDef;
     }
 
     printStringLiteral(node) {

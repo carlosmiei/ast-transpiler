@@ -28,7 +28,11 @@ const config = {
     'NOT_TOKEN': '!',
     'ELSE_OPEN_TOKEN': ' {',
     'ELSE_CLOSE_TOKEN': '}',
-    'LINE_TERMINATOR': ';'
+    'LINE_TERMINATOR': ';',
+    'LEFT_ARRAY_OPENING':"array(",
+    'RIGHT_ARRAY_CLOSING':")",
+    'OBJECT_OPENING':"array(",
+    'OBJECT_CLOSING':")",
 
 }
 
@@ -48,7 +52,7 @@ export class PhpTranspiler extends BaseTranspiler {
         return "$" + idValue; // check this later
     }
 
-    printFunctionDeclaration(node, identation) {
+    printFunctionDefinition(node, identation) {
         const { name:{ escapedText }, parameters, body, type: returnType} = node;
 
         let parsedArgs = (parameters.length > 0) ? this.parseParameters(parameters, this.FunctionDefSupportedKindNames) : [];
@@ -63,13 +67,6 @@ export class PhpTranspiler extends BaseTranspiler {
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
-
-        const funcBodyIdentation = identation + 1
-        const statementsAsString = body.statements.map((s) => {
-            return this.printNode(s, funcBodyIdentation);
-        }).filter((s)=>!!s).join("\n");
-
-        functionDef += statementsAsString + "\n" + this.getIden(identation) + "}";
 
         return functionDef;
     }
