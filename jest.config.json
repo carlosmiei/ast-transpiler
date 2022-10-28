@@ -3,6 +3,10 @@
   "testEnvironment": "node",
   "testRegex": "/tests/.*\\.(test|spec)?\\.(ts|tsx)$",
   "moduleFileExtensions": ["ts", "js","json", "node", "cjs"],
+  "transformIgnorePatterns": [],
   "moduleDirectories": ["src", "node_modules"],
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  },
   "rootDir": "./"
 }
