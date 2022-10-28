@@ -17,7 +17,6 @@ const PHP_OUTPUT = "./out/output.php"
 const PHP_SYNC_OUTPUT = "./out/output-sync.php"
 const PYTHON_OUTPUT = "./out/output.py"
 
-
 function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, options: any = {}): [any,any,any]  {
     options = options || ts.getDefaultCompilerOptions();
     const inMemoryFilePath = path.resolve(path.join(rootDir, "__dummy-file.ts"));
@@ -44,39 +43,66 @@ function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, opti
         rootNames: [inMemoryFilePath],
         host
     });
-    
+
     const typeChecker = program.getTypeChecker();
     const sourceFile = program.getSourceFile(inMemoryFilePath);
 
     return [ program, typeChecker, sourceFile];
 }
 
-const inMemoryTs =  'const x = "ola" + "mundo";'
 
-const [ memProgram, memType, memSource] = getProgramAndTypeCheckerFromMemory(__dirname, inMemoryTs);
+class Transpiler {
+    config;
+    constructor(config = {}) {
+        this.config = config;
+    }
+    
+    transpile(): string {
+
+        if (this.config.content) {
+            const [ memProgram, memType, memSource] = getProgramAndTypeCheckerFromMemory(__dirname, this.config.content);
+            global.src = memSource;
+            global.checker = memType;
+            global.program = memProgram;
+
+        } else {
+            const path = this.config.path;
+            const filename = path.split("/").pop();
+            const program = ts.createProgram([filename], {});
+            const sourceFile = program.getSourceFile(filename);
+            const typeChecker = program.getTypeChecker();
+
+            global.src = sourceFile;
+            global.checker = typeChecker;
+            global.program = program;
+            
+        }
+
+        if (this.config.php) {
+            const phpTransformer = new PhpTranspiler();
+            return phpTransformer.printNode(global.src, -1);
+        } else if (this.config.syncPhp) {
+            const phpConfig = {
+                "async": false
+            }
+            const phpTransformerSync = new PhpTranspiler(phpConfig);
+            return phpTransformerSync.printNode(global.src, -1);
+        } else if (this.config.python) {
+            const pythonTransformer = new PythonTranspiler();
+            return pythonTransformer.printNode(global.src, -1);
+        }
+    }
+
+}   
 
 
+const phpTransformerSync = new Transpiler({"syncPhp": true, "path": "./tmp.ts"});
+const phpTransformer = new Transpiler({"php": true, "path": "./tmp.ts"});
+const pythonTransformer = new Transpiler({"python": true, "path": "./tmp.ts"});
 
-const program = ts.createProgram([filename], {});
-const sourceFile = program.getSourceFile(filename);
-const typeChecker = program.getTypeChecker()
-
-global.src = sourceFile;
-global.checker = typeChecker;
-global.program = program;
-
-const pythonTransformer = new PythonTranspiler();
-
-const phpConfig = {
-    "async": false
-}
-
-const phpTransformerSync = new PhpTranspiler(phpConfig);
-const phpTransformer = new PhpTranspiler();
-
-const pythonRes = pythonTransformer.printNode(sourceFile, -1);
-const phpRes = `<?php\n${phpTransformer.printNode(sourceFile, -1)}\n?>`;
-const phpSyncRes = `<?php\n${phpTransformerSync.printNode(sourceFile, -1)}\n?>`;
+const pythonRes = pythonTransformer.transpile();
+const phpRes = `<?php\n${phpTransformer.transpile()}\n?>`;
+const phpSyncRes = `<?php\n${phpTransformerSync.transpile()}\n?>`;
 
 writeFileSync(PHP_OUTPUT, phpRes);
 writeFileSync(PYTHON_OUTPUT, pythonRes);
