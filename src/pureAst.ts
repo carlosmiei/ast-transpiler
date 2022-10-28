@@ -42,7 +42,6 @@ class BaseTranspiler {
     THROW_TOKEN = "raise";
     AWAIT_TOKEN = "await";
     STATIC_TOKEN = "static";
-    ASYNC_TOKEN =  "async";
     EXTENDS_TOKEN = "extends";
     NOT_TOKEN = "not";
     SUPER_TOKEN = "super()";
@@ -82,6 +81,8 @@ class BaseTranspiler {
     FUNCTION_TOKEN="def";
     FUNCTION_DEF_OPEN = ":";
     FUNCTION_CLOSE = "";
+
+    ASYNC_TOKEN = "async";
 
 
     SupportedKindNames = {};
@@ -142,11 +143,10 @@ class BaseTranspiler {
         };
 
         this.FuncModifiers = {
-            [ts.SyntaxKind.AsyncKeyword]: "async",
+            [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
             [ts.SyntaxKind.PublicKeyword]: "public",
             [ts.SyntaxKind.PrivateKeyword]: "private",
         }
-        
     }
 
     getIden (num) {
@@ -188,6 +188,10 @@ class BaseTranspiler {
         return this.getIden(identation) + `isinstance(${left}, ${right})`;
     }
 
+    getCustomOperatorIfAny(left, right, operator) {
+        return undefined
+    }
+
     printBinaryExpression(node, identation) {
         const {left, right, operatorToken} = node;
 
@@ -199,7 +203,11 @@ class BaseTranspiler {
 
         const rightVar = this.printNode(right, identation)
 
-        const operator = this.SupportedKindNames[operatorToken.kind];
+        let operator = this.SupportedKindNames[operatorToken.kind];
+
+        const customOperator = this.getCustomOperatorIfAny(left, right, operatorToken);
+
+        operator = customOperator ? customOperator : operator; 
 
         return this.getIden(identation) + leftVar +" "+ operator + " " + rightVar.trim();
     }
@@ -216,7 +224,7 @@ class BaseTranspiler {
 
         leftSide = this.PropertyAccessReplacements[leftSide] ?? leftSide;
         // checking "toString" insde the object will return the builtin toString method :X
-        rightSide = (rightSide !== 'toString' && rightSide !== 'length' && this.PropertyAccessReplacements[rightSide]) ? this.PropertyAccessReplacements[rightSide] : rightSide;
+        rightSide = this.PropertyAccessReplacements.hasOwnProperty(rightSide) ? this.PropertyAccessReplacements[rightSide] : rightSide;
         
         let rawExpression = leftSide + this.PROPERTY_ACCESS_TOKEN + rightSide;
         
@@ -242,11 +250,11 @@ class BaseTranspiler {
     }
 
     printModifiers(node) {
-        const modifiers = node.modifiers;
+        let modifiers = node.modifiers;
         if (modifiers === undefined) {
             return "";
         }
-
+        modifiers = modifiers.filter(mod => this.FuncModifiers[mod.kind])
         return modifiers.map(modifier => this.FuncModifiers[modifier.kind]).join(" ");
     }
 
@@ -276,8 +284,11 @@ class BaseTranspiler {
         const name = node.name.escapedText;
 
         const parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
+        
+        let modifiers = this.printModifiers(node);
+        modifiers = modifiers ? modifiers + " " : modifiers;
 
-        let functionDef = this.getIden(identation) + this.printModifiers(node) + " " + this.FUNCTION_TOKEN + " " + name
+        let functionDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
             + this.FUNCTION_DEF_OPEN
             + "\n"
@@ -312,7 +323,7 @@ class BaseTranspiler {
         let parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
         parsedArgs = "self, " + parsedArgs;
 
-        let methodDef = this.getIden(identation) + this.printModifiers(node) + this.FUNCTION_TOKEN + " " + name
+        let methodDef = this.getIden(identation) + this.printModifiers(node) + " " + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
             + this.FUNCTION_DEF_OPEN
             + "\n"

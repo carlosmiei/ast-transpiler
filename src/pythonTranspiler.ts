@@ -10,12 +10,12 @@ const config = {
     // 'DEFAULT_IDENTATION': 'WORKED'
 }
 
-const program = ts.createProgram([filename], {});
-const sourceFile = program.getSourceFile(filename);
-const typeChecker = program.getTypeChecker()
+// const program = ts.createProgram([filename], {});
+// const sourceFile = program.getSourceFile(filename);
+// const typeChecker = program.getTypeChecker()
 
-global.src = sourceFile;
-global.checker = typeChecker
+// global.src = sourceFile;
+// global.checker = typeChecker
 
 export class PythonTranspiler extends BaseTranspiler {
     constructor() {
@@ -87,7 +87,7 @@ export class PythonTranspiler extends BaseTranspiler {
     }
 
     transformFunctionComment(comment) {
-        console.log(comment)
+        // console.log(comment)
         return ""; // to override
     }
 

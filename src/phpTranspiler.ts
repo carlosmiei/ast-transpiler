@@ -3,16 +3,7 @@ import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
-const filename = "tmp.ts";
-
-const program = ts.createProgram([filename], {});
-const sourceFile = program.getSourceFile(filename);
-const typeChecker = program.getTypeChecker()
-
-global.src = sourceFile;
-global.checker = typeChecker
-
-const config = {
+const parserConfig = {
     'ELSEIF_TOKEN': 'elseif',
     'THIS_TOKEN': '$this',
     'AMPERSTAND_APERSAND_TOKEN': '&&',
@@ -36,25 +27,56 @@ const config = {
     'FUNCTION_TOKEN': 'function',
     'FUNCTION_DEF_OPEN': '{',
     'FUNCTION_CLOSE': '}',
+    'ASYNC_TOKEN': ''
 }
 
 export class PhpTranspiler extends BaseTranspiler {
-    constructor() {
-        super(config);
+    asyncTranspiling;
+    awaitWrapper;
+    constructor(config = {}) {
+        super(parserConfig);
+        
+        this.asyncTranspiling = config['async'] ?? true;
 
+        this.awaitWrapper = "Async\\await";
         this.initConfig();
+    }
+
+    printAwaitExpression(node, identation) {
+        const expression = this.printNode(node.expression, 0);
+
+        if (!this.asyncTranspiling) {
+            return this.getIden(identation) + expression;
+        }
+
+        return this.getIden(identation) + this.awaitWrapper + "(" + expression + ")" ;
     }
 
     transformIdentifier(identifier) {
         return "$" + identifier;
     }
 
+    getCustomOperatorIfAny(left, right, operator) {
+        const CONCAT_TOKEN = '.';
+        if (operator.kind == SyntaxKind.PlusToken) {
+            if (left.kind == SyntaxKind.StringLiteral || right.kind == SyntaxKind.StringLiteral) {
+                return CONCAT_TOKEN;
+            }
+            
+            const leftType = global.checker.getTypeAtLocation(left);
+            const rightType = global.checker.getTypeAtLocation(right);
+            
+            if (leftType.flags === ts.TypeFlags.String || rightType.flags === ts.TypeFlags.String) {
+                return CONCAT_TOKEN;
+            }
+            if (leftType.flags === ts.TypeFlags.StringLiteral || rightType.flags === ts.TypeFlags.StringLiteral) {
+                return CONCAT_TOKEN;
+            }
+        }
+        return undefined;
+    }
+
     initConfig() {
     }
 
 }
-
-
-// const transpiler = new PhpTranspiler();
-// const res = transpiler.printNode(sourceFile)
-// console.log(res)
