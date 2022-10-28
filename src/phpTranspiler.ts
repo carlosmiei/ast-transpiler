@@ -1,4 +1,4 @@
-import { BaseTranspiler } from "./pureAst.js";
+import { BaseTranspiler } from "./pureAst";
 import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
