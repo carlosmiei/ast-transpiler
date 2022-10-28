@@ -55,7 +55,7 @@ class Transpiler {
         this.config = config;
     }
     
-    transpile(): string {
+    transpile(): string | undefined {
 
         if (this.config.content) {
             const [ memProgram, memType, memSource] = getProgramAndTypeCheckerFromMemory(__dirname, this.config.content);
@@ -89,6 +89,7 @@ class Transpiler {
             const pythonTransformer = new PythonTranspiler();
             return pythonTransformer.printNode(global.src, -1);
         }
+        return undefined;
     }
 
 }   
@@ -103,7 +104,7 @@ const phpRes = `<?php\n${phpTransformer.transpile()}\n?>`;
 const phpSyncRes = `<?php\n${phpTransformerSync.transpile()}\n?>`;
 
 writeFileSync(PHP_OUTPUT, phpRes);
-writeFileSync(PYTHON_OUTPUT, pythonRes);
+writeFileSync(PYTHON_OUTPUT, pythonRes ?? "");
 writeFileSync(PHP_SYNC_OUTPUT, phpSyncRes);
 
 console.log("TRANSPILED!!")

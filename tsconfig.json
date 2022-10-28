@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "moduleResolution": "nodenext",
+        "moduleResolution": "node",
         "baseUrl": "./src",
         "module": "es2022",
         "outDir": "./dist",
