@@ -11,8 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
 
-const filename = "tmp.ts";
-
 const PHP_OUTPUT = "./out/output.php"
 const PHP_SYNC_OUTPUT = "./out/output-sync.php"
 const PYTHON_OUTPUT = "./out/output.py"
@@ -109,3 +107,7 @@ writeFileSync(PYTHON_OUTPUT, pythonRes);
 writeFileSync(PHP_SYNC_OUTPUT, phpSyncRes);
 
 console.log("TRANSPILED!!")
+
+export {
+    Transpiler
+}
