@@ -397,6 +397,7 @@ class BaseTranspiler {
     printCallExpression(node, identation) {
 
         const expression = node.expression
+
         const args = node.arguments;
         
         const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
@@ -407,8 +408,13 @@ class BaseTranspiler {
             return this.getIden(identation) + finalExpression;
         }
 
-        const parsedExpression = this.printNode(expression, 0);
-        
+        let parsedExpression = undefined;
+        if (this.CallExpressionReplacements.hasOwnProperty(expression.escapedText)) {
+            parsedExpression = this.CallExpressionReplacements[expression.escapedText];
+        } else {
+            parsedExpression = this.printNode(expression, 0);
+        }
+
         let parsedCall = this.getIden(identation) + parsedExpression;
         if (!removeParenthesis) {
             const parsedArgs = args.map((a) => {
