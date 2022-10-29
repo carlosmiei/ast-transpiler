@@ -1,16 +1,16 @@
 import ts from 'typescript';
 import currentPath from "./dirname.cjs";
-import { PythonTranspiler } from './pythonTranspiler';
-import { PhpTranspiler } from './phpTranspiler';
+import { PythonTranspiler } from './pythonTranspiler.js';
+import { PhpTranspiler } from './phpTranspiler.js';
 import * as fs from 'fs';
 import * as path from "path";
 import { fileURLToPath } from 'url';
 
-const { readFileSync, writeFileSync } = fs;
+// const __dirname_mock = currentPath;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname_mock = fileURLToPath(new URL('.', import.meta.url));
+// console.log(__dirname_mock);
 
-const __dirname_mock = currentPath;
-
-console.log(__dirname_mock);
 function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, options: any = {}): [any,any,any]  {
     options = options || ts.getDefaultCompilerOptions();
     const inMemoryFilePath = path.resolve(path.join(rootDir, "__dummy-file.ts"));
@@ -100,24 +100,6 @@ class Transpiler {
     }
 
 }   
-
-const transpiler = new Transpiler();
-
-const file = "tmp.ts";
-
-const pythonRes = transpiler.transpilePythonByPath(file);
-const phpRes = `<?php\n${transpiler.transpilePhpByPath(file, true)}\n?>`;
-const phpSyncRes = `<?php\n${transpiler.transpilePhpByPath(file)}\n?>`;
-
-// const PHP_OUTPUT = "./out/output.php"
-// const PHP_SYNC_OUTPUT = "./out/output-sync.php"
-// const PYTHON_OUTPUT = "./out/output.py"
-
-// writeFileSync(PHP_OUTPUT, phpRes);
-// writeFileSync(PYTHON_OUTPUT, pythonRes ?? "");
-// writeFileSync(PHP_SYNC_OUTPUT, phpSyncRes);
-
-// console.log("TRANSPILED!!")
 
 export {
     Transpiler

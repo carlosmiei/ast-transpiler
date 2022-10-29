@@ -1,4 +1,4 @@
-import { BaseTranspiler } from "./pureAst";
+import { BaseTranspiler } from "./pureAst.js";
 import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
@@ -73,6 +73,21 @@ export class PhpTranspiler extends BaseTranspiler {
                 return CONCAT_TOKEN;
             }
         }
+        return undefined;
+    }
+
+    transformPropertyAcessExpressionIfNeeded(node: any) {
+        // const expression = node.expression;
+        // let leftSide = this.printNode(expression, 0);
+        // let rightSide = node.name.escapedText;
+        // if (rightSide === "length") {
+        //     // if (checker.isArrayType(idType)) {
+        //         rawExpression =  "len(" + leftSide + ")";
+        //     // }
+        // } else if (rightSide === "toString") {
+        //     rawExpression = "str(" + leftSide + ")";
+        // }
+        // // const idType = global.checker.getTypeAtLocation(node.expression);
         return undefined;
     }
 

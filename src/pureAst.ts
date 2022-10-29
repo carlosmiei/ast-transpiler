@@ -89,7 +89,13 @@ class BaseTranspiler {
     PostFixOperators = {};
     PrefixFixOperators = {};
     FunctionDefSupportedKindNames = {};
-    PropertyAccessReplacements = {};
+    
+    LeftPropertyAccessReplacements = {};
+    RightPropertyAccessReplacements = {};
+    FullPropertyAccessReplacements = {};
+
+    CallExpressionReplacements = {};
+    
     FuncModifiers = {}
 
     constructor(config) {
@@ -212,34 +218,36 @@ class BaseTranspiler {
         return this.getIden(identation) + leftVar +" "+ operator + " " + rightVar.trim();
     }
 
+    transformPropertyAcessExpressionIfNeeded (node) {
+        return undefined;
+    }
+
 
     printPropertyAccessExpression(node, identation) {
 
         const expression = node.expression;
 
+        const transformedProperty = this.transformPropertyAcessExpressionIfNeeded(node);
+        if (transformedProperty) {
+            return this.getIden(identation) + transformedProperty;
+        }
+
         let leftSide = this.printNode(expression, 0);
         let rightSide = node.name.escapedText;
 
-        const idType = global.checker.getTypeAtLocation(node.expression);
-
-        leftSide = this.PropertyAccessReplacements[leftSide] ?? leftSide;
-        // checking "toString" insde the object will return the builtin toString method :X
-        rightSide = this.PropertyAccessReplacements.hasOwnProperty(rightSide) ? this.PropertyAccessReplacements[rightSide] : rightSide;
-        
         let rawExpression = leftSide + this.PROPERTY_ACCESS_TOKEN + rightSide;
         
-
-        if (rightSide === "length") {
-            // if (checker.isArrayType(idType)) {
-                rawExpression =  "len(" + leftSide + ")";
-            // }
-        } else if (rightSide === "toString") {
-            rawExpression = "str(" + leftSide + ")";
+        if (this.FullPropertyAccessReplacements.hasOwnProperty(rawExpression)){
+            return this.getIden(identation) + this.FullPropertyAccessReplacements[rawExpression];
         }
 
-        if (this.PropertyAccessReplacements[rawExpression]) {
-            return this.getIden(identation) + this.PropertyAccessReplacements[rawExpression];
-        }
+        leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : leftSide;
+
+        // checking "toString" insde the object will return the builtin toString method :X
+        rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? this.RightPropertyAccessReplacements[rightSide] : rightSide;
+        
+        // join together the left and right side again
+        rawExpression = leftSide + this.PROPERTY_ACCESS_TOKEN + rightSide; 
 
         return this.getIden(identation) + rawExpression;
     }

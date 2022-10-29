@@ -1,21 +1,11 @@
-import { BaseTranspiler } from "./pureAst";
+import { BaseTranspiler } from "./pureAst.js";
 import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
-const filename = "tmp.ts";
-
-
 const config = {
     // 'DEFAULT_IDENTATION': 'WORKED'
 }
-
-// const program = ts.createProgram([filename], {});
-// const sourceFile = program.getSourceFile(filename);
-// const typeChecker = program.getTypeChecker()
-
-// global.src = sourceFile;
-// global.checker = typeChecker
 
 export class PythonTranspiler extends BaseTranspiler {
     constructor() {
@@ -25,22 +15,28 @@ export class PythonTranspiler extends BaseTranspiler {
     }
 
     initConfig() {
-        this.PropertyAccessReplacements = {
-            // right side 
-            'this': 'self',
+        this.LeftPropertyAccessReplacements = {
+            'this': 'self'
+        }
+        this.RightPropertyAccessReplacements = {
             'push': 'append',
             'toUpperCase': 'upper',
             'toLowerCase': 'lower',
             'parseFloat': 'float',
             'parseInt': 'int',
             'indexOf': 'find',
-            // both sides
+        }
+        this.FullPropertyAccessReplacements = {
             'console.log': 'print',
             'JSON.stringify': 'json.dumps',
             'JSON.parse': 'json.loads',
             'Math.log': 'math.log',
             'Math.abs': 'abs',
             'process.exit': 'sys.exit',
+        }
+        this.CallExpressionReplacements = {
+            'parseInt': 'int',
+            'parseFloat': 'float',
         }
     }
 
@@ -91,7 +87,20 @@ export class PythonTranspiler extends BaseTranspiler {
         return ""; // to override
     }
 
+    transformPropertyAcessExpressionIfNeeded(node: any) {
+        const expression = node.expression;
+        let leftSide = this.printNode(expression, 0);
+        let rightSide = node.name.escapedText;
+        
+        let rawExpression = undefined;
 
+        if (rightSide === "length") {
+            rawExpression =  "len(" + leftSide + ")";
+        } else if (rightSide === "toString") {
+            rawExpression = "str(" + leftSide + ")";
+        }
+        return rawExpression;
+    }
 }
 
 
