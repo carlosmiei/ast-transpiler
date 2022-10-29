@@ -61,6 +61,7 @@ class BaseTranspiler {
     MINUS_MINUS_TOKEN = "--";
 
     WHILE_TOKEN = "while";
+    WHILE_OPEN = "";
     WHILE_COND_OPEN = "";
     WHILE_COND_CLOSE = ":";
     WHILE_CLOSE = "";
@@ -173,19 +174,7 @@ class BaseTranspiler {
     }
 
     shouldRemoveParenthesisFromCallExpression(node) {
-
-        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
-            const propertyAccessExpression = node.expression;
-            const propertyAccessExpressionName = propertyAccessExpression.name.text;
-            if (propertyAccessExpressionName === "length"
-                || propertyAccessExpressionName === "toString")
-            { // add more exceptions here
-                return true; 
-            }
-        }
-
         return false;
-
     }
 
     printInstanceOfExpression(node, identation) {
@@ -449,13 +438,15 @@ class BaseTranspiler {
         const loopExpression = node.expression;
 
         const expression = this.printNode(loopExpression, 0);
+
+        const whileOpen = this.WHILE_OPEN ? " " + this.WHILE_OPEN : "";
         
         return this.getIden(identation) +
                     this.WHILE_TOKEN + " " +
                     this.WHILE_COND_OPEN +
                     expression + 
-                    this.WHILE_COND_CLOSE + "\n" + 
-                    node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") +
+                    this.WHILE_COND_CLOSE + whileOpen + "\n" +
+                    node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") + "\n" + 
                     this.WHILE_CLOSE;
     }
 

@@ -4,7 +4,6 @@ import ts from 'typescript';
 const SyntaxKind = ts.SyntaxKind;
 
 const config = {
-    // 'DEFAULT_IDENTATION': 'WORKED'
 }
 
 export class PythonTranspiler extends BaseTranspiler {
@@ -100,9 +99,19 @@ export class PythonTranspiler extends BaseTranspiler {
         }
         return rawExpression;
     }
+
+    shouldRemoveParenthesisFromCallExpression(node) {
+
+        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
+            const propertyAccessExpression = node.expression;
+            const propertyAccessExpressionName = propertyAccessExpression.name.text;
+            if (propertyAccessExpressionName === "length"
+                || propertyAccessExpressionName === "toString")
+            { // add more exceptions here
+                return true; 
+            }
+        }
+        return false;
+
+    }
 }
-
-
-// const transpiler = new PythonTranspiler();
-// const res = transpiler.printNode(sourceFile)
-// console.log(res)

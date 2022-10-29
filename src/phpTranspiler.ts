@@ -27,7 +27,11 @@ const parserConfig = {
     'FUNCTION_TOKEN': 'function',
     'FUNCTION_DEF_OPEN': '{',
     'FUNCTION_CLOSE': '}',
-    'ASYNC_TOKEN': ''
+    'ASYNC_TOKEN': '',
+    'WHILE_COND_OPEN' : "(",
+    'WHILE_COND_CLOSE' : ")",
+    'WHILE_CLOSE': "}",
+    'WHILE_OPEN': "{",
 }
 
 export class PhpTranspiler extends BaseTranspiler {
