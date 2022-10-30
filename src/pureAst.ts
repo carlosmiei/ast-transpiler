@@ -319,19 +319,24 @@ class BaseTranspiler {
 
         return functionDef;
     }
+    
+    printMethodParameters(node) {
+        return node.parameters.map(param => this.printParameter(param)).join(", ");
+    }
 
     printMethodDefinition(node, identation) {
         const name = node.name.escapedText;
 
-        let parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
-        parsedArgs = parsedArgs ? "self " + parsedArgs : "self";
+        const parsedArgs = this.printMethodParameters(node);
 
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : "";
 
+        const funcOpen = this.FUNCTION_DEF_OPEN;
+
         let methodDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
-            + this.FUNCTION_DEF_OPEN
+            + funcOpen
             + "\n"
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
@@ -424,6 +429,13 @@ class BaseTranspiler {
         return parsedCall;
     }
 
+    printClassBody(node, identation) {
+        return node.members.map((m)=> {
+            return this.printNode(m, identation+1);
+        }).join("\n") 
+
+    }
+
     printClass(node, identation) {
         const className = node.name.escapedText;
         const heritageClauses = node.heritageClauses;
@@ -431,16 +443,14 @@ class BaseTranspiler {
         let classInit = "";
         if (heritageClauses !== undefined) {
             const classExtends = heritageClauses[0].types[0].expression.escapedText;
-            classInit = this.getIden(identation) + "class " + className + "(" + classExtends + "):\n";
+            classInit = this.getIden(identation) + "class " + className + " extends" + classExtends + ") {\n";
         } else {
-            classInit = this.getIden(identation) + "class " + className + ":\n";
+            classInit = this.getIden(identation) + "class " + className + " {\n";
         }
 
-        const classBody = node.members.map((m)=> {
-            return this.printNode(m, identation+1);
-        }).join("\n") 
+        const classBody = this.printClassBody(node, identation);
 
-        return classInit + classBody;
+        return classInit + classBody + "\n}";
     }
 
     printWhileStatement(node, identation) {

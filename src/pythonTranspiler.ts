@@ -112,6 +112,29 @@ export class PythonTranspiler extends BaseTranspiler {
             }
         }
         return false;
-
     }
+
+    printClass(node, identation) {
+        const className = node.name.escapedText;
+        const heritageClauses = node.heritageClauses;
+
+        let classInit = "";
+        if (heritageClauses !== undefined) {
+            const classExtends = heritageClauses[0].types[0].expression.escapedText;
+            classInit = this.getIden(identation) + "class " + className + "(" + classExtends + "):\n";
+        } else {
+            classInit = this.getIden(identation) + "class " + className + ":\n";
+        }
+
+        const classBody = this.printClassBody(node, identation);
+        
+        return classInit + classBody;
+    }
+
+    printMethodParameters(node) {
+        let parsedArgs = super.printMethodParameters(node);
+        parsedArgs = parsedArgs ? "self " + parsedArgs : "self";
+        return parsedArgs;
+    }
+
 }
