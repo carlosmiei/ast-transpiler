@@ -46,4 +46,16 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     });
+    test('basic function declaration', () => {
+        const php =
+        "function teste(){\n" +
+        "    return 1;\n" +
+        "}" 
+        const ts =
+        "function teste () {\n" +
+        "    return 1;\n" +
+        "}\n"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    });
   });
