@@ -74,4 +74,20 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     });
+    test('basic dictonary', () => {
+        const ts =
+        "const types = {\n" +
+        "    'limit': 'limit',\n" +
+        "    'market': 'market',\n" +
+        "    'margin': 'market',\n" +
+        "}\n" 
+        const php =
+        "$types = array(\n" +
+        "    'limit' => 'limit',\n" +
+        "    'market' => 'market',\n" +
+        "    'margin' => 'market',\n" +
+        ");"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    });
   });

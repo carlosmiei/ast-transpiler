@@ -497,8 +497,13 @@ class BaseTranspiler {
         return this.getIden(identation) + this.PrefixFixOperators[operator] + this.printNode(operand, 0); 
     }
 
+    printObjectLiteralBody(node, identation) {
+        return node.properties.map((p) => this.printNode(p, identation+1)).join(",\n") + ",";
+    }
+
     printObjectLiteralExpression(node, identation) {
-        const objectBody = node.properties.map((p) => this.printNode(p, identation+1)).join(",\n");
+
+        const objectBody = this.printObjectLiteralBody(node, identation);
 
         return  this.OBJECT_OPENING + "\n" + objectBody + "\n" +  this.getIden(identation) + this.OBJECT_CLOSING;
     }

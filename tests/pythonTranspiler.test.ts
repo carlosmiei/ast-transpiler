@@ -65,4 +65,20 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     });
+    test('basic dictonary', () => {
+        const ts =
+        "const types = {\n" +
+        "    'limit': 'limit',\n" +
+        "    'market': 'market',\n" +
+        "    'margin': 'market',\n" +
+        "}\n" 
+        const python =
+        "types = {\n" +
+        "    'limit': 'limit',\n" +
+        "    'market': 'market',\n" +
+        "    'margin': 'market',\n" +
+        "}" 
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    });
 });
