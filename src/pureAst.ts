@@ -498,14 +498,16 @@ class BaseTranspiler {
     }
 
     printObjectLiteralBody(node, identation) {
-        return node.properties.map((p) => this.printNode(p, identation+1)).join(",\n") + ",";
+        let body =  node.properties.map((p) => this.printNode(p, identation+1)).join(",\n")
+        body = body ? body + "," : body;
+        return body;
     }
 
     printObjectLiteralExpression(node, identation) {
 
         const objectBody = this.printObjectLiteralBody(node, identation);
-
-        return  this.OBJECT_OPENING + "\n" + objectBody + "\n" +  this.getIden(identation) + this.OBJECT_CLOSING;
+        const formattedObjectBody = objectBody ? "\n" + objectBody + "\n" : objectBody;
+        return  this.OBJECT_OPENING + formattedObjectBody +  this.getIden(identation) + this.OBJECT_CLOSING;
     }
 
     printPropertyAssignment(node, identation) {

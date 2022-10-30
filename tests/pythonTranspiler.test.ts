@@ -99,4 +99,14 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     });
+    test('basic element access expression', () => {
+        const ts =
+        "const x = {};\n" +
+        "x['foo'] = 'bar'"
+        const python =
+        "x = {}\n" +
+        "x['foo'] = 'bar'"
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });

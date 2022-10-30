@@ -108,4 +108,14 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('basic element access expression', () => {
+        const ts =
+        "const x = {};\n" +
+        "x['foo'] = 'bar'"
+        const php =
+        "$x = array();\n" +
+        "$x['foo'] = 'bar';"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });
