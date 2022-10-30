@@ -78,7 +78,7 @@ export class PythonTranspiler extends BaseTranspiler {
         const initValue = this.printNode(node.initializer.declarations[0].initializer, 0)
         const roofValue = this.printNode(node.condition.right,0)
 
-        return this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
+        return this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") + "\n";
     }
 
     transformFunctionComment(comment) {

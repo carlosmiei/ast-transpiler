@@ -19,4 +19,31 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     });
+    test('basic while loop', () => {
+        const ts =
+        "while (true) {\n" +
+        "    const x = 1;\n" +
+        "    break;\n" +
+        "}"
+        
+        const php =
+        "while (true) {\n" +
+        "    $x = 1;\n" +
+        "    break;\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    });
+    test('basic for loop', () => {
+        const ts =
+        "for (let i = 0; i < 10; i++) {\n" +
+        "    break;\n" +
+        "}"
+        const php =
+        "for ($i = 0; $i < 10; $i++) {\n" +
+        "    break;\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    });
   });
