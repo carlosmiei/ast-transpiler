@@ -595,14 +595,6 @@ class BaseTranspiler {
         return this.getIden(identation) + this.LEFT_ARRAY_OPENING + elements + this.RIGHT_ARRAY_CLOSING;
     }
 
-    myBase() {
-        console.log("myBase");
-    }
-
-    callMethod() {
-        this.myBase()
-    }
-
     printNode(node, identation = 0) {
 
         if(ts.isExpressionStatement(node)) {

@@ -6,9 +6,9 @@ import * as fs from 'fs';
 import * as path from "path";
 import { fileURLToPath } from 'url';
 
-// const __dirname_mock = currentPath;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname_mock = fileURLToPath(new URL('.', import.meta.url));
+const __dirname_mock = currentPath;
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname_mock = fileURLToPath(new URL('.', import.meta.url));
 // console.log(__dirname_mock);
 
 function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, options: any = {}): [any,any,any]  {
