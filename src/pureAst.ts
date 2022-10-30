@@ -67,6 +67,10 @@ class BaseTranspiler {
     WHILE_CLOSE = "";
 
     FOR_TOKEN = "for"
+    FOR_COND_OPEN = "("
+    FOR_COND_CLOSE = ")"
+    FOR_OPEN = "{"
+    FOR_CLOSE = "}"
 
     PROPERTY_ASSIGNMENT_TOKEN = ":";
 
@@ -370,12 +374,12 @@ class BaseTranspiler {
         const declaration = node.declarations[0];
         // const name = declaration.name.escapedText;
         const parsedValue = this.printNode(declaration.initializer, identation);
-        return this.getIden(identation) + this.printNode(declaration.name) + " = " + parsedValue.trim() + this.LINE_TERMINATOR;
+        return this.getIden(identation) + this.printNode(declaration.name) + " = " + parsedValue.trim();
     }
 
     printVariableStatement(node, identation){
         const decList = node.declarationList;
-        return this.printVariableDeclarationList(decList, identation);
+        return this.printVariableDeclarationList(decList, identation) + this.LINE_TERMINATOR;
 
     }
 
@@ -451,16 +455,21 @@ class BaseTranspiler {
     }
 
     printForStatement(node, identation) {
-        // currently only let i =0 ; i< 20; i++ is supported
-        const varName = node.initializer.declarations[0].name.escapedText; 
-        const initValue = this.printNode(node.initializer.declarations[0].initializer, 0)
-        const roofValue = this.printNode(node.condition.right,0)
+        const initializer = this.printNode(node.initializer, 0);
+        const condition = this.printNode(node.condition, 0);
+        const incrementor = this.printNode(node.incrementor, 0);
 
-        return this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
+        return this.getIden(identation) +
+                this.FOR_TOKEN + " " +
+                this.FOR_COND_OPEN + 
+                initializer + "; " + condition + "; " + incrementor +
+                this.FOR_COND_CLOSE + " " + this.FOR_OPEN + "\n" +
+                node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") + "\n" +  
+                this.FOR_CLOSE;
     }
 
     printBreakStatement(node, identation) {
-        return this.getIden(identation) + this.BREAK_TOKEN;
+        return this.getIden(identation) + this.BREAK_TOKEN + this.LINE_TERMINATOR;
     }
 
     printPostFixUnaryExpression(node, identation) {
