@@ -9,46 +9,60 @@ beforeAll(() => {
 
 
 describe('python tests', () => {
-  test('basic variable declaration', () => {
-    const ts = "const x = 1;"
-    const python = "x = 1"
-    const output = transpiler.transpilePython(ts);
-    expect(output).toBe(python);
-  });
-  test('basic while loop', () => {
-      const ts =
-      "while (true) {\n" +
-      "    const x = 1;\n" +
-      "    break;\n" +
-      "}"
-      
-      const python =
-      "while True:\n" +
-      "    x = 1\n" +
-      "    break\n" 
-      const output = transpiler.transpilePython(ts);
-      expect(output).toBe(python);
-  });
-  test('basic for loop', () => {
-      const ts =
-      "for (let i = 0; i < 10; i++) {\n" +
-      "    break;\n" +
-      "}"
-      const python =
-      "for i in range(0, 10):\n" +
-      "    break\n";
-      const output = transpiler.transpilePython(ts);
-      expect(output).toBe(python);
-  });
-  test('basic function declaration', () => {
-    const ts =
-    "function teste(){\n" +
-    "    return 1;\n" +
-    "}" 
-    const python =
-    "def teste():\n" +
-    "    return 1\n";
-    const output = transpiler.transpilePython(ts);
-    expect(output).toBe(python);
-});
+    test('basic variable declaration', () => {
+        const ts = "const x = 1;"
+        const python = "x = 1"
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    });
+    test('basic while loop', () => {
+        const ts =
+        "while (true) {\n" +
+        "    const x = 1;\n" +
+        "    break;\n" +
+        "}"
+        
+        const python =
+        "while True:\n" +
+        "    x = 1\n" +
+        "    break\n" 
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    });
+    test('basic for loop', () => {
+        const ts =
+        "for (let i = 0; i < 10; i++) {\n" +
+        "    break;\n" +
+        "}"
+        const python =
+        "for i in range(0, 10):\n" +
+        "    break\n";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    });
+    test('basic function declaration', () => {
+        const ts =
+        "function teste(){\n" +
+        "    return 1;\n" +
+        "}" 
+        const python =
+        "def teste():\n" +
+        "    return 1\n";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    });
+    test('basic class declaration', () => {
+        const ts =
+        "class Teste {\n" +
+        "    describe() {\n" +
+        "        return \"foo\";\n" +
+        "    }\n" +
+        "}\n" 
+        const python =
+        "class Teste:\n" +
+        "    def describe(self):\n" +
+        "        return 'foo'\n"
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    });
 });

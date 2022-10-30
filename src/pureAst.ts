@@ -263,10 +263,12 @@ class BaseTranspiler {
         return comment; // to override
     }
 
-    printFunctionComment(node, identation) {
+    printFunctionComment(node, identation) {
         const fullText = global.src.getFullText();
-        const commentsRange = ts.getLeadingCommentRanges(fullText, node.pos)[0];
-        const commentText = fullText.slice(commentsRange.pos, commentsRange.end);
+        const commentsRangeList = ts.getLeadingCommentRanges(fullText, node.pos);
+        const commentsRange = commentsRangeList ? commentsRangeList[0]: undefined;
+
+        const commentText = commentsRange ? fullText.slice(commentsRange.pos, commentsRange.end): undefined;
         if (commentText) {
             return this.getIden(identation) + this.transformFunctionComment(commentText) + "\n";
         }
@@ -322,9 +324,12 @@ class BaseTranspiler {
         const name = node.name.escapedText;
 
         let parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
-        parsedArgs = "self, " + parsedArgs;
+        parsedArgs = parsedArgs ? "self " + parsedArgs : "self";
 
-        let methodDef = this.getIden(identation) + this.printModifiers(node) + " " + this.FUNCTION_TOKEN + " " + name
+        let modifiers = this.printModifiers(node);
+        modifiers = modifiers ? modifiers + " " : "";
+
+        let methodDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
             + this.FUNCTION_DEF_OPEN
             + "\n"
@@ -596,7 +601,7 @@ class BaseTranspiler {
     printReturnStatement(node, identation) {
         const exp =  node.expression
         const rightPart = exp ? (' ' + this.printNode(exp, identation)) : '';
-        return this.getIden(identation) + this.RETURN_TOKEN + ' ' + rightPart.trim();
+        return this.getIden(identation) + this.RETURN_TOKEN + ' ' + rightPart.trim() + this.LINE_TERMINATOR;
     }
 
     printArrayBindingPattern(node, identation) {
