@@ -81,4 +81,22 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     });
+    test('basic binary expressions', () => {
+        const ts =
+        "const a = 1 + 1;\n" +
+        "const b = 2 * 2;\n" +
+        "const c = 3 / 3;\n" +
+        "const d = 4 - 4;\n" +
+        "const e = 5 % 5;\n" +
+        "const f = \"foo\" + \"bar\";\n";
+        const python =
+        "a = 1 + 1\n" +
+        "b = 2 * 2\n" +
+        "c = 3 / 3\n" +
+        "d = 4 - 4\n" +
+        "e = 5 % 5\n" +
+        "f = 'foo' + 'bar'" 
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    });
 });
