@@ -40,4 +40,15 @@ describe('python tests', () => {
       const output = transpiler.transpilePython(ts);
       expect(output).toBe(python);
   });
+  test('basic function declaration', () => {
+    const ts =
+    "function teste(){\n" +
+    "    return 1;\n" +
+    "}" 
+    const python =
+    "def teste():\n" +
+    "    return 1\n";
+    const output = transpiler.transpilePython(ts);
+    expect(output).toBe(python);
+});
 });
