@@ -109,4 +109,15 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic throw statement', () => {
+        const ts =
+        "function test () {\n" +
+        "    throw new InvalidOrder (\"error\")\n" +
+        "}";
+        const python =
+        "def test():\n" +
+        "    raise InvalidOrder('error')\n";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });

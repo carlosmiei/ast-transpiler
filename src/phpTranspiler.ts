@@ -33,6 +33,8 @@ const parserConfig = {
     'WHILE_CLOSE': "}",
     'WHILE_OPEN': "{",
     'PROPERTY_ASSIGNMENT_TOKEN': ' =>',
+    'NEW_TOKEN': 'new',
+    'THROW_TOKEN': 'throw',
 }
 
 export class PhpTranspiler extends BaseTranspiler {

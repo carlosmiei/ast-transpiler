@@ -118,4 +118,16 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('basic throw statement', () => {
+        const ts =
+        "function test () {\n" +
+        "    throw new InvalidOrder (\"error\")\n" +
+        "}";
+        const php =
+        "function test(){\n" +
+        "    throw new InvalidOrder('error');\n" +
+        "}";
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });

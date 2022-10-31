@@ -89,6 +89,8 @@ class BaseTranspiler {
 
     ASYNC_TOKEN = "async";
 
+    NEW_TOKEN = "";
+
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -588,14 +590,15 @@ class BaseTranspiler {
     }
 
     printNewExpression(node, identation) {
-        const expression =  this.printNode(node.expression, 0)
+        const expression = node.expression.escapedText;
         const args = node.arguments.map(n => this.printNode(n, 0)).join(",")
-        return expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
+        const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
+        return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
     }
 
     printThrowStatement(node, identation) {
         const expression = this.printNode(node.expression, 0);
-        return this.getIden(identation) + this.THROW_TOKEN + " " + expression;
+        return this.getIden(identation) + this.THROW_TOKEN + " " + expression + this.LINE_TERMINATOR;
     }
 
     printAwaitExpression(node, identation) {
