@@ -43,7 +43,7 @@ class BaseTranspiler {
     AWAIT_TOKEN = "await";
     STATIC_TOKEN = "static";
     EXTENDS_TOKEN = "extends";
-    NOT_TOKEN = "not";
+    NOT_TOKEN = "not ";
     SUPER_TOKEN = "super()";
     PROPERTY_ACCESS_TOKEN = ".";
     TRY_TOKEN = "try:";

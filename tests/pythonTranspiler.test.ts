@@ -99,6 +99,20 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     });
+    test('basic condition expressions', () => {
+        const ts =
+        "const a = true;\n" +
+        "const b = false;\n" +
+        "const c = true;\n" +
+        "const d = (a && b) || (c && !b);\n" 
+        const python =
+        "a = True\n" +
+        "b = False\n" +
+        "c = True\n" +
+        "d = (a and b) or (c and not b)";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    });
     test('basic element access expression', () => {
         const ts =
         "const x = {};\n" +

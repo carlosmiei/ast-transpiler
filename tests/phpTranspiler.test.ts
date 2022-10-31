@@ -108,6 +108,20 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('basic conditions expressions', () => {
+        const ts =
+        "const a = true;\n" +
+        "const b = false;\n" +
+        "const c = true;\n" +
+        "const d = (a && b) || (c && !b);\n" 
+        const php =
+        "$a = true;\n" +
+        "$b = false;\n" +
+        "$c = true;\n" +
+        "$d = ($a && $b) || ($c && !$b);"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
     test('basic element access expression', () => {
         const ts =
         "const x = {};\n" +
