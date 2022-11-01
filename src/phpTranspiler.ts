@@ -35,6 +35,7 @@ const parserConfig = {
     'PROPERTY_ASSIGNMENT_TOKEN': ' =>',
     'NEW_TOKEN': 'new',
     'THROW_TOKEN': 'throw',
+    'SUPER_TOKEN': 'parent'
 }
 
 export class PhpTranspiler extends BaseTranspiler {
@@ -99,6 +100,29 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     initConfig() {
+        this.LeftPropertyAccessReplacements = {
+            'this': '$this',
+        }
+
+        this.RightPropertyAccessReplacements = {
+
+        }
+
+        this.FullPropertyAccessReplacements = {
+            'console.log': 'var_dump',
+            'process.exit': 'exit',
+            'Math.log': 'log',
+            'Math.abs': 'abs',
+            'Math.floor': '(int) floor',
+            'Math.ceil': '(int) ceil',
+            'Math.round': '(int) round',
+            'Math.pow': 'pow',
+        }
+
+        this.CallExpressionReplacements = {
+            'parseFloat': 'floatval',
+            'parseInt': 'intval',
+        }
     }
 
 }
