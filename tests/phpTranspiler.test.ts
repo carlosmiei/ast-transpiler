@@ -168,4 +168,17 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('basic json methods', () => {
+        const ts =
+        "const j = JSON.stringify ({ 'a': 1, 'b': 2 });\n" +
+        "const k = JSON.parse (j);\n";
+        const php =
+        "$j = json_encode(array(\n" +
+        "    'a' => 1,\n" +
+        "    'b' => 2,\n" +
+        "));\n" +
+        "$k = json_decode($j,$as_associative_array = true);";
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });

@@ -158,4 +158,17 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic json methods', () => {
+        const ts =
+        "const j = JSON.stringify ({ 'a': 1, 'b': 2 });\n" +
+        "const k = JSON.parse (j);\n";
+        const python =
+        "j = json.dumps({\n" +
+        "    'a': 1,\n" +
+        "    'b': 2,\n" +
+        "})\n" +
+        "k = json.loads(j)";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });

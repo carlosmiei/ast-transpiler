@@ -119,6 +119,22 @@ export class PhpTranspiler extends BaseTranspiler {
         return rawExpression;
     }
 
+    printOutOfOrderCallExpressionIfAny(node, identation) {
+        const expressionText = node.expression.getText();
+        const args = node.arguments;
+        let finalExpression = undefined;
+        switch (expressionText) {
+            case "JSON.parse":
+                finalExpression = "json_decode(" + this.printNode(args[0], 0) + ",$as_associative_array = true)";
+                break;
+        }
+        if (finalExpression) {
+            return this.getIden(identation) + finalExpression;
+        }
+        return undefined
+    }
+
+
     initConfig() {
         this.LeftPropertyAccessReplacements = {
             'this': '$this',
