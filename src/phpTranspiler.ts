@@ -93,7 +93,7 @@ export class PhpTranspiler extends BaseTranspiler {
 
         switch(rightSide) {
             case 'length':
-                rawExpression =  "len(" + leftSide + ")";
+                rawExpression =  "count(" + leftSide + ")";
                 break;
             case 'toString':
                 rawExpression = "(string) " + leftSide;
@@ -109,6 +109,8 @@ export class PhpTranspiler extends BaseTranspiler {
             case 'pop':
                 rawExpression = "array_pop(" + leftSide + ")";
                 break;
+            // case 'indexOf':
+            //     rawExpression = "mb_strpos(" + leftSide + ")";
         }
 
         // if (rightSide === "length") {
@@ -120,7 +122,7 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     printOutOfOrderCallExpressionIfAny(node, identation) {
-        const expressionText = node.expression.getText();
+        const expressionText = node.expression.getText().trim();
         const args = node.arguments;
         let finalExpression = undefined;
         switch (expressionText) {
@@ -131,7 +133,37 @@ export class PhpTranspiler extends BaseTranspiler {
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;
         }
+
+        const letfSide = node.expression.expression;
+        const rightSide = node.expression.name?.escapedText;
+
+        if (rightSide === 'indexOf') {
+            const arg = args[0];
+            const argText = this.printNode(arg, 0);
+            const leftSideText = this.printNode(letfSide, 0);
+            return this.getIden(identation) + "mb_strpos(" + leftSideText + "," + argText + ")";
+        }
+
         return undefined
+    }
+    
+    shouldRemoveParenthesisFromCallExpression(node) {
+
+        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
+            const propertyAccessExpression = node.expression;
+            const propertyAccessExpressionName = propertyAccessExpression.name.text;
+            switch (propertyAccessExpressionName) {
+                case 'length':
+                    return true;
+                case 'toString':
+                    return true;
+                case 'toUpperCase':
+                    return true;
+                case 'toLowerCase':
+                    return true;
+            }
+        }
+        return false;
     }
 
 

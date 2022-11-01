@@ -171,4 +171,20 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic string methods', () => {
+        const ts =
+        "const a = 'test';\n" +
+        "const b = a.length;\n" +
+        "const c = a.indexOf ('t');\n" +
+        "const d = a.toUpperCase ();\n" +
+        "const e = a.toLowerCase ();";
+        const python =
+        "a = 'test'\n" +
+        "b = len(a)\n" +
+        "c = a.find('t')\n" +
+        "d = a.upper()\n" +
+        "e = a.lower()";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });
