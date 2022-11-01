@@ -227,16 +227,16 @@ class BaseTranspiler {
             return this.getIden(identation) + transformedProperty;
         }
 
-        let leftSide = this.printNode(expression, 0);
+        let leftSide = undefined;
         let rightSide = node.name.escapedText;
 
-        let rawExpression = leftSide + this.PROPERTY_ACCESS_TOKEN + rightSide;
+        let rawExpression = node.getFullText().trim();
         
         if (this.FullPropertyAccessReplacements.hasOwnProperty(rawExpression)){
             return this.getIden(identation) + this.FullPropertyAccessReplacements[rawExpression];
         }
 
-        leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : leftSide;
+        leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : this.printNode(expression, 0);
 
         // checking "toString" insde the object will return the builtin toString method :X
         rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? this.RightPropertyAccessReplacements[rightSide] : rightSide;

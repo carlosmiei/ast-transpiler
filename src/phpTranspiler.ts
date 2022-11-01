@@ -85,18 +85,38 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     transformPropertyAcessExpressionIfNeeded(node: any) {
-        // const expression = node.expression;
-        // let leftSide = this.printNode(expression, 0);
-        // let rightSide = node.name.escapedText;
+        const expression = node.expression;
+        let leftSide = this.printNode(expression, 0);
+        let rightSide = node.name.escapedText;
+        
+        let rawExpression = undefined;
+
+        switch(rightSide) {
+            case 'length':
+                rawExpression =  "len(" + leftSide + ")";
+                break;
+            case 'toString':
+                rawExpression = "(string) " + leftSide;
+                break;
+            case 'toUpperCase':
+                rawExpression = "strtoupper(" + leftSide + ")";
+                break;
+            case 'toLowerCase':
+                rawExpression = "strtolower(" + leftSide + ")";
+                break;
+            case 'shift':
+                rawExpression = "array_shift(" + leftSide + ")";
+            case 'pop':
+                rawExpression = "array_pop(" + leftSide + ")";
+                break;
+        }
+
         // if (rightSide === "length") {
-        //     // if (checker.isArrayType(idType)) {
-        //         rawExpression =  "len(" + leftSide + ")";
-        //     // }
+        //     rawExpression =  "len(" + leftSide + ")";
         // } else if (rightSide === "toString") {
         //     rawExpression = "str(" + leftSide + ")";
         // }
-        // // const idType = global.checker.getTypeAtLocation(node.expression);
-        return undefined;
+        return rawExpression;
     }
 
     initConfig() {
@@ -109,6 +129,8 @@ export class PhpTranspiler extends BaseTranspiler {
         }
 
         this.FullPropertyAccessReplacements = {
+            'Number.MAX_SAFE_INTEGER': 'PHP_INT_MAX',
+            'JSON.stringify': 'json_encode',
             'console.log': 'var_dump',
             'process.exit': 'exit',
             'Math.log': 'log',
@@ -117,6 +139,8 @@ export class PhpTranspiler extends BaseTranspiler {
             'Math.ceil': '(int) ceil',
             'Math.round': '(int) round',
             'Math.pow': 'pow',
+            'Math.min': 'min',
+            'Math.max': 'max',
         }
 
         this.CallExpressionReplacements = {

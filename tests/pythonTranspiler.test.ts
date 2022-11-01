@@ -134,4 +134,28 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic math functions', () => {
+        const ts =
+        "const a = Math.min (0, 5);\n" +
+        "const b = Math.max (0, 5);\n" +
+        "const c = parseFloat ('1.3');\n" +
+        "const d = parseInt ('1.3');\n" +
+        "const e = Number.MAX_SAFE_INTEGER;\n" +
+        "const f = Math.abs (-2);\n" +
+        "const g = Math.pow (1, 2);\n" +
+        "const h = Math.round (5);\n" +
+        "const i = Math.floor (5.5);"
+        const python =
+        "a = min(0,5)\n" +
+        "b = max(0,5)\n" +
+        "c = float('1.3')\n" +
+        "d = int('1.3')\n" +
+        "e = float('inf')\n" +
+        "f = abs(-2)\n" +
+        "g = math.pow(1,2)\n" +
+        "h = int(round(5))\n" +
+        "i = int(math.floor(5.5))";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });

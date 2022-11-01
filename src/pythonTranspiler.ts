@@ -25,6 +25,8 @@ export class PythonTranspiler extends BaseTranspiler {
             'parseFloat': 'float',
             'parseInt': 'int',
             'indexOf': 'find',
+            'padEnd': 'ljust',
+            'padStart': 'rjust'
         }
         this.FullPropertyAccessReplacements = {
             'console.log': 'print',
@@ -32,7 +34,14 @@ export class PythonTranspiler extends BaseTranspiler {
             'JSON.parse': 'json.loads',
             'Math.log': 'math.log',
             'Math.abs': 'abs',
+            'Math.min': 'min',
+            'Math.max': 'max',
+            'Math.ceil': 'math.ceil',
+            'Math.round': 'math.round',
+            'Math.floor': 'math.floor',
+            'Math.pow': 'math.pow',
             'process.exit': 'sys.exit',
+            'Number.MAX_SAFE_INTEGER': 'float(\'inf\')',
         }
         this.CallExpressionReplacements = {
             'parseInt': 'int',
@@ -58,9 +67,11 @@ export class PythonTranspiler extends BaseTranspiler {
                 finalExpression = "list(" + this.printNode(args[0], 0) + ".values())";
                 break;
             case "Math.round":
-                finalExpression = "int(math.round(" + this.printNode(args[0], 0) + "))";
+                finalExpression = "int(round(" + this.printNode(args[0], 0) + "))";
+                break;
             case "Math.ceil":
                 finalExpression = "int(math.ceil(" + this.printNode(args[0], 0) + "))";
+                break;
         }
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;

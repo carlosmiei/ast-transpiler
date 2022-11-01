@@ -9,7 +9,7 @@ const file = "tmp.ts";
 
 const pythonRes = transpiler.transpilePythonByPath(file);
 const phpRes = `<?php\n${transpiler.transpilePhpByPath(file, true)}\n?>`;
-const phpSyncRes = `<?php\n${transpiler.transpilePhpByPath(file)}\n?>`;
+// const phpSyncRes = `<?php\n${transpiler.transpilePhpByPath(file)}\n?>`;
 
 const PHP_OUTPUT = "./out/output.php"
 const PHP_SYNC_OUTPUT = "./out/output-sync.php"
@@ -17,6 +17,6 @@ const PYTHON_OUTPUT = "./out/output.py"
 
 writeFileSync(PHP_OUTPUT, phpRes);
 writeFileSync(PYTHON_OUTPUT, pythonRes ?? "");
-writeFileSync(PHP_SYNC_OUTPUT, phpSyncRes);
+// writeFileSync(PHP_SYNC_OUTPUT, phpSyncRes);
 
 console.log("TRANSPILED!!")
