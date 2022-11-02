@@ -2,14 +2,14 @@ import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
-const filename = "tmp.ts";
+// const filename = "tmp.ts";
 
-const program = ts.createProgram([filename], {});
-const sourceFile = program.getSourceFile(filename);
-const typeChecker = program.getTypeChecker()
+// const program = ts.createProgram([filename], {});
+// const sourceFile = program.getSourceFile(filename);
+// const typeChecker = program.getTypeChecker()
 
-global.src = sourceFile;
-global.checker = typeChecker
+// global.src = sourceFile;
+// global.checker = typeChecker
 
 class BaseTranspiler {
     DEFAULT_IDENTATION = "    ";

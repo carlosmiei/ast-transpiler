@@ -198,4 +198,24 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('string length', () => {
+        const ts =
+        "const myStr = \"test\";\n" +
+        "const ff = myStr.length;"
+        const php =
+        "$myStr = 'test';\n" +
+        "$ff = strlen($myStr);"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
+    test('array length', () => {
+        const ts =
+        "const myArray = [1, 2, 3];\n" +
+        "const aa = myArray.length;"
+        const php =
+        "$myArray = array(1, 2, 3);\n" +
+        "$aa = count($myArray);"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });

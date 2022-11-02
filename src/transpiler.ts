@@ -55,7 +55,7 @@ class Transpiler {
     createProgramInMemoryAndSetGlobals(content) {
         const [ memProgram, memType, memSource] = getProgramAndTypeCheckerFromMemory(__dirname_mock, content);
         global.src = memSource;
-        global.checker = memType;
+        global.checker = memType as ts.TypeChecker;
         global.program = memProgram;
     }
 

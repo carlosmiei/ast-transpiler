@@ -1,5 +1,5 @@
 import { BaseTranspiler } from "./pureAst.js";
-import ts from 'typescript';
+import ts, { TypeChecker } from 'typescript';
 import { throws } from "assert";
 
 const SyntaxKind = ts.SyntaxKind;
@@ -54,6 +54,10 @@ export class PhpTranspiler extends BaseTranspiler {
         this.initConfig();
     }
 
+    isStringType(flags) {
+        return flags === ts.TypeFlags.String || flags === ts.TypeFlags.StringLiteral;
+    }
+
     printAwaitExpression(node, identation) {
         const expression = this.printNode(node.expression, 0);
 
@@ -97,7 +101,8 @@ export class PhpTranspiler extends BaseTranspiler {
 
         switch(rightSide) {
             case 'length':
-                rawExpression =  "count(" + leftSide + ")";
+                const type = (global.checker as TypeChecker).getTypeAtLocation(expression);
+                rawExpression = this.isStringType(type.flags) ? "strlen(" + leftSide + ")" : "count(" + leftSide + ")";
                 break;
             case 'toString':
                 rawExpression = "(string) " + leftSide;
