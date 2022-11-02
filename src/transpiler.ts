@@ -96,6 +96,9 @@ class Transpiler {
         return this.phpTranspiler.printNode(global.src, -1);
     }
 
+    setPHPPropResolution(props: string[]) {
+        this.phpTranspiler.propRequiresScopeResolutionOperators = props;
+    }
 }   
 
 export {

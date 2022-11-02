@@ -217,6 +217,10 @@ class BaseTranspiler {
         return undefined;
     }
 
+    getExceptionalAccessTokenIfAny(node) {
+        return undefined; // stub to override
+    }
+
 
     printPropertyAccessExpression(node, identation) {
 
@@ -242,7 +246,10 @@ class BaseTranspiler {
         rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? this.RightPropertyAccessReplacements[rightSide] : rightSide;
         
         // join together the left and right side again
-        rawExpression = leftSide + this.PROPERTY_ACCESS_TOKEN + rightSide; 
+
+        const accessToken = this.getExceptionalAccessTokenIfAny(node) ?? this.PROPERTY_ACCESS_TOKEN;
+
+        rawExpression = leftSide + accessToken + rightSide; 
 
         return this.getIden(identation) + rawExpression;
     }

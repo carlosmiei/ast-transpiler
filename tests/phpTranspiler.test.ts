@@ -181,19 +181,11 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
-    test('basic string methods', () => {
+    test('basic scope resolution access', () => {
         const ts =
-        "const a = 'test';\n" +
-        "const b = a.length;\n" +
-        "const c = a.indexOf ('t');\n" +
-        "const d = a.toUpperCase ();\n" +
-        "const e = a.toLowerCase ();";
+        "const d = super.describe ();"
         const php =
-        "$a = 'test';\n" +
-        "$b = count($a);\n" +
-        "$c = mb_strpos($a,'t');\n" +
-        "$d = strtoupper($a);\n" +
-        "$e = strtolower($a);";
+        "$d = parent::describe();"
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })

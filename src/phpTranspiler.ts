@@ -1,5 +1,6 @@
 import { BaseTranspiler } from "./pureAst.js";
 import ts from 'typescript';
+import { throws } from "assert";
 
 const SyntaxKind = ts.SyntaxKind;
 
@@ -35,16 +36,19 @@ const parserConfig = {
     'PROPERTY_ASSIGNMENT_TOKEN': ' =>',
     'NEW_TOKEN': 'new',
     'THROW_TOKEN': 'throw',
-    'SUPER_TOKEN': 'parent'
+    'SUPER_TOKEN': 'parent',
 }
 
 export class PhpTranspiler extends BaseTranspiler {
     asyncTranspiling;
     awaitWrapper;
+    propRequiresScopeResolutionOperator;
     constructor(config = {}) {
         super(parserConfig);
         
         this.asyncTranspiling = config['async'] ?? true;
+
+        this.propRequiresScopeResolutionOperator = ['super'] + (config['scopeResolutionProps'] ?? []);
 
         this.awaitWrapper = "Async\\await";
         this.initConfig();
@@ -137,7 +141,7 @@ export class PhpTranspiler extends BaseTranspiler {
         const letfSide = node.expression.expression;
         const rightSide = node.expression.name?.escapedText;
 
-        if (rightSide === 'indexOf') {
+        if (rightSide === 'indexOf') { // check this <-- needs to convert >=0 to !== false
             const arg = args[0];
             const argText = this.printNode(arg, 0);
             const leftSideText = this.printNode(letfSide, 0);
@@ -164,6 +168,19 @@ export class PhpTranspiler extends BaseTranspiler {
             }
         }
         return false;
+    }
+
+    getExceptionalAccessTokenIfAny(node) {
+        const leftSide = node.expression.escapedText ?? node.expression.getFullText().trim();
+
+        if (!leftSide) {
+            return undefined;
+        }
+
+        if (this.propRequiresScopeResolutionOperator.includes(leftSide)) {
+            return "::";
+        }
+        return undefined;
     }
 
 
