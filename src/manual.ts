@@ -5,10 +5,15 @@ const { readFileSync, writeFileSync } = fs;
 
 const transpiler = new Transpiler();
 
+transpiler.setPHPPropResolution(['Precise'])
+
 const file = "tmp.ts";
 
 const pythonRes = transpiler.transpilePythonByPath(file);
 const phpRes = `<?php\n${transpiler.transpilePhpByPath(file, true)}\n?>`;
+
+
+
 // const phpSyncRes = `<?php\n${transpiler.transpilePhpByPath(file)}\n?>`;
 
 const PHP_OUTPUT = "./out/output.php"

@@ -187,6 +187,8 @@ export class PhpTranspiler extends BaseTranspiler {
     initConfig() {
         this.LeftPropertyAccessReplacements = {
             'this': '$this',
+            // custom should be passed as config
+            'Precise': 'Precise',
         }
 
         this.RightPropertyAccessReplacements = {

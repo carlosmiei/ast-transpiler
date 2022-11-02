@@ -189,4 +189,13 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('custom scope resolution access', () => {
+        transpiler.setPHPPropResolution(['Precise'])
+        const ts =
+        "const d = Precise.describe ();"
+        const php =
+        "$d = Precise::describe();"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });

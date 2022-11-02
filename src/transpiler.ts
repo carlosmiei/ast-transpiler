@@ -97,7 +97,7 @@ class Transpiler {
     }
 
     setPHPPropResolution(props: string[]) {
-        this.phpTranspiler.propRequiresScopeResolutionOperators = props;
+        this.phpTranspiler.propRequiresScopeResolutionOperator = props;
     }
 }   
 

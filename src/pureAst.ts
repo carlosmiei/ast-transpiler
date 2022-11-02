@@ -231,7 +231,7 @@ class BaseTranspiler {
             return this.getIden(identation) + transformedProperty;
         }
 
-        let leftSide = undefined;
+        let leftSide = node.expression.escapedText;
         let rightSide = node.name.escapedText;
 
         let rawExpression = node.getFullText().trim();
