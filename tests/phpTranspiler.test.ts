@@ -246,4 +246,16 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('basic instanceof statement', () => {
+        const ts =
+        "if (e instanceof NullResponse) {\n" +
+        "    return [];\n" +
+        "}"
+        const php =
+        "if (e instanceof NullResponse) {\n" +
+        "    return [];\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });

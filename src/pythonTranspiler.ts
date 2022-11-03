@@ -174,4 +174,10 @@ export class PythonTranspiler extends BaseTranspiler {
         return parsedArgs;
     }
 
+    printInstanceOfExpression(node, identation) {
+        const left = this.printNode(node.left, 0);
+        const right = this.printNode(node.right, 0);
+        return this.getIden(identation) + `isinstance(${left}, ${right})`;
+    }
+
 }

@@ -184,9 +184,11 @@ class BaseTranspiler {
     }
 
     printInstanceOfExpression(node, identation) {
-        const left = this.printNode(node.left, 0);
-        const right = this.printNode(node.right, 0);
-        return this.getIden(identation) + `isinstance(${left}, ${right})`;
+        // const left = this.printNode(node.left, 0);
+        // const right = this.printNode(node.right, 0);
+        const left = node.left.escapedText;
+        const right = node.right.escapedText;
+        return this.getIden(identation) + `${left} instanceof ${right}`;
     }
 
     getCustomOperatorIfAny(left, right, operator) {

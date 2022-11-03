@@ -212,4 +212,15 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic instance of statement', () => {
+        const ts =
+        "if (e instanceof NullResponse) {\n" +
+        "    return [];\n" +
+        "}"
+        const python =
+        "if isinstance(e, NullResponse):\n" +
+        "    return []\n"
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });
