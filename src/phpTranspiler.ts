@@ -199,6 +199,14 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
 
+    printConditionalExpression(node, identation) {
+        const condition = this.printNode(node.condition, 0);
+        const whenTrue = this.printNode(node.whenTrue, 0);
+        const whenFalse = this.printNode(node.whenFalse, 0);
+        
+        return this.getIden(identation) + condition + " ? " + whenTrue + " : " + whenFalse;
+    }
+
 
     initConfig() {
         this.LeftPropertyAccessReplacements = {

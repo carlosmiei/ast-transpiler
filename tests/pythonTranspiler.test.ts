@@ -204,4 +204,12 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic conditional expression', () => {
+        const ts =
+        "const test = frase ? frase.length : 0;"
+        const python =
+        "test = len(frase) if frase else 0";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });

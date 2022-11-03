@@ -236,4 +236,14 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('basic conditional expression', () => {
+        const ts =
+        "const frase = \"ola\";\n" +
+        "const test = frase ? frase.length : 0;"
+        const php =
+        "$frase = \'ola\';\n" +
+        "$test = $frase ? strlen($frase) : 0;"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });
