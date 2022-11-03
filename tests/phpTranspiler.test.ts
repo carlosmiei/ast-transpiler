@@ -213,8 +213,26 @@ describe('php transpiling tests', () => {
         "const myArray = [1, 2, 3];\n" +
         "const aa = myArray.length;"
         const php =
-        "$myArray = array(1, 2, 3);\n" +
+        "$myArray = [1, 2, 3];\n" +
         "$aa = count($myArray);"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
+    test('basic array manipulation', () => {
+        const ts =
+        "const myList = [1, 2, 3];\n" +
+        "const listLength = myList.length;\n" +
+        "const listFirst = myList[0];\n" +
+        "myList.push (4);\n" +
+        "myList.pop ();\n" +
+        "myList.shift ();"
+        const php =
+        "$myList = [1, 2, 3];\n" +
+        "$listLength = count($myList);\n" +
+        "$listFirst = $myList[0];\n" +
+        "$myList[] = 4;\n" +
+        "array_pop($myList);\n" +
+        "array_shift($myList);"
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })

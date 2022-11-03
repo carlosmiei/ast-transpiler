@@ -21,8 +21,8 @@ const parserConfig = {
     'ELSE_OPEN_TOKEN': ' {',
     'ELSE_CLOSE_TOKEN': '}',
     'LINE_TERMINATOR': ';',
-    'LEFT_ARRAY_OPENING':"array(",
-    'RIGHT_ARRAY_CLOSING':")",
+    'LEFT_ARRAY_OPENING':"[",
+    'RIGHT_ARRAY_CLOSING':"]",
     'OBJECT_OPENING':"array(",
     'OBJECT_CLOSING':")",
     'FUNCTION_TOKEN': 'function',
@@ -115,6 +115,7 @@ export class PhpTranspiler extends BaseTranspiler {
                 break;
             case 'shift':
                 rawExpression = "array_shift(" + leftSide + ")";
+                break
             case 'pop':
                 rawExpression = "array_pop(" + leftSide + ")";
                 break;
@@ -152,6 +153,12 @@ export class PhpTranspiler extends BaseTranspiler {
             const leftSideText = this.printNode(letfSide, 0);
             return this.getIden(identation) + "mb_strpos(" + leftSideText + "," + argText + ")";
         }
+        if (rightSide === 'push') {
+            const arg = args[0];
+            const argText = this.printNode(arg, 0);
+            const leftSideText = this.printNode(letfSide, 0);
+            return this.getIden(identation) + leftSideText + "[] = " + argText;
+        }
 
         return undefined
     }
@@ -169,6 +176,10 @@ export class PhpTranspiler extends BaseTranspiler {
                 case 'toUpperCase':
                     return true;
                 case 'toLowerCase':
+                    return true;
+                case 'pop':
+                    return true;
+                case 'shift':
                     return true;
             }
         }

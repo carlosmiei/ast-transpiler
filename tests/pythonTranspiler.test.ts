@@ -187,4 +187,21 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic array manipulation', () => {
+        const ts = "const myList = [1, 2, 3];\n" +
+        "const listLength = myList.length;\n" +
+        "const listFirst = myList[0];\n" +
+        "myList.push (4);\n" +
+        "myList.pop ();\n" +
+        "myList.shift ();"
+        const python = 
+        "myList = [1, 2, 3]\n" +
+        "listLength = len(myList)\n" +
+        "listFirst = myList[0]\n" +
+        "myList.append(4)\n" +
+        "myList.pop()\n" +
+        "myList.pop(0)"
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });

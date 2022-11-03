@@ -76,6 +76,14 @@ export class PythonTranspiler extends BaseTranspiler {
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;
         }
+
+        const letfSide = node.expression.expression;
+        const rightSide = node.expression.name?.escapedText;
+
+        if (rightSide === "shift") {
+            return this.getIden(identation) + this.printNode(letfSide, 0) + ".pop(0)";
+        }
+
         return undefined
     }
 
