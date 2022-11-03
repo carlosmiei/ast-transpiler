@@ -195,8 +195,17 @@ class BaseTranspiler {
         return undefined
     }
 
+    printCustomBinaryExpressionIfAny(node, identation) {
+        return undefined; // stub to override
+    }
+
     printBinaryExpression(node, identation) {
         const {left, right, operatorToken} = node;
+
+        const customBinaryExp = this.printCustomBinaryExpressionIfAny(node, identation);
+        if (customBinaryExp) {
+            return customBinaryExp;
+        }
 
         if (operatorToken.kind == ts.SyntaxKind.InstanceOfKeyword) {
             return this.printInstanceOfExpression(node, identation);
@@ -629,8 +638,10 @@ class BaseTranspiler {
 
     printReturnStatement(node, identation) {
         const exp =  node.expression
-        const rightPart = exp ? (' ' + this.printNode(exp, identation)) : '';
-        return this.getIden(identation) + this.RETURN_TOKEN + ' ' + rightPart.trim() + this.LINE_TERMINATOR;
+        let rightPart = exp ? (' ' + this.printNode(exp, identation)) : '';
+        rightPart = rightPart.trim();
+        rightPart = rightPart ? ' ' + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
+        return this.getIden(identation) + this.RETURN_TOKEN + rightPart;
     }
 
     printArrayBindingPattern(node, identation) {

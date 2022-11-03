@@ -258,4 +258,20 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('basic typeof expressions', () => {
+        const ts =
+        "const response = \"foo\";\n" +
+        "typeof response !== 'string'\n" +
+        "typeof response === 'object'\n" +
+        "typeof response === 'boolean'\n" +
+        "typeof response === 'number'";
+        const php =
+        "$response = 'foo';\n" +
+        "!is_string($response);\n" +
+        "is_array($response);\n" +
+        "is_bool($response);\n" +
+        "(is_int($response) || is_float($response));";
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });

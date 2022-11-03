@@ -223,4 +223,20 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic typeof expressions', () => {
+        const ts =
+        "const response = \"foo\";\n" +
+        "typeof response !== 'string'\n" +
+        "typeof response === 'object'\n" +
+        "typeof response === 'boolean'\n" +
+        "typeof response === 'number'";
+        const python =
+        "response = 'foo'\n" +
+        "not isinstance(response, str)\n" +
+        "isinstance(response, dict)\n" +
+        "isinstance(response, bool)\n" +
+        "isinstance(response, numbers.Real)";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });

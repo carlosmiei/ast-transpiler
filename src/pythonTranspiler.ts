@@ -179,5 +179,30 @@ export class PythonTranspiler extends BaseTranspiler {
         const right = this.printNode(node.right, 0);
         return this.getIden(identation) + `isinstance(${left}, ${right})`;
     }
+    
+    printCustomBinaryExpressionIfAny(node, identation) {
+        const left = node.left;
+        const right = node.right.text;
+
+        if (left.kind === SyntaxKind.TypeOfExpression) {
+            const expression = left.expression;
+
+            const op = node.operatorToken.kind;
+            const isDifferentOperator = op === SyntaxKind.ExclamationEqualsEqualsToken || op === SyntaxKind.ExclamationEqualsToken;
+            const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
+
+            switch (right) {
+                case "string":
+                    return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", str)";
+                case "number":
+                    return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", numbers.Real)";
+                case "boolean":
+                    return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", bool)";
+                case "object":
+                    return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", dict)";
+            }
+        }
+        return undefined;
+    }
 
 }

@@ -207,6 +207,31 @@ export class PhpTranspiler extends BaseTranspiler {
         return this.getIden(identation) + condition + " ? " + whenTrue + " : " + whenFalse;
     }
 
+    printCustomBinaryExpressionIfAny(node, identation) {
+        const left = node.left;
+        const right = node.right.text;
+
+        if (left.kind === SyntaxKind.TypeOfExpression) {
+            const expression = left.expression;
+
+            const op = node.operatorToken.kind;
+            const isDifferentOperator = op === SyntaxKind.ExclamationEqualsEqualsToken || op === SyntaxKind.ExclamationEqualsToken;
+            const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
+
+            switch (right) {
+                case "string":
+                    return this.getIden(identation) + notOperator + "is_string(" + this.printNode(expression, 0) + ")";
+                case "number":
+                    return this.getIden(identation) + notOperator + "(is_int(" + this.printNode(expression, 0) + ") || is_float(" + this.printNode(expression, 0) + "))";
+                case "boolean":
+                    return this.getIden(identation) + notOperator + "is_bool(" + this.printNode(expression, 0) + ")";
+                case "object":
+                    return this.getIden(identation) + notOperator + "is_array(" + this.printNode(expression, 0) + ")";
+            }
+        }
+        return undefined;
+    }
+
 
     initConfig() {
         this.LeftPropertyAccessReplacements = {
