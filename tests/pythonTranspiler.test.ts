@@ -259,4 +259,24 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic includes list', () => {
+        const ts =
+        "const myList = [1,2,3];\n" +
+        "const exists = myList.includes (1);"
+        const python =
+        "myList = [1, 2, 3]\n" +
+        "exists = 1 in myList"
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
+    test('basic includes string', () => {
+        const ts =
+        "const myString = \"bar\"\n" +
+        "const exists = myString.includes (\"b\");"
+        const python =
+        "myString = \'bar\'\n" +
+        "exists = 'b' in myString";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });
