@@ -274,4 +274,24 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts);
         expect(output).toBe(php);
     })
+    test('basic indexOf string [check existence]', () => {
+        const ts =
+        "const myString = \'bar\'\n" +
+        "const exists = myString.indexOf (\"b\") >= 0;"
+        const php =
+        "$myString = 'bar';\n" +
+        "$exists = mb_strpos($myString, 'b') !== false;"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
+    test('basic indexOf array [check existence]', () => {
+        const ts =
+        "const x = [1,2,3];\n" +
+        "const y = x.indexOf(1) >= 0;"
+        const php =
+        "$x = [1, 2, 3];\n" +
+        "$y = in_array(1, $x);"
+        const output = transpiler.transpilePhp(ts);
+        expect(output).toBe(php);
+    })
   });

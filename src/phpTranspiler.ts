@@ -54,7 +54,7 @@ export class PhpTranspiler extends BaseTranspiler {
         this.initConfig();
     }
 
-    isStringType(flags) {
+    isStringType(flags: ts.TypeFlags) {
         return flags === ts.TypeFlags.String || flags === ts.TypeFlags.StringLiteral;
     }
 
@@ -147,12 +147,13 @@ export class PhpTranspiler extends BaseTranspiler {
         const letfSide = node.expression.expression;
         const rightSide = node.expression.name?.escapedText;
 
-        if (rightSide === 'indexOf') { // check this <-- needs to convert >=0 to !== false
-            const arg = args[0];
-            const argText = this.printNode(arg, 0);
-            const leftSideText = this.printNode(letfSide, 0);
-            return this.getIden(identation) + "mb_strpos(" + leftSideText + "," + argText + ")";
-        }
+        // if (rightSide === 'indexOf') { // check this <-- needs to convert >=0 to !== false
+        //     const arg = args[0];
+        //     const argText = this.printNode(arg, 0);
+        //     const leftSideText = this.printNode(letfSide, 0);
+        //     return this.getIden(identation) + "mb_strpos(" + leftSideText + "," + argText + ")";
+        // }
+
         if (rightSide === 'push') {
             const arg = args[0];
             const argText = this.printNode(arg, 0);
@@ -207,26 +208,61 @@ export class PhpTranspiler extends BaseTranspiler {
         return this.getIden(identation) + condition + " ? " + whenTrue + " : " + whenFalse;
     }
 
+
+    handleTypeOfInsideBinaryExpression(node, identation) {
+        const left = node.left;
+        const right = node.right.text;
+        const op = node.operatorToken.kind;
+        const expression = left.expression;
+
+        const isDifferentOperator = op === SyntaxKind.ExclamationEqualsEqualsToken || op === SyntaxKind.ExclamationEqualsToken;
+        const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
+
+        switch (right) {
+            case "string":
+                return this.getIden(identation) + notOperator + "is_string(" + this.printNode(expression, 0) + ")";
+            case "number":
+                return this.getIden(identation) + notOperator + "(is_int(" + this.printNode(expression, 0) + ") || is_float(" + this.printNode(expression, 0) + "))";
+            case "boolean":
+                return this.getIden(identation) + notOperator + "is_bool(" + this.printNode(expression, 0) + ")";
+            case "object":
+                return this.getIden(identation) + notOperator + "is_array(" + this.printNode(expression, 0) + ")";
+        }
+
+    }
+
     printCustomBinaryExpressionIfAny(node, identation) {
         const left = node.left;
         const right = node.right.text;
 
+        const op = node.operatorToken.kind;
+
+        // handle typeof operator
+        // Example: typeof a === "string"
         if (left.kind === SyntaxKind.TypeOfExpression) {
-            const expression = left.expression;
+            const typeOfExpression = this.handleTypeOfInsideBinaryExpression(node, identation);
+            if (typeOfExpression) {
+                return typeOfExpression;
+            }
+        }
 
-            const op = node.operatorToken.kind;
-            const isDifferentOperator = op === SyntaxKind.ExclamationEqualsEqualsToken || op === SyntaxKind.ExclamationEqualsToken;
-            const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
+        const prop = node?.left?.expression?.name?.text;
 
-            switch (right) {
-                case "string":
-                    return this.getIden(identation) + notOperator + "is_string(" + this.printNode(expression, 0) + ")";
-                case "number":
-                    return this.getIden(identation) + notOperator + "(is_int(" + this.printNode(expression, 0) + ") || is_float(" + this.printNode(expression, 0) + "))";
-                case "boolean":
-                    return this.getIden(identation) + notOperator + "is_bool(" + this.printNode(expression, 0) + ")";
-                case "object":
-                    return this.getIden(identation) + notOperator + "is_array(" + this.printNode(expression, 0) + ")";
+        if (prop) {
+            const args = left.arguments;
+            const parsedArg =  (args && args.length > 0) ? this.printNode(args[0], 0): undefined;
+            switch(prop) {
+                case 'indexOf':
+                    const leftSideOfIndexOf = left.expression.expression;  // myString in myString.indexOf
+                    const leftSide = this.printNode(leftSideOfIndexOf, 0);
+                    const rightType = global.checker.getTypeAtLocation(leftSideOfIndexOf); // type of myString in myString.indexOf ("b") >= 0;
+                    if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
+                        if (this.isStringType(rightType.flags)) {
+                            return this.getIden(identation) + "mb_strpos(" + leftSide + ", " + parsedArg + ") !== false";
+                        } else {
+                            return this.getIden(identation) + "in_array(" + parsedArg + ", " + leftSide + ")";
+                        }
+                    }
             }
         }
         return undefined;

@@ -239,4 +239,14 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
+    test('basic indexOf string [check existence]', () => {
+        const ts =
+        "const myString = \"bar\"\n" +
+        "const exists = myString.indexOf (\"b\") >= 0;"
+        const python =
+        "myString = \'bar\'\n" +
+        "exists = myString.find('b') >= 0"
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
 });
