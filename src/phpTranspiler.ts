@@ -54,10 +54,6 @@ export class PhpTranspiler extends BaseTranspiler {
         this.initConfig();
     }
 
-    isStringType(flags: ts.TypeFlags) {
-        return flags === ts.TypeFlags.String || flags === ts.TypeFlags.StringLiteral;
-    }
-
     printAwaitExpression(node, identation) {
         const expression = this.printNode(node.expression, 0);
 
@@ -144,23 +140,27 @@ export class PhpTranspiler extends BaseTranspiler {
             return this.getIden(identation) + finalExpression;
         }
 
-        const letfSide = node.expression.expression;
+        const leftSide = node.expression?.expression;
         const rightSide = node.expression.name?.escapedText;
 
-        // if (rightSide === 'indexOf') { // check this <-- needs to convert >=0 to !== false
-        //     const arg = args[0];
-        //     const argText = this.printNode(arg, 0);
-        //     const leftSideText = this.printNode(letfSide, 0);
-        //     return this.getIden(identation) + "mb_strpos(" + leftSideText + "," + argText + ")";
-        // }
-
-        if (rightSide === 'push') {
-            const arg = args[0];
+        const arg = args && args.length > 0 ? args[0] : undefined;
+        
+        // check only prop replacements (ignore function calls like parseFloat)
+        if (leftSide && arg) {
             const argText = this.printNode(arg, 0);
-            const leftSideText = this.printNode(letfSide, 0);
-            return this.getIden(identation) + leftSideText + "[] = " + argText;
+            const leftSideText = this.printNode(leftSide, 0);
+            switch (rightSide) {
+                case 'push':
+                    return this.getIden(identation) + leftSideText + "[] = " + argText;
+                case 'includes':
+                    const type = global.checker.getTypeAtLocation(leftSide);
+                    if (this.isStringType(type.flags)) {
+                        return this.getIden(identation) + "str_contains(" + leftSideText + ", " + argText + ")";
+                    } else {
+                        return this.getIden(identation) + "in_array(" + argText + ", " + leftSideText + ")";
+                    }
+            }
         }
-
         return undefined
     }
     
@@ -229,6 +229,8 @@ export class PhpTranspiler extends BaseTranspiler {
                 return this.getIden(identation) + notOperator + "is_array(" + this.printNode(expression, 0) + ")";
         }
 
+        return undefined;
+
     }
 
     printCustomBinaryExpressionIfAny(node, identation) {
@@ -251,11 +253,11 @@ export class PhpTranspiler extends BaseTranspiler {
         if (prop) {
             const args = left.arguments;
             const parsedArg =  (args && args.length > 0) ? this.printNode(args[0], 0): undefined;
+            const leftSideOfIndexOf = left.expression.expression;  // myString in myString.indexOf
+            const leftSide = this.printNode(leftSideOfIndexOf, 0);
+            const rightType = global.checker.getTypeAtLocation(leftSideOfIndexOf); // type of myString in myString.indexOf ("b") >= 0;
             switch(prop) {
                 case 'indexOf':
-                    const leftSideOfIndexOf = left.expression.expression;  // myString in myString.indexOf
-                    const leftSide = this.printNode(leftSideOfIndexOf, 0);
-                    const rightType = global.checker.getTypeAtLocation(leftSideOfIndexOf); // type of myString in myString.indexOf ("b") >= 0;
                     if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
                         if (this.isStringType(rightType.flags)) {
                             return this.getIden(identation) + "mb_strpos(" + leftSide + ", " + parsedArg + ") !== false";

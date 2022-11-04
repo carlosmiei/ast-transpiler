@@ -84,6 +84,17 @@ export class PythonTranspiler extends BaseTranspiler {
             return this.getIden(identation) + this.printNode(letfSide, 0) + ".pop(0)";
         }
 
+        const arg = args && args.length > 0 ? args[0] : undefined;
+        
+        if (letfSide && arg) {
+            const argText = this.printNode(arg, 0);
+            const leftSideText = this.printNode(letfSide, 0);
+            switch (rightSide) {
+                case 'includes':
+                    return this.getIden(identation) + argText + " in " + leftSideText;
+            }
+        }
+
         return undefined
     }
 
@@ -179,27 +190,56 @@ export class PythonTranspiler extends BaseTranspiler {
         const right = this.printNode(node.right, 0);
         return this.getIden(identation) + `isinstance(${left}, ${right})`;
     }
+
+    handleTypeOfInsideBinaryExpression(node, identation) {
+        const expression = node.left.expression;
+        const right = node.right.text;
+
+        const op = node.operatorToken.kind;
+        const isDifferentOperator = op === SyntaxKind.ExclamationEqualsEqualsToken || op === SyntaxKind.ExclamationEqualsToken;
+        const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
+
+        switch (right) {
+            case "string":
+                return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", str)";
+            case "number":
+                return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", numbers.Real)";
+            case "boolean":
+                return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", bool)";
+            case "object":
+                return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", dict)";
+        }
+
+        return undefined;
+
+    }
     
     printCustomBinaryExpressionIfAny(node, identation) {
         const left = node.left;
         const right = node.right.text;
 
+        const op = node.operatorToken.kind;
+
         if (left.kind === SyntaxKind.TypeOfExpression) {
-            const expression = left.expression;
+            const typeOfExpression = this.handleTypeOfInsideBinaryExpression(node, identation);
+            if (typeOfExpression) {
+                return typeOfExpression;
+            }
+        }
 
-            const op = node.operatorToken.kind;
-            const isDifferentOperator = op === SyntaxKind.ExclamationEqualsEqualsToken || op === SyntaxKind.ExclamationEqualsToken;
-            const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
+        const prop = node?.left?.expression?.name?.text;
 
-            switch (right) {
-                case "string":
-                    return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", str)";
-                case "number":
-                    return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", numbers.Real)";
-                case "boolean":
-                    return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", bool)";
-                case "object":
-                    return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", dict)";
+        if (prop) {
+            const args = left.arguments;
+            const parsedArg =  (args && args.length > 0) ? this.printNode(args[0], 0): undefined;
+            switch(prop) {
+                case 'indexOf':
+                    const leftSideOfIndexOf = left.expression.expression;  // myString in myString.indexOf
+                    const leftSide = this.printNode(leftSideOfIndexOf, 0);
+                    const rightType = global.checker.getTypeAtLocation(leftSideOfIndexOf); // type of myString in myString.indexOf ("b") >= 0;
+                    if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
+                        return this.getIden(identation) + `${parsedArg} in ${leftSide}`;
+                    }
             }
         }
         return undefined;

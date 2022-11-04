@@ -162,6 +162,10 @@ class BaseTranspiler {
         }
     }
 
+    isStringType(flags: ts.TypeFlags) {
+        return flags === ts.TypeFlags.String || flags === ts.TypeFlags.StringLiteral;
+    }
+
     getIden (num) {
         return this.DEFAULT_IDENTATION.repeat(num);
     }

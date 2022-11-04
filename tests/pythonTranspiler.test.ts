@@ -245,7 +245,17 @@ describe('python tests', () => {
         "const exists = myString.indexOf (\"b\") >= 0;"
         const python =
         "myString = \'bar\'\n" +
-        "exists = myString.find('b') >= 0"
+        "exists = 'b' in myString";
+        const output = transpiler.transpilePython(ts);
+        expect(output).toBe(python);
+    })
+    test('basic indexOf list [check existence]', () => {
+        const ts =
+        "const myList = [1,2,3];\n" +
+        "const exists = myList.indexOf (1) >= 0;"
+        const python =
+        "myList = [1, 2, 3]\n" +
+        "exists = 1 in myList"
         const output = transpiler.transpilePython(ts);
         expect(output).toBe(python);
     })
