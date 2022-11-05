@@ -251,14 +251,14 @@ class BaseTranspiler {
 
         let rawExpression = node.getFullText().trim();
         
-        if (this.FullPropertyAccessReplacements.hasOwnProperty(rawExpression)){
-            return this.getIden(identation) + this.FullPropertyAccessReplacements[rawExpression];
+        if (this.FullPropertyAccessReplacements.hasOwnProperty(rawExpression)){ // eslint-disable-line
+            return this.getIden(identation) + this.FullPropertyAccessReplacements[rawExpression]; // eslint-disable-line
         }
 
-        leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : this.printNode(expression, 0);
+        leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : this.printNode(expression, 0); // eslint-disable-line
 
         // checking "toString" insde the object will return the builtin toString method :X
-        rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? this.RightPropertyAccessReplacements[rightSide] : rightSide;
+        rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? this.RightPropertyAccessReplacements[rightSide] : rightSide; // eslint-disable-line
         
         // join together the left and right side again
 
@@ -315,7 +315,7 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : modifiers;
 
-        let functionDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
+        const functionDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
             + this.FUNCTION_DEF_OPEN
             + "\n"
@@ -358,7 +358,7 @@ class BaseTranspiler {
 
         const funcOpen = this.FUNCTION_DEF_OPEN;
 
-        let methodDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
+        const methodDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
             + funcOpen
             + "\n"
@@ -429,14 +429,14 @@ class BaseTranspiler {
         
         const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
 
-        let finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
+        const finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
 
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;
         }
 
         let parsedExpression = undefined;
-        if (this.CallExpressionReplacements.hasOwnProperty(expression.escapedText)) {
+        if (this.CallExpressionReplacements.hasOwnProperty(expression.escapedText)) { // eslint-disable-line
             parsedExpression = this.CallExpressionReplacements[expression.escapedText];
         } else {
             parsedExpression = this.printNode(expression, 0);
@@ -571,7 +571,7 @@ class BaseTranspiler {
 
         const ifEnd = this.IF_CLOSE ? this.getIden(identation) + this.IF_CLOSE : "";
 
-        let ifOpen = this.IF_OPEN ? " " + this.IF_OPEN : "";
+        const ifOpen = this.IF_OPEN ? " " + this.IF_OPEN : "";
         let ifComplete  =  ifOrElseIfIdentation + prefix + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + "\n" + ifEnd;
 
         const elseStatement = node.elseStatement

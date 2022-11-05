@@ -43,10 +43,12 @@ export class PhpTranspiler extends BaseTranspiler {
     asyncTranspiling;
     awaitWrapper;
     propRequiresScopeResolutionOperator;
+    uncamelcaseMethodsAndProps;
     constructor(config = {}) {
         super(parserConfig);
         
         this.asyncTranspiling = config['async'] ?? true;
+        this.uncamelcaseMethodsAndProps = config['uncamelcaseMethodsAndProps'] ?? true;
 
         this.propRequiresScopeResolutionOperator = ['super'] + (config['scopeResolutionProps'] ?? []);
 
@@ -90,14 +92,14 @@ export class PhpTranspiler extends BaseTranspiler {
 
     transformPropertyAcessExpressionIfNeeded(node: any) {
         const expression = node.expression;
-        let leftSide = this.printNode(expression, 0);
-        let rightSide = node.name.escapedText;
+        const leftSide = this.printNode(expression, 0);
+        const rightSide = node.name.escapedText;
         
         let rawExpression = undefined;
 
         switch(rightSide) {
             case 'length':
-                const type = (global.checker as TypeChecker).getTypeAtLocation(expression);
+                const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
                 rawExpression = this.isStringType(type.flags) ? "strlen(" + leftSide + ")" : "count(" + leftSide + ")";
                 break;
             case 'toString':
@@ -115,50 +117,39 @@ export class PhpTranspiler extends BaseTranspiler {
             case 'pop':
                 rawExpression = "array_pop(" + leftSide + ")";
                 break;
-            // case 'indexOf':
-            //     rawExpression = "mb_strpos(" + leftSide + ")";
         }
 
-        // if (rightSide === "length") {
-        //     rawExpression =  "len(" + leftSide + ")";
-        // } else if (rightSide === "toString") {
-        //     rawExpression = "str(" + leftSide + ")";
-        // }
         return rawExpression;
     }
 
     printOutOfOrderCallExpressionIfAny(node, identation) {
-        const expressionText = node.expression.getText().trim();
-        const args = node.arguments;
-        let finalExpression = undefined;
-        switch (expressionText) {
-            case "JSON.parse":
-                finalExpression = "json_decode(" + this.printNode(args[0], 0) + ",$as_associative_array = true)";
-                break;
-        }
-        if (finalExpression) {
-            return this.getIden(identation) + finalExpression;
-        }
-
-        const leftSide = node.expression?.expression;
-        const rightSide = node.expression.name?.escapedText;
-
-        const arg = args && args.length > 0 ? args[0] : undefined;
-        
-        // check only prop replacements (ignore function calls like parseFloat)
-        if (leftSide && arg) {
-            const argText = this.printNode(arg, 0);
-            const leftSideText = this.printNode(leftSide, 0);
-            switch (rightSide) {
-                case 'push':
-                    return this.getIden(identation) + leftSideText + "[] = " + argText;
-                case 'includes':
-                    const type = global.checker.getTypeAtLocation(leftSide);
-                    if (this.isStringType(type.flags)) {
-                        return this.getIden(identation) + "str_contains(" + leftSideText + ", " + argText + ")";
-                    } else {
-                        return this.getIden(identation) + "in_array(" + argText + ", " + leftSideText + ")";
-                    }
+        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
+            const expressionText = node.expression.getText().trim();
+            const args = node.arguments;
+            switch (expressionText) {
+                case "JSON.parse":
+                    return "json_decode(" + this.printNode(args[0], 0) + ",$as_associative_array = true)";
+            }
+    
+            const leftSide = node.expression?.expression;
+            const rightSide = node.expression.name?.escapedText;
+    
+            const arg = args && args.length > 0 ? args[0] : undefined;
+            
+            if (arg) {
+                const argText = this.printNode(arg, 0);
+                const leftSideText = this.printNode(leftSide, 0);
+                switch (rightSide) {
+                    case 'push':
+                        return this.getIden(identation) + leftSideText + "[] = " + argText;
+                    case 'includes':
+                        const type = global.checker.getTypeAtLocation(leftSide); // eslint-disable-line
+                        if (this.isStringType(type.flags)) {
+                            return this.getIden(identation) + "str_contains(" + leftSideText + ", " + argText + ")";
+                        } else {
+                            return this.getIden(identation) + "in_array(" + argText + ", " + leftSideText + ")";
+                        }
+                }
             }
         }
         return undefined

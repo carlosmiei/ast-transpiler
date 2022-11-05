@@ -4,13 +4,14 @@ import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
-const config = {
-}
+// const config = {
+// }
 
 export class PythonTranspiler extends BaseTranspiler {
-    constructor() {
+    uncamelcaseMethodsAndProps;
+    constructor(config = {}) {
         super(config);
-
+        this.uncamelcaseMethodsAndProps = config['uncamelcaseMethodsAndProps'] ?? true;
         this.initConfig();
     }
 
@@ -114,18 +115,19 @@ export class PythonTranspiler extends BaseTranspiler {
 
     transformFunctionComment(comment) {
         const commentRegex = [
-                [ /\/\*\*/, '\"\"\"' ], // Doc strings
-                [ / \*\//, '\"\"\"' ], // Doc strings
+                [ /(^|\s)\/\//g, '$1#' ], // regular comments
+                [ /\/\*\*/, '"""' ], // Doc strings
+                [ / \*\//, '"""' ], // Doc strings
                 [ /\s+\* @method/g, '' ], // docstring @method
                 [ /(\s+) \* @description (.*)/g, '$1$2' ], // docstring description
                 [ /\s+\* @name .*/g, '' ], // docstring @name
                 [ /(\s+) \* @see( .*)/g, '$1see$2' ], // docstring @see
                 [ /(\s+ \* @(param|returns) {[^}]*)string([^}]*}.*)/g, '$1str$3' ], // docstring type conversion
                 [ /(\s+ \* @(param|returns) {[^}]*)object([^}]*}.*)/g, '$1dict$3' ], // doctstrubg type conversion
-                [ /(\s+) \* @returns ([^\{])/g, '$1:returns: $2' ], // docstring return
+                [ /(\s+) \* @returns ([^{])/g, '$1:returns: $2' ], // docstring return
                 [ /(\s+) \* @returns \{(.+)\}/g, '$1:returns $2:' ], // docstring return
-                [ /(\s+ \* @param \{[\]\[\|a-zA-Z]+\} )([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+) (.*)/g, '$1$2[\'$3\'] $4' ], // docstring params.anything
-                [ /(\s+) \* @([a-z]+) \{([\]\[a-zA-Z\|]+)\} ([a-zA-Z0-9_\-\.\[\]\']+)/g, '$1:$2 $3 $4:' ], // docstring para 
+                [ /(\s+ \* @param \{[\][|a-zA-Z]+\} )([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+) (.*)/g, '$1$2[\'$3\'] $4' ], // docstring params.anything
+                [ /(\s+) \* @([a-z]+) \{([\][a-zA-Z|]+)\} ([a-zA-Z0-9_\-.[\]']+)/g, '$1:$2 $3 $4:' ], // docstring para 
             ];
 
         const transformed = regexAll(comment, commentRegex);
@@ -135,8 +137,8 @@ export class PythonTranspiler extends BaseTranspiler {
 
     transformPropertyAcessExpressionIfNeeded(node: any) {
         const expression = node.expression;
-        let leftSide = this.printNode(expression, 0);
-        let rightSide = node.name.escapedText;
+        const leftSide = this.printNode(expression, 0);
+        const rightSide = node.name.escapedText;
         
         let rawExpression = undefined;
 
@@ -181,7 +183,7 @@ export class PythonTranspiler extends BaseTranspiler {
 
     printMethodParameters(node) {
         let parsedArgs = super.printMethodParameters(node);
-        parsedArgs = parsedArgs ? "self " + parsedArgs : "self";
+        parsedArgs = parsedArgs ? "self, " + parsedArgs : "self";
         return parsedArgs;
     }
 
@@ -232,11 +234,12 @@ export class PythonTranspiler extends BaseTranspiler {
         if (prop) {
             const args = left.arguments;
             const parsedArg =  (args && args.length > 0) ? this.printNode(args[0], 0): undefined;
+            const leftSideOfIndexOf = left.expression.expression;  // myString in myString.indexOf
+            const leftSide = this.printNode(leftSideOfIndexOf, 0);
+            // const rightType = global.checker.getTypeAtLocation(leftSideOfIndexOf); // type of myString in myString.indexOf ("b") >= 0;
+
             switch(prop) {
                 case 'indexOf':
-                    const leftSideOfIndexOf = left.expression.expression;  // myString in myString.indexOf
-                    const leftSide = this.printNode(leftSideOfIndexOf, 0);
-                    const rightType = global.checker.getTypeAtLocation(leftSideOfIndexOf); // type of myString in myString.indexOf ("b") >= 0;
                     if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
                         return this.getIden(identation) + `${parsedArg} in ${leftSide}`;
                     }
