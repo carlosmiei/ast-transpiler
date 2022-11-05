@@ -22,8 +22,8 @@ class BaseTranspiler {
     ASTERISK_TOKEN = "*";
     PLUS_TOKEN = "+";
     MINUS_TOKEN = "-";
-    EQUALS_TOKEN = "="
-    EQUALS_EQUALS_TOKEN = "=="
+    EQUALS_TOKEN = "=";
+    EQUALS_EQUALS_TOKEN = "==";
     EXCLAMATION_EQUALS_TOKEN = "!=";
     AMPERSTAND_APERSAND_TOKEN = "and";
     PLUS_EQUALS = "+=";
@@ -66,11 +66,11 @@ class BaseTranspiler {
     WHILE_COND_CLOSE = ":";
     WHILE_CLOSE = "";
 
-    FOR_TOKEN = "for"
-    FOR_COND_OPEN = "("
-    FOR_COND_CLOSE = ")"
-    FOR_OPEN = "{"
-    FOR_CLOSE = "}"
+    FOR_TOKEN = "for";
+    FOR_COND_OPEN = "(";
+    FOR_COND_CLOSE = ")";
+    FOR_OPEN = "{";
+    FOR_CLOSE = "}";
 
     PROPERTY_ASSIGNMENT_TOKEN = ":";
 
@@ -103,12 +103,12 @@ class BaseTranspiler {
 
     CallExpressionReplacements = {};
     
-    FuncModifiers = {}
+    FuncModifiers = {};
 
     constructor(config) {
         Object.assign (this, config);
 
-        this.initOperators()
+        this.initOperators();
 
     }
 
@@ -139,17 +139,17 @@ class BaseTranspiler {
             [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
             [ts.SyntaxKind.AwaitKeyword]: this.AWAIT_TOKEN,
             [ts.SyntaxKind.StaticKeyword]: this.STATIC_TOKEN,
-        }
+        };
 
         this.PostFixOperators = {
             [ts.SyntaxKind.PlusPlusToken]: this.PLUS_PLUS_TOKEN,
             [ts.SyntaxKind.MinusMinusToken]: this.MINUS_MINUS_TOKEN,
-        }
+        };
         
         this.PrefixFixOperators = {
             [ts.SyntaxKind.ExclamationToken]: this.NOT_TOKEN,
             [ts.SyntaxKind.MinusToken]: this.MINUS_TOKEN,
-        }
+        };
 
         this.FunctionDefSupportedKindNames = {
             [ts.SyntaxKind.StringKeyword]: "string"
@@ -159,7 +159,7 @@ class BaseTranspiler {
             [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
             [ts.SyntaxKind.PublicKeyword]: "public",
             [ts.SyntaxKind.PrivateKeyword]: "private",
-        }
+        };
     }
 
     isStringType(flags: ts.TypeFlags) {
@@ -196,7 +196,7 @@ class BaseTranspiler {
     }
 
     getCustomOperatorIfAny(left, right, operator) {
-        return undefined
+        return undefined;
     }
 
     printCustomBinaryExpressionIfAny(node, identation) {
@@ -215,9 +215,9 @@ class BaseTranspiler {
             return this.printInstanceOfExpression(node, identation);
         }
 
-        const leftVar = this.printNode(left, 0)
+        const leftVar = this.printNode(left, 0);
 
-        const rightVar = this.printNode(right, identation)
+        const rightVar = this.printNode(right, identation);
 
         let operator = this.SupportedKindNames[operatorToken.kind];
 
@@ -279,7 +279,7 @@ class BaseTranspiler {
         if (modifiers === undefined) {
             return "";
         }
-        modifiers = modifiers.filter(mod => this.FuncModifiers[mod.kind])
+        modifiers = modifiers.filter(mod => this.FuncModifiers[mod.kind]);
         return modifiers.map(modifier => this.FuncModifiers[modifier.kind]).join(" ");
     }
 
@@ -318,7 +318,7 @@ class BaseTranspiler {
         const functionDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
             + this.FUNCTION_DEF_OPEN
-            + "\n"
+            + "\n";
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
@@ -361,7 +361,7 @@ class BaseTranspiler {
         const methodDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
             + funcOpen
-            + "\n"
+            + "\n";
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
@@ -423,7 +423,7 @@ class BaseTranspiler {
 
     printCallExpression(node, identation) {
 
-        const expression = node.expression
+        const expression = node.expression;
 
         const args = node.arguments;
         
@@ -446,7 +446,7 @@ class BaseTranspiler {
         if (!removeParenthesis) {
             const parsedArgs = args.map((a) => {
                 return this.printNode(a, identation).trim();
-            }).join(",")
+            }).join(",");
             parsedCall+= "(" + parsedArgs + ")";
         
         }    
@@ -456,7 +456,7 @@ class BaseTranspiler {
     printClassBody(node, identation) {
         return node.members.map((m)=> {
             return this.printNode(m, identation+1);
-        }).join("\n") 
+        }).join("\n"); 
 
     }
 
@@ -522,7 +522,7 @@ class BaseTranspiler {
     }
 
     printObjectLiteralBody(node, identation) {
-        let body =  node.properties.map((p) => this.printNode(p, identation+1)).join(",\n")
+        let body =  node.properties.map((p) => this.printNode(p, identation+1)).join(",\n");
         body = body ? body + "," : body;
         return body;
     }
@@ -560,7 +560,7 @@ class BaseTranspiler {
     }
 
     printIfStatement(node, identation) {
-        const expression = this.printNode(node.expression, 0)
+        const expression = this.printNode(node.expression, 0);
         const ifBody = node.thenStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n");
 
         const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
@@ -574,7 +574,7 @@ class BaseTranspiler {
         const ifOpen = this.IF_OPEN ? " " + this.IF_OPEN : "";
         let ifComplete  =  ifOrElseIfIdentation + prefix + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + "\n" + ifEnd;
 
-        const elseStatement = node.elseStatement
+        const elseStatement = node.elseStatement;
 
         if (elseStatement?.kind === ts.SyntaxKind.Block) {
             
@@ -613,7 +613,7 @@ class BaseTranspiler {
 
     printNewExpression(node, identation) {
         const expression = node.expression.escapedText;
-        const args = node.arguments.map(n => this.printNode(n, 0)).join(",")
+        const args = node.arguments.map(n => this.printNode(n, 0)).join(",");
         const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
         return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
     }
@@ -637,11 +637,11 @@ class BaseTranspiler {
     }
 
     printAsExpression(node, identation) {
-        return this.printNode(node.expression, identation)
+        return this.printNode(node.expression, identation);
     }
 
     printReturnStatement(node, identation) {
-        const exp =  node.expression
+        const exp =  node.expression;
         let rightPart = exp ? (' ' + this.printNode(exp, identation)) : '';
         rightPart = rightPart.trim();
         rightPart = rightPart ? ' ' + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
@@ -661,11 +661,11 @@ class BaseTranspiler {
         } else if (ts.isFunctionDeclaration(node)){
             return this.printFunctionDeclaration(node, identation);
         } else if (ts.isClassDeclaration(node)) {
-            return this.printClass(node, identation) 
+            return this.printClass(node, identation); 
         } else if (ts.isVariableStatement(node)) {
             return this.printVariableStatement(node, identation);
         } else if (ts.isMethodDeclaration(node)) {
-            return this.printMethodDeclaration(node, identation) 
+            return this.printMethodDeclaration(node, identation); 
         } else if (ts.isStringLiteral(node)) {
             return this.printStringLiteral(node);
         } else if (ts.isNumericLiteral(node)) {
@@ -741,4 +741,4 @@ class BaseTranspiler {
 
 export {
     BaseTranspiler
-}
+};

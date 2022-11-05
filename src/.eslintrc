@@ -10,6 +10,7 @@
       "plugin:@typescript-eslint/recommended"
     ],
     "rules": { 
-      "no-console": 1 // Remember, this means error!
+      "no-console": 1,
+      "semi": "error"
     }
   }

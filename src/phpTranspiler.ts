@@ -1,6 +1,6 @@
 import { BaseTranspiler } from "./pureAst.js";
 import ts, { TypeChecker } from 'typescript';
-import { throws } from "assert";
+import { unCamelCase } from "./utils.js";
 
 const SyntaxKind = ts.SyntaxKind;
 
@@ -37,7 +37,7 @@ const parserConfig = {
     'NEW_TOKEN': 'new',
     'THROW_TOKEN': 'throw',
     'SUPER_TOKEN': 'parent',
-}
+};
 
 export class PhpTranspiler extends BaseTranspiler {
     asyncTranspiling;
@@ -67,6 +67,10 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     transformIdentifier(identifier) {
+
+        if (this.uncamelcaseIdentifiers) {
+            identifier = unCamelCase(identifier);
+        }
         return "$" + identifier;
     }
 
@@ -113,7 +117,7 @@ export class PhpTranspiler extends BaseTranspiler {
                 break;
             case 'shift':
                 rawExpression = "array_shift(" + leftSide + ")";
-                break
+                break;
             case 'pop':
                 rawExpression = "array_pop(" + leftSide + ")";
                 break;
@@ -152,7 +156,7 @@ export class PhpTranspiler extends BaseTranspiler {
                 }
             }
         }
-        return undefined
+        return undefined;
     }
     
     shouldRemoveParenthesisFromCallExpression(node) {
@@ -267,11 +271,11 @@ export class PhpTranspiler extends BaseTranspiler {
             'this': '$this',
             // custom should be passed as config
             'Precise': 'Precise',
-        }
+        };
 
         this.RightPropertyAccessReplacements = {
 
-        }
+        };
 
         this.FullPropertyAccessReplacements = {
             'Number.MAX_SAFE_INTEGER': 'PHP_INT_MAX',
@@ -286,12 +290,12 @@ export class PhpTranspiler extends BaseTranspiler {
             'Math.pow': 'pow',
             'Math.min': 'min',
             'Math.max': 'max',
-        }
+        };
 
         this.CallExpressionReplacements = {
             'parseFloat': 'floatval',
             'parseInt': 'intval',
-        }
+        };
     }
 
 }

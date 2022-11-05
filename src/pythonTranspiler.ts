@@ -1,5 +1,5 @@
 import { BaseTranspiler } from "./pureAst.js";
-import { regexAll } from "./utils.js";
+import { regexAll, unCamelCase } from "./utils.js";
 import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
@@ -18,7 +18,7 @@ export class PythonTranspiler extends BaseTranspiler {
     initConfig() {
         this.LeftPropertyAccessReplacements = {
             'this': 'self'
-        }
+        };
         this.RightPropertyAccessReplacements = {
             'push': 'append',
             'toUpperCase': 'upper',
@@ -28,7 +28,7 @@ export class PythonTranspiler extends BaseTranspiler {
             'indexOf': 'find',
             'padEnd': 'ljust',
             'padStart': 'rjust'
-        }
+        };
         this.FullPropertyAccessReplacements = {
             'console.log': 'print',
             'JSON.stringify': 'json.dumps',
@@ -43,11 +43,19 @@ export class PythonTranspiler extends BaseTranspiler {
             'Math.pow': 'math.pow',
             'process.exit': 'sys.exit',
             'Number.MAX_SAFE_INTEGER': 'float(\'inf\')',
-        }
+        };
         this.CallExpressionReplacements = {
             'parseInt': 'int',
             'parseFloat': 'float',
+        };
+    }
+
+    transformIdentifier(identifier) {
+
+        if (this.uncamelcaseIdentifiers) {
+            return unCamelCase(identifier);
         }
+        return undefined;
     }
 
     printOutOfOrderCallExpressionIfAny(node, identation) {
@@ -96,7 +104,7 @@ export class PythonTranspiler extends BaseTranspiler {
             }
         }
 
-        return undefined
+        return undefined;
     }
 
     printElementAccessExpressionExceptionIfAny(node) {
@@ -107,8 +115,8 @@ export class PythonTranspiler extends BaseTranspiler {
 
     printForStatement(node, identation) {
         const varName = node.initializer.declarations[0].name.escapedText; 
-        const initValue = this.printNode(node.initializer.declarations[0].initializer, 0)
-        const roofValue = this.printNode(node.condition.right,0)
+        const initValue = this.printNode(node.initializer.declarations[0].initializer, 0);
+        const roofValue = this.printNode(node.condition.right,0);
 
         return this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") + "\n";
     }
