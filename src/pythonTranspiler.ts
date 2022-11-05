@@ -8,10 +8,10 @@ const SyntaxKind = ts.SyntaxKind;
 // }
 
 export class PythonTranspiler extends BaseTranspiler {
-    uncamelcaseMethodsAndProps;
+    uncamelcaseIdentifiers: boolean;
     constructor(config = {}) {
         super(config);
-        this.uncamelcaseMethodsAndProps = config['uncamelcaseMethodsAndProps'] ?? true;
+        this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? true;
         this.initConfig();
     }
 

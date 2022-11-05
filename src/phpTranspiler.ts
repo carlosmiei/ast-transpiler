@@ -42,13 +42,13 @@ const parserConfig = {
 export class PhpTranspiler extends BaseTranspiler {
     asyncTranspiling;
     awaitWrapper;
-    propRequiresScopeResolutionOperator;
-    uncamelcaseMethodsAndProps;
+    propRequiresScopeResolutionOperator: string[];
+    uncamelcaseIdentifiers: boolean;
     constructor(config = {}) {
         super(parserConfig);
         
         this.asyncTranspiling = config['async'] ?? true;
-        this.uncamelcaseMethodsAndProps = config['uncamelcaseMethodsAndProps'] ?? true;
+        this.uncamelcaseIdentifiers = config['uncamelcaseIds'] ?? false;
 
         this.propRequiresScopeResolutionOperator = ['super'] + (config['scopeResolutionProps'] ?? []);
 

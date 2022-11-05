@@ -101,6 +101,14 @@ class Transpiler {
     setPHPPropResolution(props: string[]) {
         this.phpTranspiler.propRequiresScopeResolutionOperator = props;
     }
+
+    setPhpUncamelCaseIdentifiers(uncamelCase: boolean) {
+        this.phpTranspiler.uncamelcaseIdentifiers = uncamelCase;
+    }
+    
+    setPythonUncamelCaseIdentifiers(uncamelCase: boolean) {
+        this.pythonTranspiler.uncamelcaseIdentifiers = uncamelCase;
+    }
 }   
 
 export {
