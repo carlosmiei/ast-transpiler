@@ -2,15 +2,6 @@ import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
-// const filename = "tmp.ts";
-
-// const program = ts.createProgram([filename], {});
-// const sourceFile = program.getSourceFile(filename);
-// const typeChecker = program.getTypeChecker()
-
-// global.src = sourceFile;
-// global.checker = typeChecker
-
 class BaseTranspiler {
     DEFAULT_IDENTATION = "    ";
     UNDEFINED_TOKEN = "None";
@@ -308,7 +299,10 @@ class BaseTranspiler {
     }
 
     printFunctionDefinition(node, identation) {
-        const name = node.name.escapedText;
+        let name = node.name.escapedText;
+
+        const transformedName = this.transformFunctionNameIfNeeded(name);
+        name = transformedName ? transformedName : name;
 
         const parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
         
@@ -326,6 +320,10 @@ class BaseTranspiler {
         return functionDef;
     }
 
+    transformFunctionNameIfNeeded(name) {
+        return undefined; // stub to override
+    }
+    
     printFunctionDeclaration(node, identation) {
 
         let functionDef = this.printFunctionDefinition(node, identation);
@@ -347,9 +345,17 @@ class BaseTranspiler {
     printMethodParameters(node) {
         return node.parameters.map(param => this.printParameter(param)).join(", ");
     }
+    
+    transformMethodNameIfNeeded(name) {
+        return undefined; // stub to override
+    }
 
     printMethodDefinition(node, identation) {
-        const name = node.name.escapedText;
+
+        let name = node.name.escapedText;
+
+        const transformedName = this.transformMethodNameIfNeeded(name);
+        name = transformedName ? transformedName : name;
 
         const parsedArgs = this.printMethodParameters(node);
 

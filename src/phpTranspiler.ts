@@ -48,7 +48,7 @@ export class PhpTranspiler extends BaseTranspiler {
         super(parserConfig);
         
         this.asyncTranspiling = config['async'] ?? true;
-        this.uncamelcaseIdentifiers = config['uncamelcaseIds'] ?? false;
+        this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
 
         this.propRequiresScopeResolutionOperator = ['super'] + (config['scopeResolutionProps'] ?? []);
 
@@ -69,7 +69,7 @@ export class PhpTranspiler extends BaseTranspiler {
     transformIdentifier(identifier) {
 
         if (this.uncamelcaseIdentifiers) {
-            identifier = unCamelCase(identifier);
+            identifier = unCamelCase(identifier) ?? identifier;
         }
         return "$" + identifier;
     }
@@ -234,9 +234,9 @@ export class PhpTranspiler extends BaseTranspiler {
 
         const op = node.operatorToken.kind;
 
-        // handle typeof operator
-        // Example: typeof a === "string"
         if (left.kind === SyntaxKind.TypeOfExpression) {
+            // handle typeof operator
+            // Example: typeof a === "string"
             const typeOfExpression = this.handleTypeOfInsideBinaryExpression(node, identation);
             if (typeOfExpression) {
                 return typeOfExpression;
@@ -265,6 +265,19 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
 
+    transformMethodNameIfNeeded(name) {
+        if (this.uncamelcaseIdentifiers) {
+            return unCamelCase(name);
+        }
+        return undefined;
+    }
+
+    transformFunctionNameIfNeeded(name) {
+        if (this.uncamelcaseIdentifiers) {
+            return unCamelCase(name);
+        }
+        return undefined;
+    }
 
     initConfig() {
         this.LeftPropertyAccessReplacements = {

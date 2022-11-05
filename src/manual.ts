@@ -3,7 +3,14 @@ import * as fs from 'fs';
 
 const { readFileSync, writeFileSync } = fs;
 
-const transpiler = new Transpiler();
+const transpiler = new Transpiler({
+    python: {
+        uncamelcaseIdentifiers: true,   
+    },
+    php:  {
+        uncamelcaseIdentifiers: true,
+    }
+});
 
 transpiler.setPHPPropResolution(['Precise']);
 

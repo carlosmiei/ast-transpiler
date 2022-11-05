@@ -4,14 +4,12 @@ import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
-// const config = {
-// }
 
 export class PythonTranspiler extends BaseTranspiler {
     uncamelcaseIdentifiers: boolean;
     constructor(config = {}) {
         super(config);
-        this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? true;
+        this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
         this.initConfig();
     }
 
@@ -53,7 +51,21 @@ export class PythonTranspiler extends BaseTranspiler {
     transformIdentifier(identifier) {
 
         if (this.uncamelcaseIdentifiers) {
-            return unCamelCase(identifier);
+            return unCamelCase(identifier) ?? identifier;
+        }
+        return identifier;
+    }
+
+    transformMethodNameIfNeeded(name) {
+        if (this.uncamelcaseIdentifiers) {
+            return unCamelCase(name) ?? name;
+        }
+        return undefined;
+    }
+
+    transformFunctionNameIfNeeded(name) {
+        if (this.uncamelcaseIdentifiers) {
+            return unCamelCase(name) ?? name;
         }
         return undefined;
     }
@@ -255,5 +267,4 @@ export class PythonTranspiler extends BaseTranspiler {
         }
         return undefined;
     }
-
 }

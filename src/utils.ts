@@ -10,8 +10,8 @@ function regexAll (text: string, array: any[]): string {
     return text;
 }
 
-function unCamelCase (s: string): string  {
-    return s.match (/[A-Z]/) ? s.replace (/[a-z0-9][A-Z]/g, x => x[0] + '_' + x[1]).replace(/[A-Z0-9][A-Z0-9][a-z][^$]/g, x => x[0] + '_' + x[1] + x[2] + x[3]).replace(/[a-z][0-9]$/g, x=> x[0] + '_' + x[1]).toLowerCase () : s; 
+function unCamelCase (s: string): string | undefined {
+    return s.match (/[A-Z]/) ? s.replace (/[a-z0-9][A-Z]/g, x => x[0] + '_' + x[1]).replace(/[A-Z0-9][A-Z0-9][a-z][^$]/g, x => x[0] + '_' + x[1] + x[2] + x[3]).replace(/[a-z][0-9]$/g, x=> x[0] + '_' + x[1]).toLowerCase () : undefined; 
 }
 
 export {
