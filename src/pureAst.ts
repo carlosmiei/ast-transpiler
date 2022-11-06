@@ -2,6 +2,12 @@ import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
+interface IFileImport {
+    name: string;
+    path: string;
+    isDefault: boolean;
+}
+
 class BaseTranspiler {
     DEFAULT_IDENTATION = "    ";
     UNDEFINED_TOKEN = "None";
@@ -743,8 +749,41 @@ class BaseTranspiler {
         }
         return "";
     }
+
+    getFileImports(node): IFileImport[] {
+        const result = [];
+        const importStatements = node.statements.filter((s) => ts.isImportDeclaration(s));
+        importStatements.forEach(node => {
+            const importPath = node.moduleSpecifier.text;
+            const importClause = node.importClause;
+            const namedImports = importClause.namedBindings;
+            if (namedImports) {
+                namedImports.elements.forEach((elem) => {
+                    const name = elem.name.text;
+                    const fileImport: IFileImport = {
+                        name,
+                        path: importPath,
+                        isDefault: false
+                    };
+                    result.push(fileImport);
+                });
+            } else {
+                // default import
+                const name = importClause.name.text;
+                const fileImport: IFileImport = {
+                    name,
+                    path: importPath,
+                    isDefault: true
+                };
+                result.push(fileImport);
+            }
+        });
+        return result;
+    }
 }
 
+
 export {
-    BaseTranspiler
+    BaseTranspiler,
+    IFileImport
 };

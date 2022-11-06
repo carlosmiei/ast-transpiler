@@ -45,7 +45,7 @@ function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, opti
 class Transpiler {
     config;
     pythonTranspiler: PythonTranspiler;
-    phpTranspiler;
+    phpTranspiler: PhpTranspiler;
     constructor(config = {}) {
         this.config = config;
         const phpConfig = config["php"] || {};
@@ -96,6 +96,11 @@ class Transpiler {
             this.phpTranspiler.asyncTranspiling = true;
         }
         return this.phpTranspiler.printNode(global.src, -1);
+    }
+
+    getFileImports(content: string) {
+        this.createProgramInMemoryAndSetGlobals(content);
+        return this.phpTranspiler.getFileImports(global.src);
     }
 
     setPHPPropResolution(props: string[]) {

@@ -4,7 +4,6 @@ import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
-
 export class PythonTranspiler extends BaseTranspiler {
     uncamelcaseIdentifiers: boolean;
     constructor(config = {}) {
