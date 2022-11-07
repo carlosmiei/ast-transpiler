@@ -6,6 +6,8 @@ import * as fs from 'fs';
 import * as path from "path";
 import { fileURLToPath } from 'url';
 
+import { IFileImport, ITranspiledFile } from './types.js';
+
 const __dirname_mock = currentPath;
 
 function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, options: any = {}): [any,any,any]  {
@@ -72,33 +74,53 @@ class Transpiler {
         global.program = program;
     }
 
-    transpilePython(content): string {
+    transpilePython(content): ITranspiledFile {
         this.createProgramInMemoryAndSetGlobals(content);
-        return this.pythonTranspiler.printNode(global.src, -1);
+        const transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
+        const imports = this.pythonTranspiler.getFileImports(global.src);
+        return {
+            content: transpiledContent,
+            imports
+        };
     }
 
-    transpilePythonByPath(path): string {
+    transpilePythonByPath(path): ITranspiledFile {
         this.createProgramByPathAndSetGlobals(path);
-        return this.pythonTranspiler.printNode(global.src, -1);
+        const transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
+        const imports = this.pythonTranspiler.getFileImports(global.src);
+        return {
+            content: transpiledContent,
+            imports
+        };
     }
 
-    transpilePhp(content, async = true): string {
+    transpilePhp(content, async = true): ITranspiledFile {
         this.createProgramInMemoryAndSetGlobals(content);
         if (async) {
             this.phpTranspiler.asyncTranspiling = true;
         }
-        return this.phpTranspiler.printNode(global.src, -1);
+        const transpiledContent = this.phpTranspiler.printNode(global.src, -1);
+        const imports = this.phpTranspiler.getFileImports(global.src);
+        return {
+            content: transpiledContent,
+            imports
+        };
     }
 
-    transpilePhpByPath(path, async = true): string {
+    transpilePhpByPath(path, async = true): ITranspiledFile {
         this.createProgramByPathAndSetGlobals(path);
         if (async) {
             this.phpTranspiler.asyncTranspiling = true;
         }
-        return this.phpTranspiler.printNode(global.src, -1);
+        const transpiledContent = this.phpTranspiler.printNode(global.src, -1);
+        const imports = this.phpTranspiler.getFileImports(global.src);
+        return {
+            content: transpiledContent,
+            imports
+        };
     }
 
-    getFileImports(content: string) {
+    getFileImports(content: string): IFileImport[] {
         this.createProgramInMemoryAndSetGlobals(content);
         return this.phpTranspiler.getFileImports(global.src);
     }

@@ -16,7 +16,7 @@ describe('php transpiling tests', () => {
     test('basic variable declaration', () => {
         const ts = "const x = 1;"
         const php = "$x = 1;"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
     test('basic while loop', () => {
@@ -31,7 +31,7 @@ describe('php transpiling tests', () => {
         "    $x = 1;\n" +
         "    break;\n" +
         "}"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
     test('basic for loop', () => {
@@ -43,7 +43,7 @@ describe('php transpiling tests', () => {
         "for ($i = 0; $i < 10; $i++) {\n" +
         "    break;\n" +
         "}"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
     test('basic function declaration', () => {
@@ -55,7 +55,7 @@ describe('php transpiling tests', () => {
         "function teste () {\n" +
         "    return 1;\n" +
         "}\n"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
     test('basic class declaration', () => {
@@ -71,7 +71,7 @@ describe('php transpiling tests', () => {
         "        return 'foo';\n" +
         "    }\n" +
         "}"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
     test('basic dictonary', () => {
@@ -87,7 +87,7 @@ describe('php transpiling tests', () => {
         "    'market' => 'market',\n" +
         "    'margin' => 'market',\n" +
         ");"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
     test('basic binary expressions', () => {
@@ -105,7 +105,7 @@ describe('php transpiling tests', () => {
         "$d = 4 - 4;\n" +
         "$e = 5 % 5;\n" +
         "$f = 'foo' . 'bar';"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic conditions expressions', () => {
@@ -119,7 +119,7 @@ describe('php transpiling tests', () => {
         "$b = false;\n" +
         "$c = true;\n" +
         "$d = ($a && $b) || ($c && !$b);"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic element access expression', () => {
@@ -129,7 +129,7 @@ describe('php transpiling tests', () => {
         const php =
         "$x = array();\n" +
         "$x['foo'] = 'bar';"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic throw statement', () => {
@@ -141,7 +141,7 @@ describe('php transpiling tests', () => {
         "function test(){\n" +
         "    throw new InvalidOrder('error');\n" +
         "}";
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic math functions', () => {
@@ -165,7 +165,7 @@ describe('php transpiling tests', () => {
         "$g = pow(1,2);\n" +
         "$h = (int) round(5);\n" +
         "$i = (int) floor(5.5);"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic json methods', () => {
@@ -178,7 +178,7 @@ describe('php transpiling tests', () => {
         "    'b' => 2,\n" +
         "));\n" +
         "$k = json_decode($j,$as_associative_array = true);";
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic scope resolution access', () => {
@@ -186,7 +186,7 @@ describe('php transpiling tests', () => {
         "const d = super.describe ();"
         const php =
         "$d = parent::describe();"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('custom scope resolution access', () => {
@@ -195,7 +195,7 @@ describe('php transpiling tests', () => {
         "const d = Precise.describe ();"
         const php =
         "$d = Precise::describe();"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('string length', () => {
@@ -205,7 +205,7 @@ describe('php transpiling tests', () => {
         const php =
         "$myStr = 'test';\n" +
         "$ff = strlen($myStr);"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('array length', () => {
@@ -215,7 +215,7 @@ describe('php transpiling tests', () => {
         const php =
         "$myArray = [1, 2, 3];\n" +
         "$aa = count($myArray);"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic array manipulation', () => {
@@ -233,7 +233,7 @@ describe('php transpiling tests', () => {
         "$myList[] = 4;\n" +
         "array_pop($myList);\n" +
         "array_shift($myList);"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic conditional expression', () => {
@@ -243,7 +243,7 @@ describe('php transpiling tests', () => {
         const php =
         "$frase = \'ola\';\n" +
         "$test = $frase ? strlen($frase) : 0;"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic instanceof statement', () => {
@@ -255,7 +255,7 @@ describe('php transpiling tests', () => {
         "if (e instanceof NullResponse) {\n" +
         "    return [];\n" +
         "}"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic typeof expressions', () => {
@@ -271,7 +271,7 @@ describe('php transpiling tests', () => {
         "is_array($response);\n" +
         "is_bool($response);\n" +
         "(is_int($response) || is_float($response));";
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic indexOf string [check existence]', () => {
@@ -281,7 +281,7 @@ describe('php transpiling tests', () => {
         const php =
         "$myString = 'bar';\n" +
         "$exists = mb_strpos($myString, 'b') !== false;"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic indexOf array [check existence]', () => {
@@ -291,7 +291,7 @@ describe('php transpiling tests', () => {
         const php =
         "$x = [1, 2, 3];\n" +
         "$y = in_array(1, $x);"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic includes string', () => {
@@ -301,7 +301,7 @@ describe('php transpiling tests', () => {
         const php =
         "$myString = 'bar';\n" +
         "$exists = str_contains($myString, 'b');"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
     test('basic includes array', () => {
@@ -311,7 +311,7 @@ describe('php transpiling tests', () => {
         const php =
         "$x = [1, 2, 3];\n" +
         "$y = in_array(1, $x);"
-        const output = transpiler.transpilePhp(ts);
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
   });

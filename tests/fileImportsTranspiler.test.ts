@@ -1,4 +1,4 @@
-import { IFileImport } from "../src/pureAst";
+import { IFileImport } from "../src/types";
 import { Transpiler } from "../src/transpiler";
 
 let transpiler: Transpiler;

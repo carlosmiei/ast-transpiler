@@ -12,7 +12,7 @@ describe('python tests', () => {
     test('basic variable declaration', () => {
         const ts = "const x = 1;"
         const python = "x = 1"
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
     test('basic while loop', () => {
@@ -26,7 +26,7 @@ describe('python tests', () => {
         "while True:\n" +
         "    x = 1\n" +
         "    break\n" 
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
     test('basic for loop', () => {
@@ -37,7 +37,7 @@ describe('python tests', () => {
         const python =
         "for i in range(0, 10):\n" +
         "    break\n";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
     test('basic function declaration', () => {
@@ -48,7 +48,7 @@ describe('python tests', () => {
         const python =
         "def teste():\n" +
         "    return 1\n";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
     test('basic class declaration', () => {
@@ -62,7 +62,7 @@ describe('python tests', () => {
         "class Teste:\n" +
         "    def describe(self):\n" +
         "        return 'foo'\n"
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
     test('basic dictonary', () => {
@@ -78,7 +78,7 @@ describe('python tests', () => {
         "    'market': 'market',\n" +
         "    'margin': 'market',\n" +
         "}" 
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
     test('basic binary expressions', () => {
@@ -96,7 +96,7 @@ describe('python tests', () => {
         "d = 4 - 4\n" +
         "e = 5 % 5\n" +
         "f = 'foo' + 'bar'" 
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
     test('basic condition expressions', () => {
@@ -110,7 +110,7 @@ describe('python tests', () => {
         "b = False\n" +
         "c = True\n" +
         "d = (a and b) or (c and not b)";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
     test('basic element access expression', () => {
@@ -120,7 +120,7 @@ describe('python tests', () => {
         const python =
         "x = {}\n" +
         "x['foo'] = 'bar'"
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic throw statement', () => {
@@ -131,7 +131,7 @@ describe('python tests', () => {
         const python =
         "def test():\n" +
         "    raise InvalidOrder('error')\n";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic math functions', () => {
@@ -155,7 +155,7 @@ describe('python tests', () => {
         "g = math.pow(1,2)\n" +
         "h = int(round(5))\n" +
         "i = int(math.floor(5.5))";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic json methods', () => {
@@ -168,7 +168,7 @@ describe('python tests', () => {
         "    'b': 2,\n" +
         "})\n" +
         "k = json.loads(j)";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic string methods', () => {
@@ -184,7 +184,7 @@ describe('python tests', () => {
         "c = a.find('t')\n" +
         "d = a.upper()\n" +
         "e = a.lower()";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic array manipulation', () => {
@@ -201,7 +201,7 @@ describe('python tests', () => {
         "myList.append(4)\n" +
         "myList.pop()\n" +
         "myList.pop(0)"
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic conditional expression', () => {
@@ -209,7 +209,7 @@ describe('python tests', () => {
         "const test = frase ? frase.length : 0;"
         const python =
         "test = len(frase) if frase else 0";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic instance of statement', () => {
@@ -220,7 +220,7 @@ describe('python tests', () => {
         const python =
         "if isinstance(e, NullResponse):\n" +
         "    return []\n"
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic typeof expressions', () => {
@@ -236,7 +236,7 @@ describe('python tests', () => {
         "isinstance(response, dict)\n" +
         "isinstance(response, bool)\n" +
         "isinstance(response, numbers.Real)";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic indexOf string [check existence]', () => {
@@ -246,7 +246,7 @@ describe('python tests', () => {
         const python =
         "myString = \'bar\'\n" +
         "exists = 'b' in myString";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic indexOf list [check existence]', () => {
@@ -256,7 +256,7 @@ describe('python tests', () => {
         const python =
         "myList = [1, 2, 3]\n" +
         "exists = 1 in myList"
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic includes list', () => {
@@ -266,7 +266,7 @@ describe('python tests', () => {
         const python =
         "myList = [1, 2, 3]\n" +
         "exists = 1 in myList"
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
     test('basic includes string', () => {
@@ -276,7 +276,7 @@ describe('python tests', () => {
         const python =
         "myString = \'bar\'\n" +
         "exists = 'b' in myString";
-        const output = transpiler.transpilePython(ts);
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
 });

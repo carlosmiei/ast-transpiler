@@ -1,12 +1,7 @@
 import ts from 'typescript';
+import { IFileImport } from './types.js';
 
 const SyntaxKind = ts.SyntaxKind;
-
-interface IFileImport {
-    name: string;
-    path: string;
-    isDefault: boolean;
-}
 
 class BaseTranspiler {
     DEFAULT_IDENTATION = "    ";
@@ -665,7 +660,7 @@ class BaseTranspiler {
         return this.getIden(identation) + this.LEFT_ARRAY_OPENING + elements + this.RIGHT_ARRAY_CLOSING;
     }
 
-    printNode(node, identation = 0) {
+    printNode(node, identation = 0): string {
 
         if(ts.isExpressionStatement(node)) {
             // return printExpressionStatement(node.expression, identation);
