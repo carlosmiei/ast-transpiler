@@ -314,6 +314,22 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
+    test('basic as expression', () => {
+        const ts =
+        "const x = 1;\n" +
+        "const a = \"foo\";\n" +
+        "const y = x as any;\n" +
+        "const t = a as string;\n" +
+        "const z = x as number;"
+        const php =
+        "$x = 1;\n" +
+        "$a = 'foo';\n" +
+        "$y = $x;\n" +
+        "$t = $a;\n" +
+        "$z = $x;" 
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    })
     test('should snake_case function and method calls', () => {
         transpiler.setPhpUncamelCaseIdentifiers(true);
         const ts =

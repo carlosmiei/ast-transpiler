@@ -279,6 +279,22 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
+    test('basic as expression', () => {
+        const ts =
+        "const x = 1;\n" +
+        "const a = \"foo\";\n" +
+        "const y = x as any;\n" +
+        "const t = a as string;\n" +
+        "const z = x as number;"
+        const python =
+        "x = 1\n" +
+        "a = 'foo'\n" +
+        "y = x\n" +
+        "t = a\n" +
+        "z = x"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    })
     test('should snake_case function and method calls', () => {
         transpiler.setPythonUncamelCaseIdentifiers(true);
         const ts =
