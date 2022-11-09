@@ -98,10 +98,12 @@ class BaseTranspiler {
     
     FuncModifiers = {};
 
-    uncamelcaseIdentifiers = false;
+    uncamelcaseIdentifiers;
 
     constructor(config) {
         Object.assign (this, config);
+
+        this.uncamelcaseIdentifiers = false;
 
         this.initOperators();
 

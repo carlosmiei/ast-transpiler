@@ -43,7 +43,6 @@ export class PhpTranspiler extends BaseTranspiler {
     asyncTranspiling;
     awaitWrapper;
     propRequiresScopeResolutionOperator: string[];
-    uncamelcaseIdentifiers: boolean;
     constructor(config = {}) {
         super(parserConfig);
         
