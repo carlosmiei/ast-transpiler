@@ -101,7 +101,8 @@ class BaseTranspiler {
     FullPropertyAccessReplacements = {};
 
     CallExpressionReplacements = {};
-    
+    PropertyAccessRequiresParenthesisRemoval = [];
+
     FuncModifiers = {};
 
     uncamelcaseIdentifiers;
@@ -191,6 +192,9 @@ class BaseTranspiler {
     }
 
     shouldRemoveParenthesisFromCallExpression(node) {
+        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
+            return this.PropertyAccessRequiresParenthesisRemoval.includes(node.expression.name.text);
+        }
         return false;
     }
 

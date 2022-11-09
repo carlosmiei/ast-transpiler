@@ -22,6 +22,10 @@ export class PythonTranspiler extends BaseTranspiler {
         this.RightPropertyAccessReplacements = Object.assign ({}, this.RightPropertyAccessReplacements, config['RightPropertyAccessReplacements'] ?? {});
         this.FullPropertyAccessReplacements = Object.assign ({}, this.FullPropertyAccessReplacements, config['FullPropertyAccessReplacements'] ?? {});
         this.CallExpressionReplacements = Object.assign ({}, this.CallExpressionReplacements, config['CallExpressionReplacements'] ?? {});
+
+        const propertyAccessRemoval = config['PropertyAccessRequiresParenthesisRemoval'] ?? [];
+        this.PropertyAccessRequiresParenthesisRemoval.push(...propertyAccessRemoval);
+
     }
 
     initConfig() {
@@ -57,6 +61,11 @@ export class PythonTranspiler extends BaseTranspiler {
             'parseInt': 'int',
             'parseFloat': 'float',
         };
+
+        this.PropertyAccessRequiresParenthesisRemoval = [
+            'length',
+            'toString',
+        ];
     }
 
     printOutOfOrderCallExpressionIfAny(node, identation) {
@@ -157,20 +166,6 @@ export class PythonTranspiler extends BaseTranspiler {
             rawExpression = "str(" + leftSide + ")";
         }
         return rawExpression;
-    }
-
-    shouldRemoveParenthesisFromCallExpression(node) {
-
-        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
-            const propertyAccessExpression = node.expression;
-            const propertyAccessExpressionName = propertyAccessExpression.name.text;
-            if (propertyAccessExpressionName === "length"
-                || propertyAccessExpressionName === "toString")
-            { // add more exceptions here
-                return true; 
-            }
-        }
-        return false;
     }
 
     printClass(node, identation) {

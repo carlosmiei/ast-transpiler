@@ -62,6 +62,9 @@ export class PhpTranspiler extends BaseTranspiler {
         this.FullPropertyAccessReplacements = Object.assign ({}, this.FullPropertyAccessReplacements, config['FullPropertyAccessReplacements'] ?? {});
         this.CallExpressionReplacements = Object.assign ({}, this.CallExpressionReplacements, config['CallExpressionReplacements'] ?? {});
 
+        const propertyAccessRemoval = config['PropertyAccessRequiresParenthesisRemoval'] ?? [];
+        this.PropertyAccessRequiresParenthesisRemoval.push(...propertyAccessRemoval);
+
         this.awaitWrapper = "Async\\await";
     }
 
@@ -168,29 +171,6 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
     
-    shouldRemoveParenthesisFromCallExpression(node) {
-
-        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
-            const propertyAccessExpression = node.expression;
-            const propertyAccessExpressionName = propertyAccessExpression.name.text;
-            switch (propertyAccessExpressionName) {
-                case 'length':
-                    return true;
-                case 'toString':
-                    return true;
-                case 'toUpperCase':
-                    return true;
-                case 'toLowerCase':
-                    return true;
-                case 'pop':
-                    return true;
-                case 'shift':
-                    return true;
-            }
-        }
-        return false;
-    }
-
     getExceptionalAccessTokenIfAny(node) {
         const leftSide = node.expression.escapedText ?? node.expression.getFullText().trim();
 
@@ -304,6 +284,15 @@ export class PhpTranspiler extends BaseTranspiler {
             'parseFloat': 'floatval',
             'parseInt': 'intval',
         };
+
+        this.PropertyAccessRequiresParenthesisRemoval = [
+            'length',
+            'toString',
+            'toUpperCase',
+            'toLowerCase',
+            'pop',
+            'shift',
+        ];
     }
 
 }
