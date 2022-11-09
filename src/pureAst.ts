@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { IFileImport } from './types.js';
+import { unCamelCase } from "./utils.js";
 
 const SyntaxKind = ts.SyntaxKind;
 
@@ -97,6 +98,8 @@ class BaseTranspiler {
     
     FuncModifiers = {};
 
+    uncamelcaseIdentifiers = false;
+
     constructor(config) {
         Object.assign (this, config);
 
@@ -162,8 +165,15 @@ class BaseTranspiler {
         return this.DEFAULT_IDENTATION.repeat(num);
     }
 
+    unCamelCaseIfNeeded(name: string): string {
+        if (this.uncamelcaseIdentifiers) {
+            return unCamelCase(name) ?? name;
+        }
+        return name;
+    }
+
     transformIdentifier(identifier) {
-        return identifier;
+        return this.unCamelCaseIfNeeded(identifier);
     }
 
     printIdentifier(node) {
@@ -224,10 +234,13 @@ class BaseTranspiler {
         return undefined;
     }
 
+    transformPropertyAcessRightIdentifierIfNeeded (name: string): string {
+        return this.unCamelCaseIfNeeded(name);
+    }
+    
     getExceptionalAccessTokenIfAny(node) {
         return undefined; // stub to override
     }
-
 
     printPropertyAccessExpression(node, identation) {
 
@@ -250,10 +263,11 @@ class BaseTranspiler {
         leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : this.printNode(expression, 0); // eslint-disable-line
 
         // checking "toString" insde the object will return the builtin toString method :X
-        rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? this.RightPropertyAccessReplacements[rightSide] : rightSide; // eslint-disable-line
+        rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? // eslint-disable-line
+                this.RightPropertyAccessReplacements[rightSide] : 
+                this.transformPropertyAcessRightIdentifierIfNeeded(rightSide) ?? rightSide; 
         
         // join together the left and right side again
-
         const accessToken = this.getExceptionalAccessTokenIfAny(node) ?? this.PROPERTY_ACCESS_TOKEN;
 
         rawExpression = leftSide + accessToken + rightSide; 
@@ -301,9 +315,7 @@ class BaseTranspiler {
 
     printFunctionDefinition(node, identation) {
         let name = node.name.escapedText;
-
-        const transformedName = this.transformFunctionNameIfNeeded(name);
-        name = transformedName ? transformedName : name;
+        name = this.transformFunctionNameIfNeeded(name);
 
         const parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
         
@@ -321,8 +333,8 @@ class BaseTranspiler {
         return functionDef;
     }
 
-    transformFunctionNameIfNeeded(name) {
-        return undefined; // stub to override
+    transformFunctionNameIfNeeded(name): string {
+        return this.unCamelCaseIfNeeded(name);
     }
     
     printFunctionDeclaration(node, identation) {
@@ -347,16 +359,14 @@ class BaseTranspiler {
         return node.parameters.map(param => this.printParameter(param)).join(", ");
     }
     
-    transformMethodNameIfNeeded(name) {
-        return undefined; // stub to override
+    transformMethodNameIfNeeded(name: string): string {
+        return this.unCamelCaseIfNeeded(name);
     }
 
     printMethodDefinition(node, identation) {
 
         let name = node.name.escapedText;
-
-        const transformedName = this.transformMethodNameIfNeeded(name);
-        name = transformedName ? transformedName : name;
+        name = this.transformMethodNameIfNeeded(name);
 
         const parsedArgs = this.printMethodParameters(node);
 

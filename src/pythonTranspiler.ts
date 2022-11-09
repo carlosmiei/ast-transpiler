@@ -47,28 +47,6 @@ export class PythonTranspiler extends BaseTranspiler {
         };
     }
 
-    transformIdentifier(identifier) {
-
-        if (this.uncamelcaseIdentifiers) {
-            return unCamelCase(identifier) ?? identifier;
-        }
-        return identifier;
-    }
-
-    transformMethodNameIfNeeded(name) {
-        if (this.uncamelcaseIdentifiers) {
-            return unCamelCase(name) ?? name;
-        }
-        return undefined;
-    }
-
-    transformFunctionNameIfNeeded(name) {
-        if (this.uncamelcaseIdentifiers) {
-            return unCamelCase(name) ?? name;
-        }
-        return undefined;
-    }
-
     printOutOfOrderCallExpressionIfAny(node, identation) {
         const expressionText = node.expression.getText();
         const args = node.arguments;

@@ -265,20 +265,6 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
 
-    transformMethodNameIfNeeded(name) {
-        if (this.uncamelcaseIdentifiers) {
-            return unCamelCase(name);
-        }
-        return undefined;
-    }
-
-    transformFunctionNameIfNeeded(name) {
-        if (this.uncamelcaseIdentifiers) {
-            return unCamelCase(name);
-        }
-        return undefined;
-    }
-
     initConfig() {
         this.LeftPropertyAccessReplacements = {
             'this': '$this',

@@ -314,4 +314,20 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
+    test('should snake_case function and method calls', () => {
+        transpiler.setPhpUncamelCaseIdentifiers(true);
+        const ts =
+        "function camelCase () {\n" +
+        "    this.myFunc()\n" +
+        "    myFunc()\n" +
+        "}";
+        const php =
+        "function camel_case(){\n" +
+        "    $this->my_func();\n" +
+        "    $my_func();\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+        transpiler.setPhpUncamelCaseIdentifiers(false);
+    })
   });

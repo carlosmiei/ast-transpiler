@@ -279,4 +279,19 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
+    test('should snake_case function and method calls', () => {
+        transpiler.setPythonUncamelCaseIdentifiers(true);
+        const ts =
+        "function camelCase () {\n" +
+        "    this.myFunc()\n" +
+        "    myFunc()\n" +
+        "}";
+        const python =
+        "def camel_case():\n" +
+        "    self.my_func()\n" +
+        "    my_func()\n";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+        transpiler.setPythonUncamelCaseIdentifiers(false);
+    })
 });

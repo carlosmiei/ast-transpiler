@@ -16,8 +16,8 @@ transpiler.setPHPPropResolution(['Precise']);
 
 const file = "tmp.ts";
 
-const pythonRes = transpiler.transpilePythonByPath(file);
-const phpRes = `<?php\n${transpiler.transpilePhpByPath(file, true)}\n?>`;
+const pythonRes = transpiler.transpilePythonByPath(file).content;
+const phpRes = `<?php\n${transpiler.transpilePhpByPath(file, true).content}\n?>`;
 
 
 
