@@ -84,6 +84,12 @@ class BaseTranspiler {
 
     NEW_TOKEN = "";
 
+    STRING_LITERAL_KEYWORD = "StringLiteral";
+    STRING_KEYWORD = "String";
+    NUMBER_KEYWORD = "Number";
+
+    PUBLIC_KEYWORD = "public";
+    PRIVATE_KEYWORD = "private";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -101,19 +107,16 @@ class BaseTranspiler {
     uncamelcaseIdentifiers;
 
     constructor(config) {
-        Object.assign (this, config);
-
+        Object.assign (this, (config['parser'] || {}));
         this.uncamelcaseIdentifiers = false;
-
         this.initOperators();
-
     }
 
     initOperators() {
         this.SupportedKindNames = {
-            [ts.SyntaxKind.StringLiteral]: "StringLiteral",
-            [ts.SyntaxKind.StringKeyword]: "String",
-            [ts.SyntaxKind.NumberKeyword]: "Number",
+            [ts.SyntaxKind.StringLiteral]: this.STRING_LITERAL_KEYWORD,
+            [ts.SyntaxKind.StringKeyword]: this.STRING_KEYWORD,
+            [ts.SyntaxKind.NumberKeyword]: this.NUMBER_KEYWORD,
             [ts.SyntaxKind.MinusMinusToken]: this.MINUS_MINUS_TOKEN,
             [ts.SyntaxKind.MinusToken]: this.MINUS_TOKEN,
             [ts.SyntaxKind.SlashToken]: this.SLASH_TOKEN,
@@ -149,13 +152,13 @@ class BaseTranspiler {
         };
 
         this.FunctionDefSupportedKindNames = {
-            [ts.SyntaxKind.StringKeyword]: "string"
+            [ts.SyntaxKind.StringKeyword]: this.STRING_KEYWORD
         };
 
         this.FuncModifiers = {
             [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
-            [ts.SyntaxKind.PublicKeyword]: "public",
-            [ts.SyntaxKind.PrivateKeyword]: "private",
+            [ts.SyntaxKind.PublicKeyword]: this.PUBLIC_KEYWORD,
+            [ts.SyntaxKind.PrivateKeyword]: this.PRIVATE_KEYWORD,
         };
     }
 

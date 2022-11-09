@@ -1,6 +1,6 @@
 import { BaseTranspiler } from "./pureAst.js";
 import ts, { TypeChecker } from 'typescript';
-import { unCamelCase } from "./utils.js";
+import { unCamelCase, extend } from "./utils.js";
 
 const SyntaxKind = ts.SyntaxKind;
 
@@ -44,15 +44,25 @@ export class PhpTranspiler extends BaseTranspiler {
     awaitWrapper;
     propRequiresScopeResolutionOperator: string[];
     constructor(config = {}) {
-        super(parserConfig);
+        
+        config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
+        
+        super(config);
         
         this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
 
         this.propRequiresScopeResolutionOperator = ['super'] + (config['scopeResolutionProps'] ?? []);
 
-        this.awaitWrapper = "Async\\await";
         this.initConfig();
+
+        // user overrides
+        this.LeftPropertyAccessReplacements = Object.assign ({}, this.LeftPropertyAccessReplacements, config['LeftPropertyAccessReplacements'] ?? {});
+        this.RightPropertyAccessReplacements = Object.assign ({}, this.RightPropertyAccessReplacements, config['RightPropertyAccessReplacements'] ?? {});
+        this.FullPropertyAccessReplacements = Object.assign ({}, this.FullPropertyAccessReplacements, config['FullPropertyAccessReplacements'] ?? {});
+        this.CallExpressionReplacements = Object.assign ({}, this.CallExpressionReplacements, config['CallExpressionReplacements'] ?? {});
+
+        this.awaitWrapper = "Async\\await";
     }
 
     printAwaitExpression(node, identation) {

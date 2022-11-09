@@ -1,14 +1,27 @@
 import { BaseTranspiler } from "./pureAst.js";
-import { regexAll, unCamelCase } from "./utils.js";
+import { regexAll } from "./utils.js";
 import ts from 'typescript';
 
 const SyntaxKind = ts.SyntaxKind;
 
+const parserConfig = {
+
+};
 export class PythonTranspiler extends BaseTranspiler {
     constructor(config = {}) {
+        
+        config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
+
         super(config);
-        this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
+        
         this.initConfig();
+        this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
+
+        // user overrides
+        this.LeftPropertyAccessReplacements = Object.assign ({}, this.LeftPropertyAccessReplacements, config['LeftPropertyAccessReplacements'] ?? {});
+        this.RightPropertyAccessReplacements = Object.assign ({}, this.RightPropertyAccessReplacements, config['RightPropertyAccessReplacements'] ?? {});
+        this.FullPropertyAccessReplacements = Object.assign ({}, this.FullPropertyAccessReplacements, config['FullPropertyAccessReplacements'] ?? {});
+        this.CallExpressionReplacements = Object.assign ({}, this.CallExpressionReplacements, config['CallExpressionReplacements'] ?? {});
     }
 
     initConfig() {
