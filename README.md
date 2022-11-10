@@ -1,4 +1,5 @@
 # Transpiler
+[![Build](https://github.com/carlosmiei/ast-transpiling/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/carlosmiei/ast-transpiling/actions/workflows/node.js.yml)
 
 Transpiler is a library that allows transpiling typescript code to different languages
 
