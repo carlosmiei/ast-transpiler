@@ -15,6 +15,7 @@ export class PythonTranspiler extends BaseTranspiler {
         super(config);
         
         this.initConfig();
+        this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
 
         // user overrides

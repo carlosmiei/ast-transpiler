@@ -40,9 +40,10 @@ const parserConfig = {
 };
 
 export class PhpTranspiler extends BaseTranspiler {
-    asyncTranspiling;
     awaitWrapper;
     propRequiresScopeResolutionOperator: string[];
+    AWAIT_WRAPPER_OPEN;
+    AWAIT_WRAPPER_CLOSE;
     constructor(config = {}) {
         
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
@@ -65,7 +66,8 @@ export class PhpTranspiler extends BaseTranspiler {
         const propertyAccessRemoval = config['PropertyAccessRequiresParenthesisRemoval'] ?? [];
         this.PropertyAccessRequiresParenthesisRemoval.push(...propertyAccessRemoval);
 
-        this.awaitWrapper = "Async\\await";
+        this.AWAIT_WRAPPER_OPEN = config['AWAIT_WRAPPER_OPEN'] ?? "Async\\await(";
+        this.AWAIT_WRAPPER_CLOSE = config['AWAIT_WRAPPER_CLOSE'] ??  ")";
     }
 
     printAwaitExpression(node, identation) {
@@ -75,7 +77,7 @@ export class PhpTranspiler extends BaseTranspiler {
             return this.getIden(identation) + expression;
         }
 
-        return this.getIden(identation) + this.awaitWrapper + "(" + expression + ")" ;
+        return this.getIden(identation) + this.AWAIT_WRAPPER_OPEN + expression + this.AWAIT_WRAPPER_CLOSE;
     }
 
     transformIdentifier(identifier) {

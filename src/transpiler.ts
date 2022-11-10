@@ -94,11 +94,8 @@ class Transpiler {
         };
     }
 
-    transpilePhp(content, async = true): ITranspiledFile {
+    transpilePhp(content): ITranspiledFile {
         this.createProgramInMemoryAndSetGlobals(content);
-        if (async) {
-            this.phpTranspiler.asyncTranspiling = true;
-        }
         const transpiledContent = this.phpTranspiler.printNode(global.src, -1);
         const imports = this.phpTranspiler.getFileImports(global.src);
         return {
@@ -107,11 +104,8 @@ class Transpiler {
         };
     }
 
-    transpilePhpByPath(path, async = true): ITranspiledFile {
+    transpilePhpByPath(path): ITranspiledFile {
         this.createProgramByPathAndSetGlobals(path);
-        if (async) {
-            this.phpTranspiler.asyncTranspiling = true;
-        }
         const transpiledContent = this.phpTranspiler.printNode(global.src, -1);
         const imports = this.phpTranspiler.getFileImports(global.src);
         return {
@@ -136,6 +130,15 @@ class Transpiler {
     setPythonUncamelCaseIdentifiers(uncamelCase: boolean) {
         this.pythonTranspiler.uncamelcaseIdentifiers = uncamelCase;
     }
+
+    setPhpAsyncTranspiling(async: boolean) {
+        this.phpTranspiler.asyncTranspiling = async;
+    }
+
+    setPythonAsyncTranspiling(async: boolean) {
+        this.pythonTranspiler.asyncTranspiling = async;
+    }
+
 }   
 
 export {

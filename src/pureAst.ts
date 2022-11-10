@@ -106,6 +106,8 @@ class BaseTranspiler {
     FuncModifiers = {};
 
     uncamelcaseIdentifiers;
+    
+    asyncTranspiling;
 
     constructor(config) {
         Object.assign (this, (config['parser'] || {}));
@@ -295,6 +297,11 @@ class BaseTranspiler {
             return "";
         }
         modifiers = modifiers.filter(mod => this.FuncModifiers[mod.kind]);
+
+        if (!this.asyncTranspiling) {
+            modifiers = modifiers.filter(mod => mod.kind !== ts.SyntaxKind.AsyncKeyword);
+        }
+
         return modifiers.map(modifier => this.FuncModifiers[modifier.kind]).join(" ");
     }
 
@@ -651,7 +658,8 @@ class BaseTranspiler {
 
     printAwaitExpression(node, identation) {
         const expression = this.printNode(node.expression, 0);
-        return this.getIden(identation) + this.AWAIT_TOKEN + " " + expression;
+        const awaitToken = this.asyncTranspiling ? this.AWAIT_TOKEN + " " : "";
+        return this.getIden(identation) + awaitToken + expression;
     }
 
     printConditionalExpression(node, identation) {
