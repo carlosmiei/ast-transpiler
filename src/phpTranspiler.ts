@@ -44,6 +44,7 @@ export class PhpTranspiler extends BaseTranspiler {
     propRequiresScopeResolutionOperator: string[];
     AWAIT_WRAPPER_OPEN;
     AWAIT_WRAPPER_CLOSE;
+    ASYNC_FUNCTION_WRAPPER_OPEN = "";
     constructor(config = {}) {
         
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
@@ -254,6 +255,20 @@ export class PhpTranspiler extends BaseTranspiler {
             }
         }
         return undefined;
+    }
+
+    printFunctionBody(node, identation) {
+
+        if (this.asyncTranspiling && this.isAsyncFunction(node)) {
+            const funcBody = super.printFunctionBody(node, identation + 1);
+            const parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
+            const params = parsedArgs ? " use (" + parsedArgs + ")" : "";
+            const result = this.getIden(identation) +  "return Async\\async(function ()" + params + "{\n"
+            + funcBody + "\n"
+            + this.getIden(identation) + "}) ();";
+            return result;
+        }
+        return super.printFunctionBody(node, identation);
     }
 
     initConfig() {

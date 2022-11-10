@@ -58,17 +58,35 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
-    test('basic async function declaration', () => {
+    test('basic async function declaration [no args]', () => {
         const ts =
         "async function camelCase () {\n" +
         "    this.myFunc()\n" +
         "    await this.loadMarkets();\n" +
-        "}"
+        "}\n"
         const php =
         "function camelCase(){\n" +
-        "    $this->myFunc();\n" +
-        "    Async\\await($this->loadMarkets());\n" +
+        "    return Async\\async(function (){\n" +
+        "        $this->myFunc();\n" +
+        "        Async\\await($this->loadMarkets());\n" +
+        "    }) ();\n" +
         "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('basic async function declaration [with args]', () => {
+        const ts =
+        "async function camelCase (foo,bar) {\n" +
+        "    this.myFunc()\n" +
+        "    await this.loadMarkets();\n" +
+        "}\n"
+        const php =
+        "function camelCase($foo, $bar){\n" +
+        "    return Async\\async(function () use ($foo, $bar){\n" +
+        "        $this->myFunc();\n" +
+        "        Async\\await($this->loadMarkets());\n" +
+        "    }) ();\n" +
+        "}"; 
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });

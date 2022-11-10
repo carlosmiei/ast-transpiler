@@ -169,6 +169,16 @@ class BaseTranspiler {
         return flags === ts.TypeFlags.String || flags === ts.TypeFlags.StringLiteral;
     }
 
+    isAsyncFunction(node) {
+        let modifiers = node.modifiers;
+        if (modifiers === undefined) {
+            return false;
+        }
+        modifiers = modifiers.filter(mod => mod.kind === ts.SyntaxKind.AsyncKeyword);
+
+        return modifiers.length > 0;
+    }
+
     getIden (num) {
         return this.DEFAULT_IDENTATION.repeat(num);
     }
@@ -322,7 +332,8 @@ class BaseTranspiler {
     }
 
     printFunctionBody(node, identation) {
-        const statementsAsString = node.statements.map((s) => {
+        const body = node.body;
+        const statementsAsString = body.statements.map((s) => {
             return this.printNode(s, identation);
 
         }).filter((s)=>!!s).join("\n");
@@ -359,7 +370,7 @@ class BaseTranspiler {
 
         const leadingComments = this.printFunctionComment(node.body.statements[0], identation+1);
        
-        const funcBody = this.printFunctionBody(node.body, identation+1);
+        const funcBody = this.printFunctionBody(node, identation+1);
 
         const funcClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
 
@@ -411,7 +422,7 @@ class BaseTranspiler {
 
         let methodDef = this.printMethodDefinition(node, identation);
         
-        const funcBody = this.printFunctionBody(node.body, identation+1);
+        const funcBody = this.printFunctionBody(node, identation+1);
         
         methodDef += leadingComments;
         methodDef += funcBody;
@@ -806,6 +817,5 @@ class BaseTranspiler {
 
 
 export {
-    BaseTranspiler,
-    IFileImport
+    BaseTranspiler
 };
