@@ -51,6 +51,19 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('basic async function declaration', () => {
+        const ts =
+        "async function camelCase () {\n" +
+        "    this.myFunc()\n" +
+        "    await this.loadMarkets();\n" +
+        "}"
+        const python =
+        "async def camelCase():\n" +
+        "    self.myFunc()\n" +
+        "    await self.loadMarkets()\n"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic class declaration', () => {
         const ts =
         "class Teste {\n" +

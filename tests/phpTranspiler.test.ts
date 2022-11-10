@@ -58,6 +58,20 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('basic async function declaration', () => {
+        const ts =
+        "async function camelCase () {\n" +
+        "    this.myFunc()\n" +
+        "    await this.loadMarkets();\n" +
+        "}"
+        const php =
+        "function camelCase(){\n" +
+        "    $this->myFunc();\n" +
+        "    Async\\await($this->loadMarkets());\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic class declaration', () => {
         const ts =
         "class Test {\n" +
