@@ -38,6 +38,7 @@ const transpiler = new Transpiler({
 
 const ts = "const myVar = 1;"
 const transpiledCode = transpiler.transpilePython(ts);
+
 console.log(transpileCode.content) // prints my_var = 1
 ```
 
@@ -48,9 +49,34 @@ const Transpiler = require('IMPORT-HERE');
 
 const transpiler = new Transpiler();
 const transpiledCode = transpiler.transpilePhpByPath("./my/path/file.ts");
+
 console.log(transpiler.content) // prints transpiled php
 console.log(transpiler.imports) // prints unified imports statements if any
 ```
+
+## Supported Features
+
+- Variable declarations
+- Class/function/methods declarations
+- For/While loops
+- Basic string manipulation (concat, length, includes, etc)
+- Basic arrays manipulation (includes, length, etc)
+- Basic object manipulation (initialization, key access, etc)
+- Binary expressions (+,-,*/,mod)
+- Condition expressions (&&, ||)
+- Basic math functions (Math.min, Math.max, Math.floor, parseFloat, parseInt,etc)
+- Basic JSON methods (JSON.stringify, JSON.parse)
+- Throw statements
+- Conditional Expressions
+- Break expressions
+- Basic instanceof statements
+- JSDoc comments
+- snake casing of variables/calls/functions/methods
+- Basic async support (async methods/functions, await, promise.all)
+- Scope Resolution Operator conversion (PHP only)
+- etc
+
+We will try to add more features/conversations in the future but this process is also customizable, check the Overrides section.
 
 ## Contributing
 
