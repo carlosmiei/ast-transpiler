@@ -44,7 +44,7 @@ function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, opti
 }
 
 
-class Transpiler {
+export default class Transpiler {
     config;
     pythonTranspiler: PythonTranspiler;
     phpTranspiler: PhpTranspiler;

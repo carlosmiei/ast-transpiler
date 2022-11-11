@@ -106,7 +106,6 @@ class BaseTranspiler {
     FuncModifiers = {};
 
     uncamelcaseIdentifiers;
-    
     asyncTranspiling;
 
     constructor(config) {
