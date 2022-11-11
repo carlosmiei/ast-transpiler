@@ -92,6 +92,9 @@ export class PythonTranspiler extends BaseTranspiler {
             case "Math.ceil":
                 finalExpression = "int(math.ceil(" + this.printNode(args[0], 0) + "))";
                 break;
+            case "Promise.all":
+                finalExpression = "asyncio.gather(*" + this.printNode(args[0], 0) + ")";
+                break;
         }
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;

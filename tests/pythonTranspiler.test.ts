@@ -338,4 +338,15 @@ describe('python tests', () => {
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);
     })
+    test('should convert Promise.all to asyncio.gather', () => {
+        const ts =
+        "let promises = [ this.fetchSwapAndFutureMarkets (params), this.fetchUSDCMarkets (params) ];\n" +
+        "promises = await Promise.all (promises);";
+        const php =
+        "promises = [self.fetchSwapAndFutureMarkets(params), self.fetchUSDCMarkets(params)]\n" +
+        "promises = await asyncio.gather(*promises)";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(php);
+        transpiler.setPhpUncamelCaseIdentifiers(false);
+    })
 });

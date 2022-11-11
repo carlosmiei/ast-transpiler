@@ -394,4 +394,16 @@ describe('php transpiling tests', () => {
         expect(output).toBe(php);
         transpiler.setPhpUncamelCaseIdentifiers(false);
     })
+    test('should convert Promise.all to Promise\\all', () => {
+        transpiler.setPhpUncamelCaseIdentifiers(true);
+        const ts =
+        "let promises = [ this.fetchSwapAndFutureMarkets (params), this.fetchUSDCMarkets (params) ];\n" +
+        "promises = await Promise.all (promises);";
+        const php =
+        "$promises = [$this->fetch_swap_and_future_markets($params), $this->fetch_usdc_markets($params)];\n" +
+        "$promises = Async\\await(Promise\\all($promises));" 
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+        transpiler.setPhpUncamelCaseIdentifiers(false);
+    })
   });
