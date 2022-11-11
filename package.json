@@ -1,21 +1,33 @@
 {
   "name": "transpiler",
   "type": "module",
-  "module": "./dist/transpiler.mjs",
+  "module": "./dist/transpiler.js",
   "types": "./dist/transpiler.d.ts",
   "exports": {
     ".": {
       "require": "./dist/transpiler.js",
-      "import": "./dist/transpiler.mjs",
+      "import": "./dist/transpiler.js",
       "types": "./dist/transpiler.d.ts"
     }
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "readme": "README.md",
   "scripts": {
     "build": "npm run lint &&  tsup src/transpiler.ts --format cjs,esm --dts --clean",
     "build2": "npm run lint && tsc",
     "start": "node --loader ts-node/esm src/manual.ts",
     "start-py": "node --loader ts-node/esm src/pythonTranspiler.ts",
     "start2": " ts-node-esm src/transpiler.ts",
+    "test-ci": "jest --ci --coverage",
     "test": "jest --verbose",
     "testv": "jest --verbose --coverage",
     "test2": "node --experimental-vm-modules node_modules/.bin/jest",
