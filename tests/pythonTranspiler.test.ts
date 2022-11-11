@@ -342,11 +342,35 @@ describe('python tests', () => {
         const ts =
         "let promises = [ this.fetchSwapAndFutureMarkets (params), this.fetchUSDCMarkets (params) ];\n" +
         "promises = await Promise.all (promises);";
-        const php =
+        const python =
         "promises = [self.fetchSwapAndFutureMarkets(params), self.fetchUSDCMarkets(params)]\n" +
         "promises = await asyncio.gather(*promises)";
         const output = transpiler.transpilePython(ts).content;
-        expect(output).toBe(php);
+        expect(output).toBe(python);
+        transpiler.setPhpUncamelCaseIdentifiers(false);
+    })
+    test('should convert JS doc', () => {
+        const ts =
+        "function fetchStatus (params ) {\n" +
+        "    /**\n" +
+        "     * @method\n" +
+        "     * @name aax#fetchStatus\n" +
+        "     * @description the latest known information on the availability of the exchange API\n" +
+        "     * @param {object} params extra parameters specific to the aax api endpoint\n" +
+        "     * @returns {object} a [status structure]{@link https://docs.ccxt.com/en/latest/manual.html#exchange-status-structure}\n" +
+        "     */\n" +
+        "    return 1;\n" +
+        "}";
+        const python =
+        "def fetchStatus(params):\n" +
+        "    \"\"\"\n" +
+        "    the latest known information on the availability of the exchange API\n" +
+        "    :param dict params: extra parameters specific to the aax api endpoint\n" +
+        "    :returns dict: a `status structure <https://docs.ccxt.com/en/latest/manual.html#exchange-status-structure>`\n" +
+        "    \"\"\"\n" +
+        "    return 1\n";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
         transpiler.setPhpUncamelCaseIdentifiers(false);
     })
 });

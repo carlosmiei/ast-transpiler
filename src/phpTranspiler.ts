@@ -1,6 +1,6 @@
 import { BaseTranspiler } from "./pureAst.js";
 import ts, { TypeChecker } from 'typescript';
-import { unCamelCase, extend } from "./utils.js";
+import { unCamelCase, regexAll } from "./utils.js";
 
 const SyntaxKind = ts.SyntaxKind;
 
@@ -269,6 +269,23 @@ export class PhpTranspiler extends BaseTranspiler {
             return result;
         }
         return super.printFunctionBody(node, identation);
+    }
+
+    transformFunctionComment(comment) {
+        const commentRegex = [
+            [ /\{([\]\[\|a-zA-Z0-9_-]+?)\}/g, '~$1~' ], // eslint-disable-line -- resolve the "arrays vs url params" conflict (both are in {}-brackets)
+            [ /\[([^\]\[]*)\]\{(@link .*)\}/g, '~$2 $1~' ], // eslint-disable-line -- docstring item with link
+            [ /\s+\* @method/g, '' ], // docstring @method
+            [ /(\s+)\* @description (.*)/g, '$1\* $2' ], // eslint-disable-line
+            [ /\s+\* @name .*/g, '' ], // docstring @name
+            [ /(\s+)\* @returns/g, '$1\* @return' ], // eslint-disable-line
+            [ /\~([\]\[\|@\.\s+\:\/#\-a-zA-Z0-9_-]+?)\~/g, '{$1}' ], // eslint-disable-line -- resolve the "arrays vs url params" conflict (both are in {}-brackets)
+            [ /(\s+ \* @(param|return) {[^}]*)object([^}]*}.*)/g, '$1array$3' ], // docstring type conversion
+        ];
+
+        const transformed = regexAll(comment, commentRegex);
+
+        return transformed;
     }
 
     initConfig() {

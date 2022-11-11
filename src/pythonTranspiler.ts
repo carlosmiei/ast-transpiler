@@ -138,18 +138,19 @@ export class PythonTranspiler extends BaseTranspiler {
     transformFunctionComment(comment) {
         const commentRegex = [
                 [ /(^|\s)\/\//g, '$1#' ], // regular comments
-                [ /\/\*\*/, '"""' ], // Doc strings
-                [ / \*\//, '"""' ], // Doc strings
+                [ /\/\*\*/, '\"\"\"' ], // eslint-disable-line
+                [ / \*\//, '\"\"\"' ], // eslint-disable-line
+                [ /\[([^\[\]]*)\]\{@link (.*)\}/g, '`$1 <$2>`' ], // eslint-disable-line
                 [ /\s+\* @method/g, '' ], // docstring @method
                 [ /(\s+) \* @description (.*)/g, '$1$2' ], // docstring description
                 [ /\s+\* @name .*/g, '' ], // docstring @name
                 [ /(\s+) \* @see( .*)/g, '$1see$2' ], // docstring @see
                 [ /(\s+ \* @(param|returns) {[^}]*)string([^}]*}.*)/g, '$1str$3' ], // docstring type conversion
                 [ /(\s+ \* @(param|returns) {[^}]*)object([^}]*}.*)/g, '$1dict$3' ], // doctstrubg type conversion
-                [ /(\s+) \* @returns ([^{])/g, '$1:returns: $2' ], // docstring return
+                [ /(\s+) \* @returns ([^\{])/g, '$1:returns: $2' ], // eslint-disable-line
                 [ /(\s+) \* @returns \{(.+)\}/g, '$1:returns $2:' ], // docstring return
-                [ /(\s+ \* @param \{[\][|a-zA-Z]+\} )([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+) (.*)/g, '$1$2[\'$3\'] $4' ], // docstring params.anything
-                [ /(\s+) \* @([a-z]+) \{([\][a-zA-Z|]+)\} ([a-zA-Z0-9_\-.[\]']+)/g, '$1:$2 $3 $4:' ], // docstring para 
+                [ /(\s+ \* @param \{[\]\[\|a-zA-Z]+\} )([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+) (.*)/g, '$1$2[\'$3\'] $4' ], // eslint-disable-line
+                [ /(\s+) \* @([a-z]+) \{([\]\[a-zA-Z\|]+)\} ([a-zA-Z0-9_\-\.\[\]\']+)/g, '$1:$2 $3 $4:' ],  // eslint-disable-line
             ];
 
         const transformed = regexAll(comment, commentRegex);

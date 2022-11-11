@@ -406,4 +406,29 @@ describe('php transpiling tests', () => {
         expect(output).toBe(php);
         transpiler.setPhpUncamelCaseIdentifiers(false);
     })
+    test('should convert JS doc', () => {
+        const ts =
+        "function fetchStatus (params ) {\n" +
+        "    /**\n" +
+        "     * @method\n" +
+        "     * @name aax#fetchStatus\n" +
+        "     * @description the latest known information on the availability of the exchange API\n" +
+        "     * @param {object} params extra parameters specific to the aax api endpoint\n" +
+        "     * @returns {object} a [status structure]{@link https://docs.ccxt.com/en/latest/manual.html#exchange-status-structure}\n" +
+        "     */\n" +
+        "    return 1;\n" +
+        "}";
+        const php =
+        "function fetchStatus($params){\n" +
+        "    /**\n" +
+        "     * the latest known information on the availability of the exchange API\n" +
+        "     * @param {array} params extra parameters specific to the aax api endpoint\n" +
+        "     * @return {array} a {@link https://docs.ccxt.com/en/latest/manual.html#exchange-status-structure status structure}\n" +
+        "     */\n" +
+        "    return 1;\n" +
+        "}";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+        transpiler.setPhpUncamelCaseIdentifiers(false);
+    })
   });
