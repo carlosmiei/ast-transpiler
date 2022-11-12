@@ -56,6 +56,8 @@ class BaseTranspiler {
 
     CLASS_OPENING_TOKEN = ":";
     CLASS_CLOSING_TOKEN = "";
+    CONSTRUCTOR_TOKEN = "def __init__";
+    SUPER_CALL_TOKEN = "super().__init__";
 
     WHILE_TOKEN = "while";
     WHILE_OPEN = "";
@@ -473,11 +475,24 @@ class BaseTranspiler {
         return undefined; // stub to override
     }
 
+    printSuperCallInsideConstructor(node, identation) {
+        const args = node.arguments;
+
+        const parsedArgs = args.map((a) => {
+            return this.printNode(a, identation).trim();
+        }).join(",");
+        return this.getIden(identation) + this.SUPER_CALL_TOKEN + "(" + parsedArgs + ")";
+    }
+
     printCallExpression(node, identation) {
 
         const expression = node.expression;
 
         const args = node.arguments;
+
+        const parsedArgs = args.map((a) => {
+            return this.printNode(a, identation).trim();
+        }).join(",");
         
         const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
 
@@ -485,6 +500,11 @@ class BaseTranspiler {
 
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;
+        }
+
+        // print super() call inside constructor
+        if (expression.kind === ts.SyntaxKind.SuperKeyword) {
+            return this.printSuperCallInsideConstructor(node, identation);
         }
 
         let parsedExpression = undefined;
@@ -496,9 +516,6 @@ class BaseTranspiler {
 
         let parsedCall = this.getIden(identation) + parsedExpression;
         if (!removeParenthesis) {
-            const parsedArgs = args.map((a) => {
-                return this.printNode(a, identation).trim();
-            }).join(",");
             parsedCall+= "(" + parsedArgs + ")";
         
         }    
@@ -536,6 +553,18 @@ class BaseTranspiler {
         const classClosing = this.CLASS_CLOSING_TOKEN ? "\n" + this.CLASS_CLOSING_TOKEN : "";
 
         return classDefinition + classBody + classClosing;
+    }
+
+    printConstructorDeclaration (node, identation) {
+        const args = this.printMethodParameters(node);
+        const constructorBody = this.printFunctionBody(node, identation+1);
+        const funcClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
+        return this.getIden(identation) +
+                this.CONSTRUCTOR_TOKEN + 
+                "(" + args + ")" + 
+                this.FUNCTION_DEF_OPEN +  "\n" + 
+                constructorBody + "\n" +
+                funcClose;
     }
 
     printWhileStatement(node, identation) {
@@ -788,6 +817,8 @@ class BaseTranspiler {
             return this.printArrayBindingPattern(node, identation);
         } else if (ts.isParameter(node)) {
             return this.printParameter(node);
+        } else if (ts.isConstructorDeclaration(node)) {
+            return this.printConstructorDeclaration(node, identation);
         }
 
         if (node.statements) {

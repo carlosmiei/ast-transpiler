@@ -39,6 +39,8 @@ const parserConfig = {
     'SUPER_TOKEN': 'parent',
     'CLASS_CLOSING_TOKEN': '}',
     'CLASS_OPENING_TOKEN': '{',
+    'CONSTRUCTOR_TOKEN': 'function __construct',
+    'SUPER_CALL_TOKEN': 'parent::__construct'
 };
 
 export class PhpTranspiler extends BaseTranspiler {
