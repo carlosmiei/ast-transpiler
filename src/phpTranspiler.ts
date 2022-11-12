@@ -37,6 +37,8 @@ const parserConfig = {
     'NEW_TOKEN': 'new',
     'THROW_TOKEN': 'throw',
     'SUPER_TOKEN': 'parent',
+    'CLASS_CLOSING_TOKEN': '}',
+    'CLASS_OPENING_TOKEN': '{',
 };
 
 export class PhpTranspiler extends BaseTranspiler {

@@ -54,6 +54,9 @@ class BaseTranspiler {
     PLUS_PLUS_TOKEN = "++";
     MINUS_MINUS_TOKEN = "--";
 
+    CLASS_OPENING_TOKEN = ":";
+    CLASS_CLOSING_TOKEN = "";
+
     WHILE_TOKEN = "while";
     WHILE_OPEN = "";
     WHILE_COND_OPEN = "";
@@ -509,21 +512,30 @@ class BaseTranspiler {
 
     }
 
-    printClass(node, identation) {
+    printClassDefinition(node, identation) {
         const className = node.name.escapedText;
         const heritageClauses = node.heritageClauses;
 
         let classInit = "";
+        const classOpening = " " + this.CLASS_OPENING_TOKEN + "\n";
         if (heritageClauses !== undefined) {
             const classExtends = heritageClauses[0].types[0].expression.escapedText;
-            classInit = this.getIden(identation) + "class " + className + " extends" + classExtends + ") {\n";
+            classInit = this.getIden(identation) + "class " + className + " extends " + classExtends + classOpening;
         } else {
-            classInit = this.getIden(identation) + "class " + className + " {\n";
+            classInit = this.getIden(identation) + "class " + className + classOpening;
         }
+        return classInit;  
+    }
+
+    printClass(node, identation) {
+
+        const classDefinition = this.printClassDefinition(node, identation);
 
         const classBody = this.printClassBody(node, identation);
 
-        return classInit + classBody + "\n}";
+        const classClosing = this.CLASS_CLOSING_TOKEN ? "\n" + this.CLASS_CLOSING_TOKEN : "";
+
+        return classDefinition + classBody + classClosing;
     }
 
     printWhileStatement(node, identation) {

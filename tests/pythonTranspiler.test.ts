@@ -93,6 +93,20 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('basic class inheritance', () => {
+        const ts =
+        "class teste extends extended {\n" +
+        "    method() {\n" +
+        "        return 1;\n" +
+        "    }\n" +
+        "}";
+        const python =
+        "class teste(extended):\n" +
+        "    def method(self):\n" +
+        "        return 1\n";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic dictonary', () => {
         const ts =
         "const types = {\n" +

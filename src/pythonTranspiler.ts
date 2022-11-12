@@ -173,7 +173,7 @@ export class PythonTranspiler extends BaseTranspiler {
         return rawExpression;
     }
 
-    printClass(node, identation) {
+    printClassDefinition(node: any, identation: any): string {
         const className = node.name.escapedText;
         const heritageClauses = node.heritageClauses;
 
@@ -184,10 +184,7 @@ export class PythonTranspiler extends BaseTranspiler {
         } else {
             classInit = this.getIden(identation) + "class " + className + ":\n";
         }
-
-        const classBody = this.printClassBody(node, identation);
-        
-        return classInit + classBody;
+        return classInit;
     }
 
     printMethodParameters(node) {

@@ -122,6 +122,22 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('basic class inheritance', () => {
+        const ts =
+        "class teste extends extended {\n" +
+        "    method() {\n" +
+        "        return 1;\n" +
+        "    }\n" +
+        "}";
+        const php =
+        "class teste extends extended {\n" +
+        "    function method(){\n" +
+        "        return 1;\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic dictonary', () => {
         const ts =
         "const types = {\n" +
