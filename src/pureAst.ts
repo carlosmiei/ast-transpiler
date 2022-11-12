@@ -322,13 +322,17 @@ class BaseTranspiler {
     printFunctionComment(node, identation) {
         const fullText = global.src.getFullText();
         const commentsRangeList = ts.getLeadingCommentRanges(fullText, node.pos);
-        const commentsRange = commentsRangeList ? commentsRangeList[0]: undefined;
-
-        const commentText = commentsRange ? fullText.slice(commentsRange.pos, commentsRange.end): undefined;
-        if (commentText !== undefined) {
-            return this.getIden(identation) + this.transformFunctionComment(commentText) + "\n";
+        const commentsRange = commentsRangeList ? commentsRangeList : undefined;
+        let res = "";
+        if (commentsRange) {
+            for (const commentRange of commentsRange) {
+                const commentText = fullText.slice(commentRange.pos, commentRange.end);
+                if (commentText !== undefined) {
+                    res+= this.getIden(identation) + this.transformFunctionComment(commentText) + "\n";
+                }
+            }
         }
-        return "";
+        return res;
     }
 
     printFunctionBody(node, identation) {

@@ -373,4 +373,22 @@ describe('python tests', () => {
         expect(output).toBe(python);
         transpiler.setPhpUncamelCaseIdentifiers(false);
     })
+    test('should convert regular comment', () => {
+        const ts =
+        "function test () {\n" +
+        "    // comment 1\n" +
+        "    // comment 2\n" +
+        "    // comment 3\n" +
+        "    const x = 1;\n" +
+        "}";
+        const python =
+        "def test():\n" +
+        "    # comment 1\n" +
+        "    # comment 2\n" +
+        "    # comment 3\n" +
+        "    x = 1\n";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+        transpiler.setPhpUncamelCaseIdentifiers(false);
+    })
 });
