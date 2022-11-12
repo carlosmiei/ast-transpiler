@@ -55,7 +55,8 @@ console.log(transpiler.imports) // prints unified imports statements if any
 ```
 
 ## Supported Features
-
+- Identation
+  - Does not rely on the original indentation but on the hierarchy of the statements, can be controlled by setting `DEFAULT_IDENTATION` (default value is four spaces)
 - Variable declarations
 - Class/function/methods declarations
 - For/While loops
@@ -111,7 +112,7 @@ transpiler.setPythonAsyncTranspiling(false);
 
 ### Overrides
 
-There is no perfect recipe for transpiling one language in another completely different so we have to made some choices that you might not find the most correct or might want to change it slightly. For that reason this library exposes some objects that you might load up with your own options.
+There is no perfect recipe for transpiling one language in another completely different so we have to made some choices that you might not find the most correct or might want to change it slightly. For that reason this library exposes some objects and methods that you might load up with your own options.
 #### parser
 
 This object contains all tokens used to convert one language into another (if token, return token, while token, etc). Let's say that you prefer the `array()` notation instead of the default `[]` syntax. You can easily do that by overriding the  `ARRAY_OPENING_TOKEN` and `ARRAY_CLOSING_TOKEN`. 
@@ -194,10 +195,59 @@ const config = {
 }
 ```
 
-#### PropertyAccessRequiresParenthesisRemoval
-This one is a bit triciker. When we navigate through the AST recursively, we don't know what is behind, so let's say I'm in the property `a.x` node. I have only access to that property. This property might be a "standalone" property `const a = a.x` or be part of an expression call `a.x()`. //In the latter case we might 
+#### ScopeResolutionProps (PHP only)
+In PHP, there is the *Scope Resolution Operation* that allows access to *static/constant/overriden* properties, so in these cases we must use a different property access token. Since this concept does not exist in typescript, we have to rely on a list of properties provided by the user where the `::` operator should be applied.
 
 
+```Javascript
+const ScopeResolutionProps = [
+    'Precise'
+]
+
+const config = {
+    "php": {
+        "ScopeResolutionProps": ScopeResolutionProps
+    }
+}
+
+// Precise.string() will be converted to Precise::string()
+```
+
+#### Methods
+
+Due to the nature of this process, there are a lot of things that can't be transpiled by directly replacements so we need to add custom logic depending on the target language. For that reason there are a lot of small atomic methods that can be overriden to add custom modifications.
+
+##### Example 1: Removing JSDocs from PHP code
+
+```Javascript
+
+const transpiler = new Transpiler();
+
+function myPrintFunctionComment (comment) {
+    return "";
+}
+
+transpiler.phpTranspiler.printFunctionComment = myPrintFunctionComment;
+```
+
+##### Example 2: Custom call expression modification in Python
+
+```Javascript
+
+const transpiler = new Transpiler();
+
+function printOutOfOrderCallExpressionIfAny(node, identation) {
+    const expressionText = node.expression.getText();
+    const args = node.arguments;
+    if (expressionText === "Array.isArray") {
+        return "isinstance(" + this.printNode(args[0], 0) + ", list)"; // already done out of the box so no need to add it
+    }
+
+    return super.printOutOfOrderCallExpressionIfAny(node, identation); // avoid interfering with the builtn modifications
+}
+
+transpiler.pythonTranspiler.printOutOfOrderCallExpressionIfAny = printOutOfOrderCallExpressionIfAny;
+```
 
 ## Contributing
 
