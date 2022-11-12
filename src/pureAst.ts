@@ -6,6 +6,7 @@ const SyntaxKind = ts.SyntaxKind;
 
 class BaseTranspiler {
     DEFAULT_IDENTATION = "    ";
+    STRING_QUOTE_TOKEN = "'";
     UNDEFINED_TOKEN = "None";
     IF_TOKEN = "if";
     ELSE_TOKEN = "else";
@@ -27,8 +28,8 @@ class BaseTranspiler {
     OBJECT_CLOSING = "}";
     LEFT_PARENTHESIS = "(";
     RIGHT_PARENTHESIS = ")";
-    LEFT_ARRAY_OPENING = "[";
-    RIGHT_ARRAY_CLOSING = "]";
+    ARRAY_OPENING_TOKEN = "[";
+    ARRAY_CLOSING_TOKEN = "]";
     TRUE_KEYWORD = "True";
     FALSE_KEYWORD = "False";
     NEW_CORRESPODENT = "new";
@@ -324,7 +325,7 @@ class BaseTranspiler {
         const commentsRange = commentsRangeList ? commentsRangeList[0]: undefined;
 
         const commentText = commentsRange ? fullText.slice(commentsRange.pos, commentsRange.end): undefined;
-        if (commentText) {
+        if (commentText !== undefined) {
             return this.getIden(identation) + this.transformFunctionComment(commentText) + "\n";
         }
         return "";
@@ -432,7 +433,8 @@ class BaseTranspiler {
     }
 
     printStringLiteral(node) {
-        return "'" + node.text.replace("'", "\\'") + "'";
+        const token = this.STRING_QUOTE_TOKEN;
+        return token + node.text.replace(token, "\\" + token) + token;
     }
 
     printNumericLiteral(node) {
@@ -444,7 +446,7 @@ class BaseTranspiler {
         const elements = node.elements.map((e) => {
             return this.printNode(e);
         }).join(", ");
-        return this.LEFT_ARRAY_OPENING + elements + this.RIGHT_ARRAY_CLOSING;
+        return this.ARRAY_OPENING_TOKEN + elements + this.ARRAY_CLOSING_TOKEN;
     }
 
     printVariableDeclarationList(node,identation) {
@@ -694,7 +696,7 @@ class BaseTranspiler {
 
     printArrayBindingPattern(node, identation) {
         const elements = node.elements.map((e) => this.printNode(e.name, identation)).join(", ");
-        return this.getIden(identation) + this.LEFT_ARRAY_OPENING + elements + this.RIGHT_ARRAY_CLOSING;
+        return this.getIden(identation) + this.ARRAY_OPENING_TOKEN + elements + this.ARRAY_CLOSING_TOKEN;
     }
 
     printNode(node, identation = 0): string {

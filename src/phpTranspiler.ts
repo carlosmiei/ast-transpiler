@@ -54,7 +54,7 @@ export class PhpTranspiler extends BaseTranspiler {
         this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
 
-        this.propRequiresScopeResolutionOperator = ['super'] + (config['scopeResolutionProps'] ?? []);
+        this.propRequiresScopeResolutionOperator = ['super'] + (config['ScopeResolutionProps'] ?? []);
 
         this.initConfig();
 
@@ -109,7 +109,7 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
 
-    transformPropertyAcessExpressionIfNeeded(node: any) {
+    transformPropertyAcessExpressionIfNeeded(node) {
         const expression = node.expression;
         const leftSide = this.printNode(expression, 0);
         const rightSide = node.name.escapedText;
@@ -121,6 +121,18 @@ export class PhpTranspiler extends BaseTranspiler {
                 const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
                 rawExpression = this.isStringType(type.flags) ? "strlen(" + leftSide + ")" : "count(" + leftSide + ")";
                 break;
+        }
+        return rawExpression;
+    }
+
+    transformPropertyInsideCallExpressionIfNeeded(node: any) {
+        const expression = node.expression;
+        const leftSide = this.printNode(expression, 0);
+        const rightSide = node.name.escapedText;
+        
+        let rawExpression = undefined;
+
+        switch(rightSide) {
             case 'toString':
                 rawExpression = "(string) " + leftSide;
                 break;
@@ -148,6 +160,12 @@ export class PhpTranspiler extends BaseTranspiler {
             switch (expressionText) {
                 case "JSON.parse":
                     return "json_decode(" + this.printNode(args[0], 0) + ",$as_associative_array = true)";
+            }
+
+            const transformedProp = this.transformPropertyInsideCallExpressionIfNeeded(node.expression);
+
+            if (transformedProp) {
+                return transformedProp;
             }
     
             const leftSide = node.expression?.expression;
@@ -321,12 +339,12 @@ export class PhpTranspiler extends BaseTranspiler {
         };
 
         this.PropertyAccessRequiresParenthesisRemoval = [
-            'length',
-            'toString',
-            'toUpperCase',
-            'toLowerCase',
-            'pop',
-            'shift',
+            // 'length',
+            // 'toString',
+            // 'toUpperCase',
+            // 'toLowerCase',
+            // 'pop',
+            // 'shift',
         ];
     }
 

@@ -14,6 +14,8 @@ const transpiler = new Transpiler({
 
 transpiler.setPHPPropResolution(['Precise']);
 
+
+
 const file = "tmp.ts";
 
 const pythonRes = transpiler.transpilePythonByPath(file).content;
