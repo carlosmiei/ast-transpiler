@@ -117,6 +117,8 @@ export class PythonTranspiler extends BaseTranspiler {
                     return this.getIden(identation) + argText + " in " + leftSideText;
                 case 'join':
                     return this.getIden(identation) + argText + ".join(" + leftSideText + ")";
+                case 'split':
+                    return this.getIden(identation) + leftSideText + ".split(" + argText + ")";
             }
         }
 

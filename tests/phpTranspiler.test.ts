@@ -298,10 +298,29 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
+    test('basic string methods', () => {
+        const ts =
+        "const a = 'test';\n" +
+        "const t = a.split (',');\n" +
+        "const b = a.length;\n" +
+        "const c = a.indexOf ('t');\n" +
+        "const d = a.toUpperCase ();\n" +
+        "const e = a.toLowerCase ();";
+        const php =
+        "$a = 'test';\n" +
+        "$t = explode(',', $a);\n" +
+        "$b = strlen($a);\n" +
+        "$c = mb_strpos($a, 't');\n" +
+        "$d = strtoupper($a);\n" +
+        "$e = strtolower($a);";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    })
     test('basic array manipulation', () => {
         const ts =
         "const myList = [1, 2, 3];\n" +
         "const y = myList.join (',')\n" +
+        "const i = myList.indexOf(1);\n" +
         "const listLength = myList.length;\n" +
         "const listFirst = myList[0];\n" +
         "myList.push (4);\n" +
@@ -310,6 +329,7 @@ describe('php transpiling tests', () => {
         const php =
         "$myList = [1, 2, 3];\n" +
         "$y = implode(',', $myList);\n" +
+        "$i = array_search(1, $myList);\n" + 
         "$listLength = count($myList);\n" +
         "$listFirst = $myList[0];\n" +
         "$myList[] = 4;\n" +
