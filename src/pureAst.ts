@@ -320,11 +320,15 @@ class BaseTranspiler {
         return modifiers.map(modifier => this.FuncModifiers[modifier.kind]).join(" ");
     }
 
-    transformFunctionComment(comment) {
+    transformLeadingComment(comment) {
         return comment; // to override
     }
 
-    printFunctionComment(node, identation) {
+    transformTrailingComment(comment) {
+        return comment; // to override
+    }
+
+    printLeadingComments(node, identation) {
         const fullText = global.src.getFullText();
         const commentsRangeList = ts.getLeadingCommentRanges(fullText, node.pos);
         const commentsRange = commentsRangeList ? commentsRangeList : undefined;
@@ -333,7 +337,23 @@ class BaseTranspiler {
             for (const commentRange of commentsRange) {
                 const commentText = fullText.slice(commentRange.pos, commentRange.end);
                 if (commentText !== undefined) {
-                    res+= this.getIden(identation) + this.transformFunctionComment(commentText) + "\n";
+                    res+= this.getIden(identation) + this.transformLeadingComment(commentText) + "\n";
+                }
+            }
+        }
+        return res;
+    }
+
+    printTraillingComment(node, identation) {
+        const fullText = global.src.getFullText();
+        const commentsRangeList = ts.getTrailingCommentRanges(fullText, node.end);
+        const commentsRange = commentsRangeList ? commentsRangeList : undefined;
+        let res = "";
+        if (commentsRange) {
+            for (const commentRange of commentsRange) {
+                const commentText = fullText.slice(commentRange.pos, commentRange.end);
+                if (commentText !== undefined) {
+                    res+= this.getIden(identation) + this.transformTrailingComment(commentText);
                 }
             }
         }
@@ -377,13 +397,10 @@ class BaseTranspiler {
 
         let functionDef = this.printFunctionDefinition(node, identation);
 
-        const leadingComments = this.printFunctionComment(node.body.statements[0], identation+1);
-       
         const funcBody = this.printFunctionBody(node, identation+1);
 
         const funcClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
 
-        functionDef += leadingComments;
         functionDef += funcBody;
         functionDef += "\n";
         functionDef += funcClose;
@@ -427,7 +444,7 @@ class BaseTranspiler {
 
         const methodClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
 
-        const leadingComments = this.printFunctionComment(node.body.statements[0], identation+1);
+        const leadingComments = this.printLeadingComments(node.body.statements[0], identation+1);
 
         let methodDef = this.printMethodDefinition(node, identation);
         
@@ -466,8 +483,10 @@ class BaseTranspiler {
     }
 
     printVariableStatement(node, identation){
+        const leadingComment = this.printLeadingComments(node, identation);
+        const trailingComment = this.printTraillingComment(node, identation);
         const decList = node.declarationList;
-        return this.printVariableDeclarationList(decList, identation) + this.LINE_TERMINATOR;
+        return leadingComment + this.printVariableDeclarationList(decList, identation) + this.LINE_TERMINATOR + " " + trailingComment;
 
     }
 

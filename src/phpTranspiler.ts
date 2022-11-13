@@ -303,7 +303,7 @@ export class PhpTranspiler extends BaseTranspiler {
         return super.printFunctionBody(node, identation);
     }
 
-    transformFunctionComment(comment) {
+    transformLeadingComment(comment) {
         const commentRegex = [
             [ /\{([\]\[\|a-zA-Z0-9_-]+?)\}/g, '~$1~' ], // eslint-disable-line -- resolve the "arrays vs url params" conflict (both are in {}-brackets)
             [ /\[([^\]\[]*)\]\{(@link .*)\}/g, '~$2 $1~' ], // eslint-disable-line -- docstring item with link

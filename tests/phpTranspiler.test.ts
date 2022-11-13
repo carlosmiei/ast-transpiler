@@ -504,4 +504,17 @@ describe('php transpiling tests', () => {
         expect(output).toBe(php);
         transpiler.setPhpUncamelCaseIdentifiers(false);
     })
+    test('should convert leading and trailing comments', () => {
+        const ts =
+        "// I'm a leading comment\n" +
+        "const z = \"my var\" // I'm a trailing comment\n" +
+        "const a = \"bar\" // I'm second trailing comment\n";
+        const php =
+        "// I'm a leading comment\n" +
+        "$z = 'my var'; // I'm a trailing comment\n" +
+        "$a = 'bar'; // I'm second trailing comment";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+        transpiler.setPhpUncamelCaseIdentifiers(false);
+    })
   });

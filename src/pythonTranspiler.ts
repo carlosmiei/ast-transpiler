@@ -139,7 +139,7 @@ export class PythonTranspiler extends BaseTranspiler {
         return this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") + "\n";
     }
 
-    transformFunctionComment(comment) {
+    transformLeadingComment(comment) {
         const commentRegex = [
                 [ /(^|\s)\/\//g, '$1#' ], // regular comments
                 [ /\/\*\*/, '\"\"\"' ], // eslint-disable-line
@@ -158,8 +158,16 @@ export class PythonTranspiler extends BaseTranspiler {
             ];
 
         const transformed = regexAll(comment, commentRegex);
-
         return transformed;
+    }
+
+    transformTrailingComment(comment) {
+        const commentRegex = [
+                [ /(^|\s)\/\//g, '$1#' ], // regular comments
+            ];
+
+        const transformed = regexAll(comment, commentRegex);
+        return " " + transformed;
     }
 
     transformPropertyAcessExpressionIfNeeded(node: any) {
