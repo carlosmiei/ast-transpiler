@@ -237,6 +237,7 @@ describe('python tests', () => {
         "const e = a.toLowerCase ();";
         const python =
         "a = 'test'\n" +
+        "t = a.split(',')\n" +
         "b = len(a)\n" +
         "c = a.find('t')\n" +
         "d = a.upper()\n" +
@@ -256,6 +257,7 @@ describe('python tests', () => {
         const python = 
         "myList = [1, 2, 3]\n" +
         "y = ','.join(myList)\n" +
+        "i = myList.find(1)\n" +
         "listLength = len(myList)\n" +
         "listFirst = myList[0]\n" +
         "myList.append(4)\n" +
