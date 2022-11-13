@@ -444,13 +444,10 @@ class BaseTranspiler {
 
         const methodClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
 
-        const leadingComments = this.printLeadingComments(node.body.statements[0], identation+1);
-
         let methodDef = this.printMethodDefinition(node, identation);
         
         const funcBody = this.printFunctionBody(node, identation+1);
         
-        methodDef += leadingComments;
         methodDef += funcBody;
         methodDef += "\n";
         methodDef += methodClose;
@@ -484,9 +481,11 @@ class BaseTranspiler {
 
     printVariableStatement(node, identation){
         const leadingComment = this.printLeadingComments(node, identation);
-        const trailingComment = this.printTraillingComment(node, identation);
+        let trailingComment = this.printTraillingComment(node, identation);
+        trailingComment = trailingComment ? " " + trailingComment : trailingComment;
+        
         const decList = node.declarationList;
-        return leadingComment + this.printVariableDeclarationList(decList, identation) + this.LINE_TERMINATOR + " " + trailingComment;
+        return leadingComment + this.printVariableDeclarationList(decList, identation) + this.LINE_TERMINATOR + trailingComment;
 
     }
 
@@ -613,7 +612,7 @@ class BaseTranspiler {
                 initializer + "; " + condition + "; " + incrementor +
                 this.FOR_COND_CLOSE + " " + this.FOR_OPEN + "\n" +
                 node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") + "\n" +  
-                this.FOR_CLOSE;
+                this.getIden(identation) + this.FOR_CLOSE;
     }
 
     printBreakStatement(node, identation) {
@@ -751,11 +750,14 @@ class BaseTranspiler {
     }
 
     printReturnStatement(node, identation) {
+        const leadingComment = this.printLeadingComments(node, identation);
+        let trailingComment = this.printTraillingComment(node, identation);
+        trailingComment = trailingComment ? " " + trailingComment : trailingComment;
         const exp =  node.expression;
         let rightPart = exp ? (' ' + this.printNode(exp, identation)) : '';
         rightPart = rightPart.trim();
         rightPart = rightPart ? ' ' + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
-        return this.getIden(identation) + this.RETURN_TOKEN + rightPart;
+        return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
     }
 
     printArrayBindingPattern(node, identation) {
