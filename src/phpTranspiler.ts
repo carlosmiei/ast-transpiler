@@ -190,6 +190,8 @@ export class PhpTranspiler extends BaseTranspiler {
                         } else {
                             return this.getIden(identation) + "in_array(" + argText + ", " + leftSideText + ")";
                         }
+                    case 'join':
+                        return this.getIden(identation) + "implode(" + argText + ", " + leftSideText + ")";
                 }
             }
         }

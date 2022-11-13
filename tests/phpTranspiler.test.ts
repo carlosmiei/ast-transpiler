@@ -138,6 +138,22 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('basic class with constructor', () => {
+        const ts =
+        "class teste extends extended {\n" +
+        "    constructor(x) {\n" +
+        "        super(x);\n" +
+        "    }\n" +
+        "}" 
+        const php =
+        "class teste extends extended {\n" +
+        "    function __construct($x){\n" +
+        "        parent::__construct($x);\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic dictonary', () => {
         const ts =
         "const types = {\n" +
@@ -285,6 +301,7 @@ describe('php transpiling tests', () => {
     test('basic array manipulation', () => {
         const ts =
         "const myList = [1, 2, 3];\n" +
+        "const y = myList.join (',')\n" +
         "const listLength = myList.length;\n" +
         "const listFirst = myList[0];\n" +
         "myList.push (4);\n" +
@@ -292,6 +309,7 @@ describe('php transpiling tests', () => {
         "myList.shift ();"
         const php =
         "$myList = [1, 2, 3];\n" +
+        "$y = implode(',', $myList);\n" +
         "$listLength = count($myList);\n" +
         "$listFirst = $myList[0];\n" +
         "$myList[] = 4;\n" +

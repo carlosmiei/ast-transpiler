@@ -107,6 +107,20 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('basic class declaration with constructor', () => {
+        const ts =
+        "class teste extends extended {\n" +
+        "    constructor(x) {\n" +
+        "        super(x);\n" +
+        "    }\n" +
+        "}" 
+        const python =
+        "class teste(extended):\n" +
+        "    def __init__(self, x):\n" +
+        "        super().__init__(x)\n";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic dictonary', () => {
         const ts =
         "const types = {\n" +
@@ -231,6 +245,7 @@ describe('python tests', () => {
     })
     test('basic array manipulation', () => {
         const ts = "const myList = [1, 2, 3];\n" +
+        "const y = myList.join (',')\n" +
         "const listLength = myList.length;\n" +
         "const listFirst = myList[0];\n" +
         "myList.push (4);\n" +
@@ -238,6 +253,7 @@ describe('python tests', () => {
         "myList.shift ();"
         const python = 
         "myList = [1, 2, 3]\n" +
+        "y = ','.join(myList)\n" +
         "listLength = len(myList)\n" +
         "listFirst = myList[0]\n" +
         "myList.append(4)\n" +
@@ -278,6 +294,18 @@ describe('python tests', () => {
         "isinstance(response, dict)\n" +
         "isinstance(response, bool)\n" +
         "isinstance(response, numbers.Real)";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    })
+    test('should convert ==/===/!== undefined to is None or is Not None ', () => {
+        const ts =
+        "const x = 1 === undefined;\n" +
+        "const y = 1 !== undefined;\n" +
+        "const c = 3 == undefined;";
+        const python =
+        "x = 1 is None\n" +
+        "y = 1 is not None\n" +
+        "c = 3 is None";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })

@@ -115,6 +115,8 @@ export class PythonTranspiler extends BaseTranspiler {
             switch (rightSide) {
                 case 'includes':
                     return this.getIden(identation) + argText + " in " + leftSideText;
+                case 'join':
+                    return this.getIden(identation) + argText + ".join(" + leftSideText + ")";
             }
         }
 
@@ -252,5 +254,22 @@ export class PythonTranspiler extends BaseTranspiler {
             }
         }
         return undefined;
+    }
+
+    getCustomOperatorIfAny(left, right, operator) {
+        const rightText = right.getText();
+        const isUndefined = rightText === "undefined";
+        if (isUndefined) {
+            switch (operator.kind) {
+                case ts.SyntaxKind.EqualsEqualsToken:
+                    return "is";
+                case ts.SyntaxKind.ExclamationEqualsToken:
+                    return "is not";
+                case ts.SyntaxKind.ExclamationEqualsEqualsToken:
+                    return "is not";
+                case ts.SyntaxKind.EqualsEqualsEqualsToken:
+                    return "is";
+            }
+        }
     }
 }
