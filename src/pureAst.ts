@@ -642,7 +642,7 @@ class BaseTranspiler {
     printObjectLiteralExpression(node, identation) {
 
         const objectBody = this.printObjectLiteralBody(node, identation);
-        const formattedObjectBody = objectBody ? "\n" + this.getIden(identation) + objectBody + "\n" : objectBody;
+        const formattedObjectBody = objectBody ? "\n" + objectBody + "\n" + this.getIden(identation) : objectBody;
         return  this.OBJECT_OPENING + formattedObjectBody + this.OBJECT_CLOSING;
     }
 
@@ -852,7 +852,7 @@ class BaseTranspiler {
             return this.printParameter(node);
         } else if (ts.isConstructorDeclaration(node)) {
             return this.printConstructorDeclaration(node, identation);
-        }
+        } 
 
         if (node.statements) {
             const transformedStatements = node.statements.map((m)=> {

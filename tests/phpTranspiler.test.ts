@@ -70,7 +70,7 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
-    test('basic identation check', () => {
+    test('basic identation check [nested if]', () => {
         const ts =
         "if (1) {\n" +
         "    if (2) {\n" +
@@ -91,6 +91,26 @@ describe('php transpiling tests', () => {
         "        }\n" +
         "    }\n" +
         "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('basic identation check [nested objects]', () => {
+        const ts =
+        "const x = {\n" +
+        "    'world': {\n" +
+        "        'hello': {\n" +
+        "            'foo': 'bar'\n" +
+        "        }\n" +
+        "    }\n" +
+        "}"
+        const php =
+        "$x = array(\n" +
+        "    'world' => array(\n" +
+        "        'hello' => array(\n" +
+        "            'foo' => 'bar',\n" +
+        "        ),\n" +
+        "    ),\n" +
+        ");"
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });

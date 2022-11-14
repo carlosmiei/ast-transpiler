@@ -62,7 +62,7 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
-    test('basic identation test', () => {
+    test('basic identation test [nested if]', () => {
         const ts =
         "if (1) {\n" +
         "    if (2) {\n" +
@@ -79,6 +79,26 @@ describe('python tests', () => {
         "        if 4:\n" +
         "            if 5:\n" +
         "                x = {}"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
+    test('basic identation test [nested objects]', () => {
+        const ts =
+        "const x = {\n" +
+        "    'world': {\n" +
+        "        'hello': {\n" +
+        "            'foo': 'bar'\n" +
+        "        }\n" +
+        "    }\n" +
+        "}"
+        const python =
+        "x = {\n" +
+        "    'world': {\n" +
+        "        'hello': {\n" +
+        "            'foo': 'bar',\n" +
+        "        },\n" +
+        "    },\n" +
+        "}"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
