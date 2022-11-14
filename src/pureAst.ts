@@ -673,24 +673,32 @@ class BaseTranspiler {
 
         const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
 
-        const prefix = isElseIf ? this.ELSEIF_TOKEN : this.IF_TOKEN;
+        // const prefix = isElseIf ? this.ELSEIF_TOKEN : this.IF_TOKEN;
 
         const ifOrElseIfIdentation = isElseIf && this.IF_CLOSE ? " " : this.getIden(identation);
 
-        const ifEnd = this.IF_CLOSE ? this.getIden(identation) + this.IF_CLOSE : "";
+        const ifEnd = this.IF_CLOSE ? "\n" + this.getIden(identation) + this.IF_CLOSE : "";
 
         const ifOpen = this.IF_OPEN ? " " + this.IF_OPEN : "";
-        let ifComplete  =  ifOrElseIfIdentation + prefix + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + "\n" + ifEnd;
+
+        let ifComplete = undefined;
+        if (isElseIf) {
+            const prefix = this.IF_CLOSE ? this.ELSEIF_TOKEN : "\n" + this.ELSEIF_TOKEN;
+            ifComplete  =  ifOrElseIfIdentation + prefix + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + ifEnd;
+        } else {
+            ifComplete  =  ifOrElseIfIdentation + this.IF_TOKEN + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + ifEnd;
+        }
+        
 
         const elseStatement = node.elseStatement;
 
         if (elseStatement?.kind === ts.SyntaxKind.Block) {
             
             const elseOpen = this.ELSE_OPEN_TOKEN;
-            const elseClose = this.ELSE_CLOSE_TOKEN ? this.getIden(identation) + this.ELSE_CLOSE_TOKEN : " ";
+            const elseClose = this.ELSE_CLOSE_TOKEN ? "\n"  + this.getIden(identation) + this.ELSE_CLOSE_TOKEN : "";
 
-            const elseIdentation = this.IF_CLOSE ? ' ' : this.getIden(identation);
-            const elseBody = elseIdentation + this.ELSE_TOKEN + elseOpen + '\n' + elseStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n") + "\n" + elseClose;
+            const elseIdentation = this.IF_CLOSE ? ' ' : "\n" +  this.getIden(identation);
+            const elseBody = elseIdentation + this.ELSE_TOKEN + elseOpen + '\n' + elseStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n") + elseClose;
             
             ifComplete += elseBody;
             

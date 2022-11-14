@@ -51,6 +51,51 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('basic if statement', () => {
+        const ts =
+        "if (1) {\n" +
+        "    const x = 1;\n" +
+        "}"
+        const python =
+        "if 1:\n" +
+        "    x = 1";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
+    test('basic if else statement', () => {
+        const ts =
+        "if (1) {\n" +
+        "    const x = 1;\n" +
+        "} else {\n" +
+        "    const x = 2;\n" +
+        "}";
+        const python =
+        "if 1:\n" +
+        "    x = 1\n" +
+        "else:\n" +
+        "    x = 2";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
+    test('basic if-elseif-else statement', () => {
+        const ts =
+        "if (1) {\n" +
+        "    const x = 1;\n" +
+        "} else if (2) {\n" +
+        "    const x = 2;\n" +
+        "} else {\n" +
+        "    const x = 3;\n" +
+        "}"
+        const python =
+        "if 1:\n" +
+        "    x = 1\n" +
+        "elif 2:\n" +
+        "    x = 2\n" +
+        "else:\n" +
+        "    x = 3"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic async function declaration', () => {
         const ts =
         "async function camelCase () {\n" +
@@ -281,7 +326,7 @@ describe('python tests', () => {
         "}"
         const python =
         "if isinstance(e, NullResponse):\n" +
-        "    return []\n"
+        "    return []"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })

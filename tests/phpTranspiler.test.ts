@@ -58,6 +58,54 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('basic if statement', () => {
+        const ts =
+        "if (1) {\n" +
+        "    const x = 1;\n" +
+        "}"
+        const php =
+        "if (1) {\n" +
+        "    $x = 1;\n" +
+        "}" 
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('basic if else statement', () => {
+        const ts =
+        "if (1) {\n" +
+        "    const x = 1;\n" +
+        "} else {\n" +
+        "    const x = 2;\n" +
+        "}";
+        const php =
+        "if (1) {\n" +
+        "    $x = 1;\n" +
+        "} else {\n" +
+        "    $x = 2;\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('basic if-elseif-else statement', () => {
+        const ts =
+        "if (1) {\n" +
+        "    const x = 1;\n" +
+        "} else if (2) {\n" +
+        "    const x = 2;\n" +
+        "} else {\n" +
+        "    const x = 3;\n" +
+        "}"
+        const php =
+        "if (1) {\n" +
+        "    $x = 1;\n" +
+        "} elseif (2) {\n" +
+        "    $x = 2;\n" +
+        "} else {\n" +
+        "    $x = 3;\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic async function declaration [no args]', () => {
         const ts =
         "async function camelCase () {\n" +
