@@ -16,7 +16,7 @@ In order to faciliate the transpilation process we should try to add as many typ
 **Bad Example**
 ```Javascript
 function importantFunction(argument){ // type of argumment is unknown
-const length = argument.length;
+    const length = argument.length;
 }
 ```
 
@@ -26,7 +26,7 @@ In this case, we have no means to infer the argument's type, so for instance in 
 
 ```Javascript
 function importantFunction(argument: string[]){
-const length = argument.length;
+    const length = argument.length;
 }
 ```
 argument's type is known so all good, no ambiguities here.
