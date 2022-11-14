@@ -587,7 +587,6 @@ describe('php transpiling tests', () => {
         "}";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
-        transpiler.setPhpUncamelCaseIdentifiers(false);
     })
     test('should convert regular comment', () => {
         const ts =
@@ -606,7 +605,6 @@ describe('php transpiling tests', () => {
         "}";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
-        transpiler.setPhpUncamelCaseIdentifiers(false);
     })
     test('should convert leading and trailing comments', () => {
         const ts =
@@ -619,6 +617,21 @@ describe('php transpiling tests', () => {
         "$a = 'bar'; // I'm second trailing comment";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
-        transpiler.setPhpUncamelCaseIdentifiers(false);
+    })
+    test('basic try-catch-block', () => {
+        const ts =
+        "try {\n" +
+        "    const x = 1;\n" +
+        "} catch (e) {\n" +
+        "    console.log(e);\n" +
+        "}"
+        const php =
+        "try {\n" +
+        "    $x = 1;\n" +
+        "} catch(Exception $e) {\n" +
+        "    var_dump($e);\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
     })
   });

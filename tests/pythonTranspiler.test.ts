@@ -544,4 +544,20 @@ describe('python tests', () => {
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);
     })
+    test('basic try-catch block', () => {
+        const ts =
+        "try {\n" +
+        "    const x = 1;\n" +
+        "} catch (e) {\n" +
+        "    console.log(e);\n" +
+        "}"
+        const python =
+        "try:\n" +
+        "    x = 1\n" +
+        "except Exception as e:\n" +
+        "    print(e)" 
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+        transpiler.setPythonUncamelCaseIdentifiers(false);
+    })
 });
