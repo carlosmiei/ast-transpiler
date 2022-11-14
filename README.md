@@ -5,13 +5,34 @@
 ![Lines](./badges/coverage-lines.svg)
 ![Statements](./badges/coverage-statements.svg)
 
-Transpiler is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST). 
+Transpiler is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker. 
 
 As expected, it's not possible to transpile Typescript to Python or PHP in a 1:1 parity because they are different languages a lot of features are not interchangeable. Nonetheless, this library supports as many features as possible doing some adaptions (more to come).
 
 Although we transpile TS code directly to the other languages, this library does touch import statements because each language has its own module/namespace model. Instead, we return a unified list of imports separately, allowing the user to adapt it to the target language easily and append it to the generated code (check `IFileImport`).
 
-Both sync and async code transpilation is supported.
+In order to faciliate the transpilation process we should try to add as many types as possible otherwise we might get invalid results.
+
+**Bad Example**
+```Javascript
+function importantFunction(argument){ // type of argumment is unknown
+const length = argument.length;
+}
+```
+
+In this case, we have no means to infer the argument's type, so for instance in PHP we don't know if `.length` should be transpiled to `str_len` or `count`.
+
+**Good Example**
+
+```Javascript
+function importantFunction(argument: string[]){
+const length = argument.length;
+}
+```
+argument's type is known so all good, no ambiguities here.
+
+#### What about javascript?** 
+Obviously all Javascript code is valid Typescript, so in theory it should transpile Javascript seamlessy as well. This is in part true, but for the lacking of types we might get some invalid results when the types are not clear (check bad example).
 
 ## Currently supported languages
 - Python
@@ -83,7 +104,7 @@ console.log(transpiler.imports) // prints unified imports statements if any
 - Scope Resolution Operator conversion (PHP only)
 - etc
 
-We will try to add more features/conversations in the future but this process is also customizable, check the Overrides section.
+We will try to add more features/conversions in the future but this process is also customizable, check the Overrides section.
 
 
 ## Options and Overrides
@@ -96,7 +117,7 @@ Currently there are two generic transpiling options, `uncamelcaseIdentifiers` an
 
 They can be set upon instantiating our transpiler, or using setter methods
 
-```Javasript
+```Javascript
 const transpiler = new Transpiler({
     python: {
         uncamelcaseIdentifiers: false, // default value
@@ -236,7 +257,6 @@ transpiler.phpTranspiler.printFunctionComment = myPrintFunctionComment;
 ##### Example 2: Custom call expression modification in Python
 
 ```Javascript
-
 const transpiler = new Transpiler();
 
 function printOutOfOrderCallExpressionIfAny(node, identation) {
