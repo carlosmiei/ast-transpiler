@@ -40,7 +40,20 @@ const parserConfig = {
     'CLASS_CLOSING_TOKEN': '}',
     'CLASS_OPENING_TOKEN': '{',
     'CONSTRUCTOR_TOKEN': 'function __construct',
-    'SUPER_CALL_TOKEN': 'parent::__construct'
+    'SUPER_CALL_TOKEN': 'parent::__construct',
+    'CATCH_DECLARATION': 'Exception',
+    'CATCH_OPEN': '{',
+    'CATCH_CLOSE': '}',
+    'TRY_OPEN': '{',
+    'TRY_CLOSE': '}',
+    'CATCH_COND_OPEN': '(',
+    'CATCH_COND_CLOSE': ')',
+    'CATCH_TOKEN': 'catch',
+    'BLOCK_OPENING_TOKEN' :'{',
+    'BLOCK_CLOSING_TOKEN' :'}',
+    'SPACE_BEFORE_BLOCK_OPENING' :' ',
+    'CONDITION_OPENING' :'(',
+    'CONDITION_CLOSE' :')',
 };
 
 export class PhpTranspiler extends BaseTranspiler {

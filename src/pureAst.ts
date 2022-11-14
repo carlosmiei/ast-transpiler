@@ -5,6 +5,13 @@ import { unCamelCase } from "./utils.js";
 const SyntaxKind = ts.SyntaxKind;
 
 class BaseTranspiler {
+
+    BLOCK_OPENING_TOKEN = ':';
+    BLOCK_CLOSING_TOKEN = '';
+    SPACE_BEFORE_BLOCK_OPENING = '';
+    CONDITION_OPENING = '';
+    CONDITION_CLOSE = '';
+
     DEFAULT_IDENTATION = "    ";
     STRING_QUOTE_TOKEN = "'";
     UNDEFINED_TOKEN = "None";
@@ -40,11 +47,17 @@ class BaseTranspiler {
     NOT_TOKEN = "not ";
     SUPER_TOKEN = "super()";
     PROPERTY_ACCESS_TOKEN = ".";
-    TRY_TOKEN = "try:";
+    TRY_TOKEN = "try";
+    // TRY_OPEN = ":";
+    // TRY_CLOSE = "";
     CATCH_TOKEN = "except";
-    CATCH_OPEN = "";
-    CATCH_CLOSE = ":";
-    TRY_CONDITION_OPEN_TOKEN = "";
+    // CATCH_COND_OPEN = "";
+    // CATCH_COND_CLOSE = "";
+    // CATCH_OPEN = ":";
+    // CATCH_CLOSE = "";
+    CATCH_DECLARATION = "Exception as";
+    // TRY_CONDITION_OPEN_TOKEN = "";
+
     BREAK_TOKEN = "break";
     IN_TOKEN = "in";
     LESS_THAN_TOKEN = "<";
@@ -54,16 +67,16 @@ class BaseTranspiler {
     PLUS_PLUS_TOKEN = "++";
     MINUS_MINUS_TOKEN = "--";
 
-    CLASS_OPENING_TOKEN = ":";
-    CLASS_CLOSING_TOKEN = "";
+    // CLASS_OPENING_TOKEN = ":";
+    // CLASS_CLOSING_TOKEN = "";
     CONSTRUCTOR_TOKEN = "def __init__";
     SUPER_CALL_TOKEN = "super().__init__";
 
     WHILE_TOKEN = "while";
-    WHILE_OPEN = "";
-    WHILE_COND_OPEN = "";
-    WHILE_COND_CLOSE = ":";
-    WHILE_CLOSE = "";
+    // WHILE_OPEN = "";
+    // WHILE_COND_OPEN = "";
+    // WHILE_COND_CLOSE = ":";
+    // WHILE_CLOSE = "";
 
     FOR_TOKEN = "for";
     FOR_COND_OPEN = "(";
@@ -73,18 +86,18 @@ class BaseTranspiler {
 
     PROPERTY_ASSIGNMENT_TOKEN = ":";
 
-    IF_COND_CLOSE = ":";
-    IF_COND_OPEN = "";
-    IF_CLOSE = "";
-    IF_OPEN = "";
-    ELSE_OPEN_TOKEN = ":";
-    ELSE_CLOSE_TOKEN = "";
+    // IF_COND_CLOSE = ":";
+    // IF_COND_OPEN = "";
+    // IF_CLOSE = "";
+    // IF_OPEN = "";
+    // ELSE_OPEN_TOKEN = ":";
+    // ELSE_CLOSE_TOKEN = "";
 
     LINE_TERMINATOR = "";
 
     FUNCTION_TOKEN="def";
-    FUNCTION_DEF_OPEN = ":";
-    FUNCTION_CLOSE = "";
+    // FUNCTION_DEF_OPEN = ":";
+    // FUNCTION_CLOSE = "";
 
     ASYNC_TOKEN = "async";
 
@@ -186,6 +199,14 @@ class BaseTranspiler {
 
     getIden (num) {
         return this.DEFAULT_IDENTATION.repeat(num);
+    }
+
+    getBlockOpen(){
+        return this.SPACE_BEFORE_BLOCK_OPENING + this.BLOCK_OPENING_TOKEN + "\n";
+    }
+
+    getBlockClose(identation) {
+        return this.BLOCK_CLOSING_TOKEN ? "\n" + this.getIden(identation) + this.BLOCK_CLOSING_TOKEN : "";
     }
 
     unCamelCaseIfNeeded(name: string): string {
@@ -382,10 +403,11 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : modifiers;
 
+        const functionOpen = this.getBlockOpen();
+
         const functionDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
-            + this.FUNCTION_DEF_OPEN
-            + "\n";
+            + functionOpen;
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
@@ -403,10 +425,9 @@ class BaseTranspiler {
 
         const funcBody = this.printFunctionBody(node, identation+1);
 
-        const funcClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
+        const funcClose = this.getBlockClose(identation);
 
         functionDef += funcBody;
-        functionDef += "\n";
         functionDef += funcClose;
 
         return functionDef;
@@ -430,12 +451,11 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : "";
 
-        const funcOpen = this.FUNCTION_DEF_OPEN;
+        const funcOpen = this.getBlockOpen();
 
         const methodDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")"
-            + funcOpen
-            + "\n";
+            + funcOpen;
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
@@ -446,7 +466,7 @@ class BaseTranspiler {
 
     printMethodDeclaration(node, identation) {
 
-        const methodClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
+        const methodClose = this.BLOCK_CLOSING_TOKEN ? this.getIden(identation) + this.BLOCK_CLOSING_TOKEN : "";
 
         let methodDef = this.printMethodDefinition(node, identation);
         
@@ -556,7 +576,7 @@ class BaseTranspiler {
         const heritageClauses = node.heritageClauses;
 
         let classInit = "";
-        const classOpening = " " + this.CLASS_OPENING_TOKEN + "\n";
+        const classOpening = this.getBlockOpen();
         if (heritageClauses !== undefined) {
             const classExtends = heritageClauses[0].types[0].expression.escapedText;
             classInit = this.getIden(identation) + "class " + className + " extends " + classExtends + classOpening;
@@ -572,7 +592,7 @@ class BaseTranspiler {
 
         const classBody = this.printClassBody(node, identation);
 
-        const classClosing = this.CLASS_CLOSING_TOKEN ? "\n" + this.CLASS_CLOSING_TOKEN : "";
+        const classClosing = this.getBlockClose(identation);
 
         return classDefinition + classBody + classClosing;
     }
@@ -580,12 +600,13 @@ class BaseTranspiler {
     printConstructorDeclaration (node, identation) {
         const args = this.printMethodParameters(node);
         const constructorBody = this.printFunctionBody(node, identation+1);
-        const funcClose = this.FUNCTION_CLOSE ? this.getIden(identation) + this.FUNCTION_CLOSE : "";
+        const funcClose = this.getBlockClose(identation);
+        const funcOpen = this.getBlockOpen();
         return this.getIden(identation) +
                 this.CONSTRUCTOR_TOKEN + 
                 "(" + args + ")" + 
-                this.FUNCTION_DEF_OPEN +  "\n" + 
-                constructorBody + "\n" +
+                funcOpen +
+                constructorBody + 
                 funcClose;
     }
 
@@ -594,15 +615,15 @@ class BaseTranspiler {
 
         const expression = this.printNode(loopExpression, 0);
 
-        const whileOpen = this.WHILE_OPEN ? " " + this.WHILE_OPEN : "";
+        const whileOpen = this.getBlockOpen();
+        const whileClose = this.getBlockClose(identation);
         
         return this.getIden(identation) +
                     this.WHILE_TOKEN + " " +
-                    this.WHILE_COND_OPEN +
-                    expression + 
-                    this.WHILE_COND_CLOSE + whileOpen + "\n" +
-                    node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") + "\n" + 
-                    this.WHILE_CLOSE;
+                    this.CONDITION_OPENING + expression + this.CONDITION_CLOSE +
+                    whileOpen + 
+                    node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n") +
+                    whileClose;
     }
 
     printForStatement(node, identation) {
@@ -677,32 +698,28 @@ class BaseTranspiler {
 
         const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
 
-        // const prefix = isElseIf ? this.ELSEIF_TOKEN : this.IF_TOKEN;
+        const ifOrElseIfIdentation = isElseIf && this.BLOCK_CLOSING_TOKEN ? " " : this.getIden(identation);
 
-        const ifOrElseIfIdentation = isElseIf && this.IF_CLOSE ? " " : this.getIden(identation);
-
-        const ifEnd = this.IF_CLOSE ? "\n" + this.getIden(identation) + this.IF_CLOSE : "";
-
-        const ifOpen = this.IF_OPEN ? " " + this.IF_OPEN : "";
+        const ifEnd = this.getBlockClose(identation);
+        const ifOpen = this.getBlockOpen();
 
         let ifComplete = undefined;
         if (isElseIf) {
-            const prefix = this.IF_CLOSE ? this.ELSEIF_TOKEN : "\n" + this.ELSEIF_TOKEN;
-            ifComplete  =  ifOrElseIfIdentation + prefix + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + ifEnd;
+            const prefix = this.BLOCK_CLOSING_TOKEN ? this.ELSEIF_TOKEN : "\n" + this.ELSEIF_TOKEN;
+            ifComplete  =  ifOrElseIfIdentation + prefix + " " + this.CONDITION_OPENING + expression + this.CONDITION_CLOSE + ifOpen + ifBody + ifEnd;
         } else {
-            ifComplete  =  ifOrElseIfIdentation + this.IF_TOKEN + " " + this.IF_COND_OPEN + expression + this.IF_COND_CLOSE + ifOpen +"\n" + ifBody + ifEnd;
+            ifComplete  =  ifOrElseIfIdentation + this.IF_TOKEN + " " + this.CONDITION_OPENING + expression + this.CONDITION_CLOSE + ifOpen + ifBody + ifEnd;
         }
         
-
         const elseStatement = node.elseStatement;
 
         if (elseStatement?.kind === ts.SyntaxKind.Block) {
             
-            const elseOpen = this.ELSE_OPEN_TOKEN;
-            const elseClose = this.ELSE_CLOSE_TOKEN ? "\n"  + this.getIden(identation) + this.ELSE_CLOSE_TOKEN : "";
+            const elseOpen = this.getBlockOpen();
+            const elseClose = this.getBlockClose(identation);
 
-            const elseIdentation = this.IF_CLOSE ? ' ' : "\n" +  this.getIden(identation);
-            const elseBody = elseIdentation + this.ELSE_TOKEN + elseOpen + '\n' + elseStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n") + elseClose;
+            const elseIdentation = this.BLOCK_CLOSING_TOKEN ? ' ' : "\n" +  this.getIden(identation);
+            const elseBody = elseIdentation + this.ELSE_TOKEN + elseOpen + elseStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n") + elseClose;
             
             ifComplete += elseBody;
             
@@ -727,8 +744,16 @@ class BaseTranspiler {
     printTryStatement(node, identation) {
         const tryBody = node.tryBlock.statements.map((s) => this.printNode(s, identation+1)).join("\n");
         const catchBody = node.catchClause.block.statements.map((s) => this.printNode(s, identation+1)).join("\n");
-        const catchDeclaration = " Exception as " + node.catchClause.variableDeclaration.name.escapedText;
-        return this.getIden(identation) + this.TRY_TOKEN + "\n" + tryBody + "\n" + this.getIden(identation) + this.CATCH_TOKEN + this.CATCH_OPEN + catchDeclaration + this.CATCH_CLOSE + "\n" + catchBody;
+        const catchDeclaration = this.CATCH_DECLARATION + " " + this.printNode(node.catchClause.variableDeclaration.name, 0);
+        const tryOpen = this.getBlockOpen();
+        const tryClose = this.CONDITION_CLOSE ? this.CONDITION_CLOSE + " " : "";
+        const catchCondOpen = this.CONDITION_OPENING ? this.CONDITION_OPENING : " ";
+        const catchOpen = this.getBlockOpen();
+        const catchClose = this.getBlockClose(identation);
+        return this.getIden(identation) + this.TRY_TOKEN + tryOpen +
+                            tryBody + "\n" + 
+                            this.getIden(identation) + tryClose + this.CATCH_TOKEN + catchCondOpen + catchDeclaration + this.CONDITION_CLOSE + catchOpen + 
+                            catchBody + catchClose; 
     }
 
     printNewExpression(node, identation) {

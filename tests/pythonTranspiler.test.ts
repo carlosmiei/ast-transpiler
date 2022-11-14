@@ -25,7 +25,7 @@ describe('python tests', () => {
         const python =
         "while True:\n" +
         "    x = 1\n" +
-        "    break\n" 
+        "    break" 
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -47,7 +47,7 @@ describe('python tests', () => {
         "}" 
         const python =
         "def teste():\n" +
-        "    return 1\n";
+        "    return 1";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -58,7 +58,7 @@ describe('python tests', () => {
         "}"
         const python =
         "def teste(x = 'foo', y = None, params = {}):\n" +
-        "    return 1\n"
+        "    return 1"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -156,7 +156,7 @@ describe('python tests', () => {
         const python =
         "async def camelCase():\n" +
         "    self.myFunc()\n" +
-        "    await self.loadMarkets()\n"
+        "    await self.loadMarkets()"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -170,7 +170,7 @@ describe('python tests', () => {
         const python =
         "def camelCase():\n" +
         "    self.myFunc()\n" +
-        "    self.loadMarkets()\n"
+        "    self.loadMarkets()"
         const output = transpiler.transpilePython(ts).content;
         transpiler.setPythonAsyncTranspiling(true);
         expect(output).toBe(python);
@@ -213,7 +213,7 @@ describe('python tests', () => {
         const python =
         "class teste(extended):\n" +
         "    def __init__(self, x):\n" +
-        "        super().__init__(x)\n";
+        "        super().__init__(x)";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -282,7 +282,7 @@ describe('python tests', () => {
         "}";
         const python =
         "def test():\n" +
-        "    raise InvalidOrder('error')\n";
+        "    raise InvalidOrder('error')";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
@@ -475,7 +475,7 @@ describe('python tests', () => {
         const python =
         "def camel_case():\n" +
         "    self.my_func()\n" +
-        "    my_func()\n";
+        "    my_func()";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);
@@ -489,7 +489,6 @@ describe('python tests', () => {
         "promises = await asyncio.gather(*promises)";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
-        transpiler.setPhpUncamelCaseIdentifiers(false);
     })
     test('should convert JS doc', () => {
         const ts =
@@ -510,10 +509,9 @@ describe('python tests', () => {
         "    :param dict params: extra parameters specific to the aax api endpoint\n" +
         "    :returns dict: a `status structure <https://docs.ccxt.com/en/latest/manual.html#exchange-status-structure>`\n" +
         "    \"\"\"\n" +
-        "    return 1\n";
+        "    return 1";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
-        transpiler.setPhpUncamelCaseIdentifiers(false);
     })
     test('should convert regular comment', () => {
         const ts =
@@ -528,10 +526,10 @@ describe('python tests', () => {
         "    # comment 1\n" +
         "    # comment 2\n" +
         "    # comment 3\n" +
-        "    x = 1\n";
+        "    x = 1";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
-        transpiler.setPhpUncamelCaseIdentifiers(false);
+        transpiler.setPythonUncamelCaseIdentifiers(false);
     })
     test('should convert leading and trailing comments', () => {
         const ts =
@@ -544,6 +542,6 @@ describe('python tests', () => {
         "a = 'bar'  # I'm second trailing comment"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
-        transpiler.setPhpUncamelCaseIdentifiers(false);
+        transpiler.setPythonUncamelCaseIdentifiers(false);
     })
 });

@@ -47,14 +47,14 @@ describe('php transpiling tests', () => {
         expect(output).toBe(php);
     });
     test('basic function declaration', () => {
-        const php =
-        "function teste(){\n" +
-        "    return 1;\n" +
-        "}" 
         const ts =
         "function teste () {\n" +
         "    return 1;\n" +
-        "}\n"
+        "}\n";
+        const php =
+        "function teste() {\n" +
+        "    return 1;\n" +
+        "}";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
@@ -64,7 +64,7 @@ describe('php transpiling tests', () => {
         "    return 1;\n" +
         "}"
         const php =
-        "function teste($x = 'foo', $y = null, $params = array()){\n" +
+        "function teste($x = 'foo', $y = null, $params = array()) {\n" +
         "    return 1;\n" +
         "}"
         const output = transpiler.transpilePhp(ts).content;
@@ -169,7 +169,7 @@ describe('php transpiling tests', () => {
         "    await this.loadMarkets();\n" +
         "}\n"
         const php =
-        "function camelCase(){\n" +
+        "function camelCase() {\n" +
         "    return Async\\async(function (){\n" +
         "        $this->myFunc();\n" +
         "        Async\\await($this->loadMarkets());\n" +
@@ -185,7 +185,7 @@ describe('php transpiling tests', () => {
         "    await this.loadMarkets();\n" +
         "}\n"
         const php =
-        "function camelCase($foo, $bar){\n" +
+        "function camelCase($foo, $bar) {\n" +
         "    return Async\\async(function () use ($foo, $bar){\n" +
         "        $this->myFunc();\n" +
         "        Async\\await($this->loadMarkets());\n" +
@@ -202,7 +202,7 @@ describe('php transpiling tests', () => {
         "    await this.loadMarkets();\n" +
         "}"
         const php =
-        "function camelCase(){\n" +
+        "function camelCase() {\n" +
         "    $this->myFunc();\n" +
         "    $this->loadMarkets();\n" +
         "}"
@@ -219,7 +219,7 @@ describe('php transpiling tests', () => {
         "}\n" 
         const php =
         "class Test {\n" +
-        "    function describe(){\n" +
+        "    function describe() {\n" +
         "        return 'foo';\n" +
         "    }\n" +
         "}"
@@ -235,7 +235,7 @@ describe('php transpiling tests', () => {
         "}";
         const php =
         "class teste extends extended {\n" +
-        "    function method(){\n" +
+        "    function method() {\n" +
         "        return 1;\n" +
         "    }\n" +
         "}"
@@ -251,7 +251,7 @@ describe('php transpiling tests', () => {
         "}" 
         const php =
         "class teste extends extended {\n" +
-        "    function __construct($x){\n" +
+        "    function __construct($x) {\n" +
         "        parent::__construct($x);\n" +
         "    }\n" +
         "}"
@@ -322,7 +322,7 @@ describe('php transpiling tests', () => {
         "    throw new InvalidOrder (\"error\")\n" +
         "}";
         const php =
-        "function test(){\n" +
+        "function test() {\n" +
         "    throw new InvalidOrder('error');\n" +
         "}";
         const output = transpiler.transpilePhp(ts).content;
@@ -544,7 +544,7 @@ describe('php transpiling tests', () => {
         "    myFunc()\n" +
         "}";
         const php =
-        "function camel_case(){\n" +
+        "function camel_case() {\n" +
         "    $this->my_func();\n" +
         "    $my_func();\n" +
         "}"
@@ -577,7 +577,7 @@ describe('php transpiling tests', () => {
         "    return 1;\n" +
         "}";
         const php =
-        "function fetchStatus($params){\n" +
+        "function fetchStatus($params) {\n" +
         "    /**\n" +
         "     * the latest known information on the availability of the exchange API\n" +
         "     * @param {array} params extra parameters specific to the aax api endpoint\n" +
@@ -598,7 +598,7 @@ describe('php transpiling tests', () => {
         "    const x = 1;\n" +
         "}";
         const php =
-        "function test(){\n" +
+        "function test() {\n" +
         "    // comment 1\n" +
         "    // comment 2\n" +
         "    // comment 3\n" +
