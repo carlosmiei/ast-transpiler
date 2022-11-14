@@ -642,8 +642,8 @@ class BaseTranspiler {
     printObjectLiteralExpression(node, identation) {
 
         const objectBody = this.printObjectLiteralBody(node, identation);
-        const formattedObjectBody = objectBody ? "\n" + objectBody + "\n" : objectBody;
-        return  this.OBJECT_OPENING + formattedObjectBody +  this.getIden(identation) + this.OBJECT_CLOSING;
+        const formattedObjectBody = objectBody ? "\n" + this.getIden(identation) + objectBody + "\n" : objectBody;
+        return  this.OBJECT_OPENING + formattedObjectBody + this.OBJECT_CLOSING;
     }
 
     printPropertyAssignment(node, identation) {

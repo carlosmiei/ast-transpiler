@@ -70,6 +70,30 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('basic identation check', () => {
+        const ts =
+        "if (1) {\n" +
+        "    if (2) {\n" +
+        "        if (4) {\n" +
+        "            if (5) {\n" +
+        "                const x = {};\n" +
+        "            }\n" +
+        "        }\n" +
+        "    }\n" +
+        "}"
+        const php =
+        "if (1) {\n" +
+        "    if (2) {\n" +
+        "        if (4) {\n" +
+        "            if (5) {\n" +
+        "                $x = array();\n" +
+        "            }\n" +
+        "        }\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic if statement', () => {
         const ts =
         "if (1) {\n" +

@@ -62,6 +62,26 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('basic identation test', () => {
+        const ts =
+        "if (1) {\n" +
+        "    if (2) {\n" +
+        "        if (4) {\n" +
+        "            if (5) {\n" +
+        "                const x = {};\n" +
+        "            }\n" +
+        "        }\n" +
+        "    }\n" +
+        "}"
+        const python =
+        "if 1:\n" +
+        "    if 2:\n" +
+        "        if 4:\n" +
+        "            if 5:\n" +
+        "                x = {}"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic if statement', () => {
         const ts =
         "if (1) {\n" +
