@@ -58,6 +58,18 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('basic function declaration with default parameters', () => {
+        const ts =
+        "function teste(x = \"foo\", y = undefined, params = {}) {\n" +
+        "    return 1;\n" +
+        "}"
+        const php =
+        "function teste($x = 'foo', $y = null, $params = array()){\n" +
+        "    return 1;\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic if statement', () => {
         const ts =
         "if (1) {\n" +

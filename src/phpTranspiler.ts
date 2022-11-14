@@ -293,7 +293,7 @@ export class PhpTranspiler extends BaseTranspiler {
 
         if (this.asyncTranspiling && this.isAsyncFunction(node)) {
             const funcBody = super.printFunctionBody(node, identation + 1);
-            const parsedArgs = node.parameters.map(param => this.printParameter(param)).join(", ");
+            const parsedArgs = node.parameters.map(param => this.printParameter(param, false)).join(", ");
             const params = parsedArgs ? " use (" + parsedArgs + ")" : "";
             const result = this.getIden(identation) +  "return Async\\async(function ()" + params + "{\n"
             + funcBody + "\n"

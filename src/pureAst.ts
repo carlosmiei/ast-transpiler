@@ -301,8 +301,12 @@ class BaseTranspiler {
         return this.getIden(identation) + rawExpression;
     }
 
-    printParameter(node) {
+    printParameter(node, defaultValue = true) {
         const name = this.printNode(node.name, 0);
+        const initializer = node.initializer;
+        if (defaultValue && initializer) {
+            return name + " = " + this.printNode(initializer, 0);
+        }
         return name;
     }
 

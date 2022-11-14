@@ -51,6 +51,17 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('basic function declaration with default parameters', () => {
+        const ts =
+        "function teste(x = \"foo\", y = undefined, params = {}) {\n" +
+        "    return 1;\n" +
+        "}"
+        const python =
+        "def teste(x = 'foo', y = None, params = {}):\n" +
+        "    return 1\n"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic if statement', () => {
         const ts =
         "if (1) {\n" +
