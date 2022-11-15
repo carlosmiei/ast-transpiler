@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { IFileImport } from './types.js';
+import { IFileImport, IFileExport } from './types.js';
 import { unCamelCase } from "./utils.js";
 
 const SyntaxKind = ts.SyntaxKind;
@@ -905,6 +905,38 @@ class BaseTranspiler {
                 result.push(fileImport);
             }
         });
+        return result;
+    }
+
+    getFileExports(node): IFileExport[] {
+        const result = [];
+        const namedExports = node.statements.filter((s) => ts.isExportDeclaration(s));
+
+        const defaultExport = node.statements.filter((s) => ts.isExportAssignment(s));
+
+        namedExports.forEach(node => {
+            const namedExports = node.exportClause;
+            if (namedExports) {
+                namedExports.elements.forEach((elem) => {
+                    const name = elem.name.text;
+                    const fileExport: IFileExport = {
+                        name,
+                        isDefault: false
+                    };
+                    result.push(fileExport);
+                });
+            }
+        });
+
+        defaultExport.forEach(node => {
+            const name = node.expression.getText();
+            const fileExport: IFileExport = {
+                name,
+                isDefault: true
+            };
+            result.push(fileExport);
+        });
+        
         return result;
     }
 }

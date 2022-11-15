@@ -4,12 +4,19 @@ interface IFileImport {
     isDefault: boolean;
 }
 
+interface IFileExport {
+    name: string;
+    isDefault: boolean;
+}
+
 interface ITranspiledFile {
     content: string;
     imports: IFileImport[];
+    exports: IFileExport[];
 }
 
 export {
     IFileImport,
-    ITranspiledFile
+    ITranspiledFile,
+    IFileExport
 };

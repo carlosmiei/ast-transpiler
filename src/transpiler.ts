@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from "path";
 import { fileURLToPath } from 'url';
 
-import { IFileImport, ITranspiledFile } from './types.js';
+import { IFileExport, IFileImport, ITranspiledFile } from './types.js';
 
 const __dirname_mock = currentPath;
 
@@ -78,9 +78,11 @@ export default class Transpiler {
         this.createProgramInMemoryAndSetGlobals(content);
         const transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
         const imports = this.pythonTranspiler.getFileImports(global.src);
+        const exports = this.pythonTranspiler.getFileExports(global.src);
         return {
             content: transpiledContent,
-            imports
+            imports,
+            exports
         };
     }
 
@@ -88,9 +90,11 @@ export default class Transpiler {
         this.createProgramByPathAndSetGlobals(path);
         const transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
         const imports = this.pythonTranspiler.getFileImports(global.src);
+        const exports = this.phpTranspiler.getFileExports(global.src);
         return {
             content: transpiledContent,
-            imports
+            imports,
+            exports
         };
     }
 
@@ -98,9 +102,11 @@ export default class Transpiler {
         this.createProgramInMemoryAndSetGlobals(content);
         const transpiledContent = this.phpTranspiler.printNode(global.src, -1);
         const imports = this.phpTranspiler.getFileImports(global.src);
+        const exports = this.phpTranspiler.getFileExports(global.src);
         return {
             content: transpiledContent,
-            imports
+            imports,
+            exports
         };
     }
 
@@ -108,15 +114,22 @@ export default class Transpiler {
         this.createProgramByPathAndSetGlobals(path);
         const transpiledContent = this.phpTranspiler.printNode(global.src, -1);
         const imports = this.phpTranspiler.getFileImports(global.src);
+        const exports = this.phpTranspiler.getFileExports(global.src);
         return {
             content: transpiledContent,
-            imports
+            imports,
+            exports
         };
     }
 
     getFileImports(content: string): IFileImport[] {
         this.createProgramInMemoryAndSetGlobals(content);
         return this.phpTranspiler.getFileImports(global.src);
+    }
+
+    getFileExports(content: string): IFileExport[] {
+        this.createProgramInMemoryAndSetGlobals(content);
+        return this.phpTranspiler.getFileExports(global.src);
     }
 
     setPHPPropResolution(props: string[]) {
