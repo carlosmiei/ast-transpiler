@@ -693,34 +693,28 @@ class BaseTranspiler {
 
     printIfStatement(node, identation) {
         const expression = this.printNode(node.expression, 0);
-        const ifBody = node.thenStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n");
 
+        const elseExists = node.elseStatement !== undefined;
         const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
 
-        const ifOrElseIfIdentation = isElseIf && this.BLOCK_CLOSING_TOKEN ? " " : this.getIden(identation);
+        const needChainBlock = elseExists || isElseIf;
+        const ifBody = this.printBlock(node.thenStatement, identation, needChainBlock);
 
-        const ifEnd = this.getBlockClose(identation);
-        const ifOpen = this.getBlockOpen();
-
-        let ifComplete = undefined;
+        let ifComplete = this.CONDITION_OPENING + expression + this.CONDITION_CLOSE + ifBody;
         if (isElseIf) {
-            const prefix = this.BLOCK_CLOSING_TOKEN ? this.ELSEIF_TOKEN : "\n" + this.ELSEIF_TOKEN;
-            ifComplete  =  ifOrElseIfIdentation + prefix + " " + this.CONDITION_OPENING + expression + this.CONDITION_CLOSE + ifOpen + ifBody + ifEnd;
+            ifComplete = this.ELSEIF_TOKEN + " " + ifComplete;
         } else {
-            ifComplete  =  ifOrElseIfIdentation + this.IF_TOKEN + " " + this.CONDITION_OPENING + expression + this.CONDITION_CLOSE + ifOpen + ifBody + ifEnd;
+            ifComplete  =  this.getIden(identation) + this.IF_TOKEN + " " + ifComplete;
         }
         
         const elseStatement = node.elseStatement;
-
         if (elseStatement?.kind === ts.SyntaxKind.Block) {
             
-            const elseOpen = this.getBlockOpen();
-            const elseClose = this.getBlockClose(identation);
+            const elseBody = this.printBlock(elseStatement, identation);
 
-            const elseIdentation = this.BLOCK_CLOSING_TOKEN ? ' ' : "\n" +  this.getIden(identation);
-            const elseBody = elseIdentation + this.ELSE_TOKEN + elseOpen + elseStatement.statements.map((s) => this.printNode(s, identation+1)).join("\n") + elseClose;
+            const elseBlock = this.ELSE_TOKEN + elseBody;
             
-            ifComplete += elseBody;
+            ifComplete += elseBlock;
             
         } else if (elseStatement?.kind === ts.SyntaxKind.IfStatement) {
             const elseBody = this.printIfStatement(elseStatement, identation);
