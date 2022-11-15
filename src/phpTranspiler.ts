@@ -191,28 +191,28 @@ export class PhpTranspiler extends BaseTranspiler {
             const arg = args && args.length > 0 ? args[0] : undefined;
             
             if (arg) {
-                const argText = this.printNode(arg, 0);
+                const argText = this.printNode(arg, identation).trimStart();
                 const leftSideText = this.printNode(leftSide, 0);
                 const type = global.checker.getTypeAtLocation(leftSide); // eslint-disable-line
                 switch (rightSide) {
                     case 'push':
-                        return this.getIden(identation) + leftSideText + "[] = " + argText;
+                        return leftSideText + "[] = " + argText;
                     case 'includes': // "ol".includes("o") -> str_contains("ol", "o") or [12,3,4].includes(3) -> in_array(3, [12,3,4])
                         if (this.isStringType(type.flags)) {
-                            return this.getIden(identation) + "str_contains(" + leftSideText + ", " + argText + ")";
+                            return "str_contains(" + leftSideText + ", " + argText + ")";
                         } else {
-                            return this.getIden(identation) + "in_array(" + argText + ", " + leftSideText + ")";
+                            return "in_array(" + argText + ", " + leftSideText + ")";
                         }
                     case 'indexOf':
                         if (this.isStringType(type.flags)) {
-                            return this.getIden(identation) + "mb_strpos(" + leftSideText + ", " + argText + ")";
+                            return "mb_strpos(" + leftSideText + ", " + argText + ")";
                         } else {
-                            return this.getIden(identation) + "array_search(" + argText + ", " + leftSideText + ")";
+                            return "array_search(" + argText + ", " + leftSideText + ")";
                         }
                     case 'join': // [1,2,3].join(',') => implode(',', [1,2,3])
-                        return this.getIden(identation) + "implode(" + argText + ", " + leftSideText + ")";
+                        return "implode(" + argText + ", " + leftSideText + ")";
                     case 'split': // "ol".split("o") -> explode("o", "ol")
-                        return this.getIden(identation) + "explode(" + argText + ", " + leftSideText + ")"; 
+                        return "explode(" + argText + ", " + leftSideText + ")"; 
                 }
             }
         }
