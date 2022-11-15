@@ -205,7 +205,12 @@ class BaseTranspiler {
         return this.SPACE_BEFORE_BLOCK_OPENING + this.BLOCK_OPENING_TOKEN + "\n";
     }
 
-    getBlockClose(identation) {
+    getBlockClose(identation, chainBlock = false) {
+        
+        if (chainBlock) {
+            return this.BLOCK_CLOSING_TOKEN ? "\n" + this.getIden(identation) + this.BLOCK_CLOSING_TOKEN  + this.SPACE_BEFORE_BLOCK_OPENING : "\n";
+        }
+
         return this.BLOCK_CLOSING_TOKEN ? "\n" + this.getIden(identation) + this.BLOCK_CLOSING_TOKEN : "";
     }
 
@@ -736,18 +741,17 @@ class BaseTranspiler {
     }
 
     printTryStatement(node, identation) {
-        const tryBody = node.tryBlock.statements.map((s) => this.printNode(s, identation+1)).join("\n");
-        const catchBody = node.catchClause.block.statements.map((s) => this.printNode(s, identation+1)).join("\n");
+        const tryBody = this.printBlock(node.tryBlock, identation, true);
+
+        const catchBody = this.printBlock(node.catchClause.block, identation);
         const catchDeclaration = this.CATCH_DECLARATION + " " + this.printNode(node.catchClause.variableDeclaration.name, 0);
-        const tryOpen = this.getBlockOpen();
-        const tryClose = this.BLOCK_CLOSING_TOKEN ? this.BLOCK_CLOSING_TOKEN + " " : "";
+        
         const catchCondOpen = this.CONDITION_OPENING ? this.CONDITION_OPENING : " ";
-        const catchOpen = this.getBlockOpen();
-        const catchClose = this.getBlockClose(identation);
-        return this.getIden(identation) + this.TRY_TOKEN + tryOpen +
-                            tryBody + "\n" + 
-                            this.getIden(identation) + tryClose + this.CATCH_TOKEN + catchCondOpen + catchDeclaration + this.CONDITION_CLOSE + catchOpen + 
-                            catchBody + catchClose; 
+        
+        return this.getIden(identation) + this.TRY_TOKEN +
+                            tryBody +
+                            this.CATCH_TOKEN + catchCondOpen + catchDeclaration + this.CONDITION_CLOSE +
+                            catchBody;
     }
 
     printNewExpression(node, identation) {
@@ -796,9 +800,9 @@ class BaseTranspiler {
         return this.getIden(identation) + this.ARRAY_OPENING_TOKEN + elements + this.ARRAY_CLOSING_TOKEN;
     }
 
-    printBlock(node, identation) {
+    printBlock(node, identation, chainBlock = false) {
         const blockOpen = this.getBlockOpen();
-        const blockClose = this.getBlockClose(identation);
+        const blockClose = this.getBlockClose(identation, chainBlock);
         const statements = node.statements.map((s) => this.printNode(s, identation+1)).join("\n");
 
         return blockOpen + statements + blockClose;
