@@ -208,7 +208,7 @@ class BaseTranspiler {
     getBlockClose(identation, chainBlock = false) {
         
         if (chainBlock) {
-            return this.BLOCK_CLOSING_TOKEN ? "\n" + this.getIden(identation) + this.BLOCK_CLOSING_TOKEN  + this.SPACE_BEFORE_BLOCK_OPENING : "\n";
+            return this.BLOCK_CLOSING_TOKEN ? "\n" + this.getIden(identation) + this.BLOCK_CLOSING_TOKEN  + this.SPACE_BEFORE_BLOCK_OPENING : "\n" + this.getIden(identation) + this.BLOCK_CLOSING_TOKEN;
         }
 
         return this.BLOCK_CLOSING_TOKEN ? "\n" + this.getIden(identation) + this.BLOCK_CLOSING_TOKEN : "";
@@ -680,7 +680,7 @@ class BaseTranspiler {
         if (isElseIf) {
             ifComplete = this.ELSEIF_TOKEN + " " + ifComplete;
         } else {
-            ifComplete  =  this.getIden(identation) + this.IF_TOKEN + " " + ifComplete;
+            ifComplete = this.getIden(identation) + this.IF_TOKEN + " " + ifComplete;
         }
         
         const elseStatement = node.elseStatement;

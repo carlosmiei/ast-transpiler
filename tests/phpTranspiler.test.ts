@@ -94,6 +94,30 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('basic identation check [if-else-if]', () => {
+        const ts =
+        "function teste() {\n" +
+        "    if (1) {\n" +
+        "        const x = 1;\n" +
+        "    } else if (3) {\n" +
+        "        const b = 2;\n" +
+        "    } else {\n" +
+        "        const a = 1;\n" +
+        "    }\n" +
+        "}" 
+        const php =
+        "function teste() {\n" +
+        "    if (1) {\n" +
+        "        $x = 1;\n" +
+        "    } elseif (3) {\n" +
+        "        $b = 2;\n" +
+        "    } else {\n" +
+        "        $a = 1;\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic identation check [nested objects]', () => {
         const ts =
         "const x = {\n" +
