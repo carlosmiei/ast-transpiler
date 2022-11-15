@@ -6,6 +6,7 @@ const SyntaxKind = ts.SyntaxKind;
 
 class BaseTranspiler {
 
+    NUM_LINES_BETWEEN_CLASS_MEMBERS = 1;
     BLOCK_OPENING_TOKEN = ':';
     BLOCK_CLOSING_TOKEN = '';
     SPACE_BEFORE_BLOCK_OPENING = '';
@@ -214,8 +215,14 @@ class BaseTranspiler {
         return this.BLOCK_CLOSING_TOKEN ? "\n" + this.getIden(identation) + this.BLOCK_CLOSING_TOKEN : "";
     }
 
+    startsWithUpperCase(str) {
+        return str.charAt(0) === str.charAt(0).toUpperCase();
+    }
+
     unCamelCaseIfNeeded(name: string): string {
-        if (this.uncamelcaseIdentifiers) {
+
+
+        if (this.uncamelcaseIdentifiers && !this.startsWithUpperCase(name) ) { // avoid snake_case constant (MY_CONSTANT) or exception errors (BadRequestException)
             return unCamelCase(name) ?? name;
         }
         return name;
@@ -383,7 +390,7 @@ class BaseTranspiler {
             for (const commentRange of commentsRange) {
                 const commentText = fullText.slice(commentRange.pos, commentRange.end);
                 if (commentText !== undefined) {
-                    res+= this.getIden(identation) + this.transformTrailingComment(commentText);
+                    res+= this.transformTrailingComment(commentText);
                 }
             }
         }
@@ -552,7 +559,7 @@ class BaseTranspiler {
     printClassBody(node, identation) {
         return node.members.map((m)=> {
             return this.printNode(m, identation+1);
-        }).join("\n"); 
+        }).join("\n".repeat( 1+ this.NUM_LINES_BETWEEN_CLASS_MEMBERS)); 
 
     }
 
@@ -646,8 +653,11 @@ class BaseTranspiler {
         const {name, initializer} = node;
         const nameAsString = this.printNode(name, 0);
         const valueAsString = this.printNode(initializer, identation);
+        let trailingComment = this.printTraillingComment(node, identation);
+        trailingComment = trailingComment ? " " + trailingComment : trailingComment;
+        
 
-        return this.getIden(identation) + nameAsString +  this.PROPERTY_ASSIGNMENT_TOKEN + " " + valueAsString.trim();
+        return this.getIden(identation) + nameAsString +  this.PROPERTY_ASSIGNMENT_TOKEN + " " + valueAsString.trim() + trailingComment;
     }
 
     printElementAccessExpressionExceptionIfAny(node) {
