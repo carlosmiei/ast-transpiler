@@ -185,7 +185,7 @@ describe('python tests', () => {
         const python =
         "class Teste:\n" +
         "    def describe(self):\n" +
-        "        return 'foo'\n"
+        "        return 'foo'"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -199,7 +199,7 @@ describe('python tests', () => {
         const python =
         "class teste(extended):\n" +
         "    def method(self):\n" +
-        "        return 1\n";
+        "        return 1";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });

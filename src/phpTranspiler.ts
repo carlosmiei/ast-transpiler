@@ -305,13 +305,17 @@ export class PhpTranspiler extends BaseTranspiler {
     printFunctionBody(node, identation) {
 
         if (this.asyncTranspiling && this.isAsyncFunction(node)) {
-            const funcBody = super.printFunctionBody(node, identation + 1);
+            const blockOpen = this.getBlockOpen();
+            const blockClose = this.getBlockClose(identation);
+
+            const funcBody = node.body.statements.map((s) => this.printNode(s, identation+2)).join("\n");
             const parsedArgs = node.parameters.map(param => this.printParameter(param, false)).join(", ");
             const params = parsedArgs ? " use (" + parsedArgs + ")" : "";
-            const result = this.getIden(identation) +  "return Async\\async(function ()" + params + "{\n"
+            const result = this.getIden(identation+1) +  "return Async\\async(function ()" + params + "{\n"
             + funcBody + "\n"
-            + this.getIden(identation) + "}) ();";
-            return result;
+            + this.getIden(identation+1) + "}) ();";
+
+            return blockOpen + result + blockClose;
         }
         return super.printFunctionBody(node, identation);
     }

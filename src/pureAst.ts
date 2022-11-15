@@ -391,12 +391,7 @@ class BaseTranspiler {
     }
 
     printFunctionBody(node, identation) {
-        const body = node.body;
-        const statementsAsString = body.statements.map((s) => {
-            return this.printNode(s, identation);
-
-        }).filter((s)=>!!s).join("\n");
-        return statementsAsString;
+        return this.printBlock(node.body, identation);
     }
 
     printFunctionDefinition(node, identation) {
@@ -408,11 +403,8 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : modifiers;
 
-        const functionOpen = this.getBlockOpen();
-
         const functionDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
-            + "(" + parsedArgs + ")"
-            + functionOpen;
+            + "(" + parsedArgs + ")";
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
@@ -425,15 +417,9 @@ class BaseTranspiler {
     }
     
     printFunctionDeclaration(node, identation) {
-
         let functionDef = this.printFunctionDefinition(node, identation);
-
-        const funcBody = this.printFunctionBody(node, identation+1);
-
-        const funcClose = this.getBlockClose(identation);
-
+        const funcBody = this.printFunctionBody(node, identation);
         functionDef += funcBody;
-        functionDef += funcClose;
 
         return functionDef;
     }
@@ -456,11 +442,9 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : "";
 
-        const funcOpen = this.getBlockOpen();
 
         const methodDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
-            + "(" + parsedArgs + ")"
-            + funcOpen;
+            + "(" + parsedArgs + ")";
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
@@ -471,15 +455,11 @@ class BaseTranspiler {
 
     printMethodDeclaration(node, identation) {
 
-        const methodClose = this.BLOCK_CLOSING_TOKEN ? this.getIden(identation) + this.BLOCK_CLOSING_TOKEN : "";
-
         let methodDef = this.printMethodDefinition(node, identation);
         
-        const funcBody = this.printFunctionBody(node, identation+1);
+        const funcBody = this.printFunctionBody(node, identation);
         
         methodDef += funcBody;
-        methodDef += "\n";
-        methodDef += methodClose;
 
         return methodDef;
     }
@@ -604,15 +584,11 @@ class BaseTranspiler {
 
     printConstructorDeclaration (node, identation) {
         const args = this.printMethodParameters(node);
-        const constructorBody = this.printFunctionBody(node, identation+1);
-        const funcClose = this.getBlockClose(identation);
-        const funcOpen = this.getBlockOpen();
+        const constructorBody = this.printFunctionBody(node, identation);
         return this.getIden(identation) +
                 this.CONSTRUCTOR_TOKEN + 
                 "(" + args + ")" + 
-                funcOpen +
-                constructorBody + 
-                funcClose;
+                constructorBody;
     }
 
     printWhileStatement(node, identation) {
