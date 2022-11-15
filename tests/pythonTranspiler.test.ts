@@ -287,6 +287,20 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('basic postfixUnary expression', () => {
+        const ts =
+        "let x = 1;\n" +
+        "x++;\n" +
+        "let y = 1;\n" +
+        "y--;"
+        const python =
+        "x = 1\n" +
+        "x+= 1\n" +
+        "y = 1\n" +
+        "y-= 1"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic element access expression', () => {
         const ts =
         "const x = {};\n" +

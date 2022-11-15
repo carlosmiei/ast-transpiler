@@ -54,6 +54,8 @@ const parserConfig = {
     'SPACE_BEFORE_BLOCK_OPENING' :' ',
     'CONDITION_OPENING' :'(',
     'CONDITION_CLOSE' :')',
+    'PLUS_PLUS_TOKEN': '++',
+    'MINUS_MINUS_TOKEN': '--',
 };
 
 export class PhpTranspiler extends BaseTranspiler {

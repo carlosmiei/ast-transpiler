@@ -65,8 +65,8 @@ class BaseTranspiler {
     GREATER_THAN_TOKEN = ">";
     GREATER_THAN_EQUALS_TOKEN = ">=";
     LESS_THAN_EQUALS_TOKEN = "<=";
-    PLUS_PLUS_TOKEN = "++";
-    MINUS_MINUS_TOKEN = "--";
+    PLUS_PLUS_TOKEN = " += 1";
+    MINUS_MINUS_TOKEN = " -= 1";
 
     // CLASS_OPENING_TOKEN = ":";
     // CLASS_CLOSING_TOKEN = "";
@@ -936,7 +936,7 @@ class BaseTranspiler {
             };
             result.push(fileExport);
         });
-        
+
         return result;
     }
 }

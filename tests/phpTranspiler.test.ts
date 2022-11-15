@@ -560,6 +560,20 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
+    test('basic postfixUnary expression', () => {
+        const ts =
+        "let x = 1;\n" +
+        "x++;\n" +
+        "let y = 1;\n" +
+        "y--;"
+        const php =
+        "$x = 1;\n" +
+        "$x++;\n" +
+        "$y = 1;\n" +
+        "$y--;"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('should snake_case function and method calls', () => {
         transpiler.setPhpUncamelCaseIdentifiers(true);
         const ts =
