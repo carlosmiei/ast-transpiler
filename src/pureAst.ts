@@ -496,6 +496,11 @@ class BaseTranspiler {
     }
 
     printVariableStatement(node, identation){
+
+        if (this.isRequireStatement(node)) {
+            return ""; // remove cjs imports
+        }
+
         const leadingComment = this.printLeadingComments(node, identation);
         let trailingComment = this.printTraillingComment(node, identation);
         trailingComment = trailingComment ? " " + trailingComment : trailingComment;
@@ -877,7 +882,7 @@ class BaseTranspiler {
         return "";
     }
 
-    getFileImports(node): IFileImport[] {
+    getFileESMImports(node): IFileImport[] {
         const result = [];
         const importStatements = node.statements.filter((s) => ts.isImportDeclaration(s));
         importStatements.forEach(node => {
@@ -908,10 +913,62 @@ class BaseTranspiler {
         return result;
     }
 
-    getFileExports(node): IFileExport[] {
+    isRequireStatement(node): boolean {
+        const dec = node.declarationList.declarations[0];
+        return ts.isCallExpression(dec.initializer) && dec.initializer.expression.getText() === "require";
+    }
+
+    getCJSImports(node): IFileImport[] {
+        const result = [];
+        const varStatements = node.statements.filter(s => ts.isVariableStatement(s));
+        const decList = varStatements.map(s => s.declarationList);
+        const dec = decList.map(d => d.declarations[0]);
+
+        dec.forEach(decNode => {
+            if (decNode.initializer.kind === ts.SyntaxKind.CallExpression) {
+                const callExpression = decNode.initializer.expression.getText();
+                if (callExpression === "require") {
+                    const isDefault = decNode.name.kind === ts.SyntaxKind.Identifier;
+                    const importPath = decNode.initializer.arguments[0].text;
+                    if (isDefault) {
+                        const name = decNode.name.text;
+                        const fileImport: IFileImport = {
+                            name,
+                            path: importPath,
+                            isDefault: isDefault
+                        };
+                        result.push(fileImport);
+                    } else {
+                        const elems = decNode.name.elements;
+                        elems.forEach(elem => {
+                            const name = elem.name.text;
+                            const fileImport: IFileImport = {
+                                name, 
+                                path: importPath,
+                                isDefault: false,
+                            };
+                            result.push(fileImport);
+                        });
+                    }
+                }
+            }
+        });
+
+        return result;
+    }
+
+    getFileImports(node): IFileImport[] {
+        const esmImports = this.getFileESMImports(node);
+        if (esmImports.length > 0) {
+            return esmImports;
+        }
+        const cjsImports = this.getCJSImports(node);
+        return cjsImports;
+    }
+
+    getESMExports(node): IFileExport[] {
         const result = [];
         const namedExports = node.statements.filter((s) => ts.isExportDeclaration(s));
-
         const defaultExport = node.statements.filter((s) => ts.isExportAssignment(s));
 
         namedExports.forEach(node => {
@@ -936,8 +993,14 @@ class BaseTranspiler {
             };
             result.push(fileExport);
         });
-
         return result;
+    }
+
+    getFileExports(node): IFileExport[] {
+        const esmExports = this.getESMExports(node);
+        if (esmExports) {
+            return esmExports;
+        }
     }
 }
 

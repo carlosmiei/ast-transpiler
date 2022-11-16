@@ -295,9 +295,9 @@ describe('python tests', () => {
         "y--;"
         const python =
         "x = 1\n" +
-        "x+= 1\n" +
+        "x += 1\n" +
         "y = 1\n" +
-        "y-= 1"
+        "y -= 1"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
