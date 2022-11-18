@@ -348,7 +348,7 @@ class BaseTranspiler {
         const name = this.printNode(node.name, 0);
         const initializer = node.initializer;
         if (defaultValue && initializer) {
-            return name + " = " + this.printNode(initializer, 0);
+            return name + "=" + this.printNode(initializer, 0);
         }
         return name;
     }
@@ -400,11 +400,17 @@ class BaseTranspiler {
             for (const commentRange of commentsRange) {
                 const commentText = fullText.slice(commentRange.pos, commentRange.end);
                 if (commentText !== undefined) {
-                    res+= this.transformTrailingComment(commentText);
+                    res+= " " + this.transformTrailingComment(commentText);
                 }
             }
         }
         return res;
+    }
+    
+    printNodeCommentsIfAny(node, identation, parsedNode) {
+        const leadingComment = this.printLeadingComments(node, identation);
+        const trailingComment = this.printTraillingComment(node, identation);
+        return leadingComment + parsedNode + trailingComment;
     }
 
     printFunctionBody(node, identation) {
@@ -514,14 +520,10 @@ class BaseTranspiler {
         if (this.isCJSRequireStatement(node)) {
             return ""; // remove cjs imports
         }
-
-        const leadingComment = this.printLeadingComments(node, identation);
-        let trailingComment = this.printTraillingComment(node, identation);
-        trailingComment = trailingComment ? " " + trailingComment : trailingComment;
         
         const decList = node.declarationList;
-        return leadingComment + this.printVariableDeclarationList(decList, identation) + this.LINE_TERMINATOR + trailingComment;
-
+        const varStatement = this.printVariableDeclarationList(decList, identation) + this.LINE_TERMINATOR;
+        return this.printNodeCommentsIfAny(node, identation, varStatement);
     }
 
     printOutOfOrderCallExpressionIfAny(node, identation) {
@@ -622,10 +624,11 @@ class BaseTranspiler {
 
         const expression = this.printNode(loopExpression, 0);
 
-        return this.getIden(identation) +
+        const whileStm = this.getIden(identation) +
                     this.WHILE_TOKEN + " " +
                     this.CONDITION_OPENING + expression + this.CONDITION_CLOSE +
                     this.printBlock(node.statement, identation);
+        return this.printNodeCommentsIfAny(node, identation, whileStm);
     }
 
     printForStatement(node, identation) {
@@ -633,16 +636,18 @@ class BaseTranspiler {
         const condition = this.printNode(node.condition, 0);
         const incrementor = this.printNode(node.incrementor, 0);
 
-        return this.getIden(identation) +
+        const forStm = this.getIden(identation) +
                 this.FOR_TOKEN + " " +
                 this.FOR_COND_OPEN + 
                 initializer + "; " + condition + "; " + incrementor +
                 this.FOR_COND_CLOSE +
                 this.printBlock(node.statement, identation);
+        return this.printNodeCommentsIfAny(node, identation, forStm);
     }
 
     printBreakStatement(node, identation) {
-        return this.getIden(identation) + this.BREAK_TOKEN + this.LINE_TERMINATOR;
+        const breakStm = this.getIden(identation) + this.BREAK_TOKEN + this.LINE_TERMINATOR;
+        return this.printNodeCommentsIfAny(node, identation, breakStm);
     }
 
     printPostFixUnaryExpression(node, identation) {
@@ -724,7 +729,7 @@ class BaseTranspiler {
             const elseBody = this.printIfStatement(elseStatement, identation);
             ifComplete += elseBody;
         }
-        return ifComplete;
+        return this.printNodeCommentsIfAny(node, identation, ifComplete);
     }
 
     printParenthesizedExpression(node, identation) {
@@ -810,9 +815,8 @@ class BaseTranspiler {
         if (this.isCJSModuleExportsExpressionStatement(node)) {
             return ""; // remove module.exports = ...
         }
-        const leadingComment = this.printLeadingComments(node, identation);
-        const trailingComment = this.printTraillingComment(node, identation);
-        return leadingComment + this.printNode(node.expression, identation) + this.LINE_TERMINATOR + trailingComment;
+        const expStatement = this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
+        return this.printNodeCommentsIfAny(node, identation, expStatement);
     }
 
     printNode(node, identation = 0): string {

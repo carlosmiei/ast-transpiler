@@ -25,7 +25,6 @@ const php = transpiler.transpilePhpByPath(file);
 const phpRes = `<?php\n${php.content}\n?>`;
 
 
-
 // const phpSyncRes = `<?php\n${transpiler.transpilePhpByPath(file)}\n?>`;
 
 const PHP_OUTPUT = "./out/output.php";
