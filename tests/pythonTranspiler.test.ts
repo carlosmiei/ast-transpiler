@@ -1,5 +1,5 @@
 import { Transpiler } from '../src/transpiler';
- 
+import { readFileSync } from 'fs';
 
 let transpiler: Transpiler;
 
@@ -615,4 +615,11 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('should transpile file from path', () => {
+        transpiler.setPythonUncamelCaseIdentifiers(true);
+        const python = readFileSync ('./tests/files/output/python/test1.py', "utf8");
+        const output = transpiler.transpilePythonByPath('./tests/files/input/test1.ts').content;
+        transpiler.setPythonUncamelCaseIdentifiers(false);
+        expect(output).toBe(python);
+    })
 });

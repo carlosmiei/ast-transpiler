@@ -78,13 +78,10 @@ export class PhpTranspiler extends BaseTranspiler {
         this.initConfig();
 
         // user overrides
-        this.LeftPropertyAccessReplacements = Object.assign ({}, this.LeftPropertyAccessReplacements, config['LeftPropertyAccessReplacements'] ?? {});
-        this.RightPropertyAccessReplacements = Object.assign ({}, this.RightPropertyAccessReplacements, config['RightPropertyAccessReplacements'] ?? {});
-        this.FullPropertyAccessReplacements = Object.assign ({}, this.FullPropertyAccessReplacements, config['FullPropertyAccessReplacements'] ?? {});
-        this.CallExpressionReplacements = Object.assign ({}, this.CallExpressionReplacements, config['CallExpressionReplacements'] ?? {});
+        this.applyUserOverrides(config);
 
-        const propertyAccessRemoval = config['PropertyAccessRequiresParenthesisRemoval'] ?? [];
-        this.PropertyAccessRequiresParenthesisRemoval.push(...propertyAccessRemoval);
+        // const propertyAccessRemoval = config['PropertyAccessRequiresParenthesisRemoval'] ?? [];
+        // this.PropertyAccessRequiresParenthesisRemoval.push(...propertyAccessRemoval);
 
         this.AWAIT_WRAPPER_OPEN = config['AWAIT_WRAPPER_OPEN'] ?? "Async\\await(";
         this.AWAIT_WRAPPER_CLOSE = config['AWAIT_WRAPPER_CLOSE'] ??  ")";

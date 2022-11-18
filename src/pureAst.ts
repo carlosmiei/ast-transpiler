@@ -119,6 +119,7 @@ class BaseTranspiler {
     LeftPropertyAccessReplacements = {};
     RightPropertyAccessReplacements = {};
     FullPropertyAccessReplacements = {};
+    StringLiteralReplacements = {};
 
     CallExpressionReplacements = {};
     PropertyAccessRequiresParenthesisRemoval = [];
@@ -182,6 +183,14 @@ class BaseTranspiler {
             [ts.SyntaxKind.PublicKeyword]: this.PUBLIC_KEYWORD,
             [ts.SyntaxKind.PrivateKeyword]: this.PRIVATE_KEYWORD,
         };
+    }
+
+    applyUserOverrides(config): void {
+        this.LeftPropertyAccessReplacements = Object.assign ({}, this.LeftPropertyAccessReplacements, config['LeftPropertyAccessReplacements'] ?? {});
+        this.RightPropertyAccessReplacements = Object.assign ({}, this.RightPropertyAccessReplacements, config['RightPropertyAccessReplacements'] ?? {});
+        this.FullPropertyAccessReplacements = Object.assign ({}, this.FullPropertyAccessReplacements, config['FullPropertyAccessReplacements'] ?? {});
+        this.CallExpressionReplacements = Object.assign ({}, this.CallExpressionReplacements, config['CallExpressionReplacements'] ?? {});
+        this.StringLiteralReplacements = Object.assign ({}, this.StringLiteralReplacements, config['StringLiteralReplacements'] ?? {});
     }
 
     isStringType(flags: ts.TypeFlags) {
@@ -474,6 +483,10 @@ class BaseTranspiler {
 
     printStringLiteral(node) {
         const token = this.STRING_QUOTE_TOKEN;
+        const text = node.text;
+        if (text in this.StringLiteralReplacements) {
+            return this.StringLiteralReplacements[text];
+        }
         return token + node.text.replace(token, "\\" + token) + token;
     }
 

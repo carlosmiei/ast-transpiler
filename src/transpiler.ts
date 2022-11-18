@@ -10,6 +10,16 @@ import { IFileExport, IFileImport, ITranspiledFile } from './types.js';
 
 const __dirname_mock = currentPath;
 
+enum Languages {
+    Python,
+    Php
+}
+
+enum TranspilationMode {
+    ByPath,
+    ByContent
+}
+
 function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, options: any = {}): [any,any,any]  {
     options = options || ts.getDefaultCompilerOptions();
     const inMemoryFilePath = path.resolve(path.join(rootDir, "__dummy-file.ts"));
@@ -64,9 +74,9 @@ export default class Transpiler {
     }
 
     createProgramByPathAndSetGlobals(path) {
-        const filename = path.split("/").pop();
-        const program = ts.createProgram([filename], {});
-        const sourceFile = program.getSourceFile(filename);
+        // const filename = path.split("/").pop();
+        const program = ts.createProgram([path], {});
+        const sourceFile = program.getSourceFile(path);
         const typeChecker = program.getTypeChecker();
 
         global.src = sourceFile;
@@ -74,52 +84,48 @@ export default class Transpiler {
         global.program = program;
     }
 
-    transpilePython(content): ITranspiledFile {
-        this.createProgramInMemoryAndSetGlobals(content);
-        const transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
+    transpile(lang: Languages, mode: TranspilationMode, file: string): ITranspiledFile {
+
+        if (mode === TranspilationMode.ByPath) {
+            this.createProgramByPathAndSetGlobals(file);
+        } else {
+            this.createProgramInMemoryAndSetGlobals(file);
+        }
+
+        let transpiledContent = undefined;
+        switch(lang) {
+            case Languages.Python:
+                transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
+                break;
+            case Languages.Php:
+                transpiledContent = this.phpTranspiler.printNode(global.src, -1);
+                break;
+        }
+
         const imports = this.pythonTranspiler.getFileImports(global.src);
         const exports = this.pythonTranspiler.getFileExports(global.src);
         return {
             content: transpiledContent,
             imports,
             exports
+
         };
+    }
+
+    transpilePython(content): ITranspiledFile {
+        return this.transpile(Languages.Python, TranspilationMode.ByContent, content);
     }
 
     transpilePythonByPath(path): ITranspiledFile {
-        this.createProgramByPathAndSetGlobals(path);
-        const transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
-        const imports = this.pythonTranspiler.getFileImports(global.src);
-        const exports = this.phpTranspiler.getFileExports(global.src);
-        return {
-            content: transpiledContent,
-            imports,
-            exports
-        };
+        return this.transpile(Languages.Python, TranspilationMode.ByPath, path);
     }
 
     transpilePhp(content): ITranspiledFile {
-        this.createProgramInMemoryAndSetGlobals(content);
-        const transpiledContent = this.phpTranspiler.printNode(global.src, -1);
-        const imports = this.phpTranspiler.getFileImports(global.src);
-        const exports = this.phpTranspiler.getFileExports(global.src);
-        return {
-            content: transpiledContent,
-            imports,
-            exports
-        };
+        return this.transpile(Languages.Php, TranspilationMode.ByContent, content);
     }
 
     transpilePhpByPath(path): ITranspiledFile {
-        this.createProgramByPathAndSetGlobals(path);
-        const transpiledContent = this.phpTranspiler.printNode(global.src, -1);
-        const imports = this.phpTranspiler.getFileImports(global.src);
-        const exports = this.phpTranspiler.getFileExports(global.src);
-        return {
-            content: transpiledContent,
-            imports,
-            exports
-        };
+        return this.transpile(Languages.Php, TranspilationMode.ByPath, path);
     }
 
     getFileImports(content: string): IFileImport[] {

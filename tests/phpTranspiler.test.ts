@@ -1,5 +1,5 @@
 import { Transpiler } from '../src/transpiler';
-
+import { readFileSync } from 'fs';
 
 jest.mock('module',()=>({
     __esModule: true,                    // this makes it work
@@ -691,6 +691,13 @@ describe('php transpiling tests', () => {
         "}";
         const php = ""
         const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('should transpile file from path', () => {
+        transpiler.setPhpUncamelCaseIdentifiers(true);
+        const php = readFileSync ('./tests/files/output/php/test1.php', "utf8");
+        const output = transpiler.transpilePhpByPath('./tests/files/input/test1.ts').content;
+        transpiler.setPhpUncamelCaseIdentifiers(false);
         expect(output).toBe(php);
     });
   });

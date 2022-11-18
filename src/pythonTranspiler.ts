@@ -19,13 +19,10 @@ export class PythonTranspiler extends BaseTranspiler {
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
 
         // user overrides
-        this.LeftPropertyAccessReplacements = Object.assign ({}, this.LeftPropertyAccessReplacements, config['LeftPropertyAccessReplacements'] ?? {});
-        this.RightPropertyAccessReplacements = Object.assign ({}, this.RightPropertyAccessReplacements, config['RightPropertyAccessReplacements'] ?? {});
-        this.FullPropertyAccessReplacements = Object.assign ({}, this.FullPropertyAccessReplacements, config['FullPropertyAccessReplacements'] ?? {});
-        this.CallExpressionReplacements = Object.assign ({}, this.CallExpressionReplacements, config['CallExpressionReplacements'] ?? {});
+        this.applyUserOverrides(config);
 
-        const propertyAccessRemoval = config['PropertyAccessRequiresParenthesisRemoval'] ?? [];
-        this.PropertyAccessRequiresParenthesisRemoval.push(...propertyAccessRemoval);
+        // const propertyAccessRemoval = config['PropertyAccessRequiresParenthesisRemoval'] ?? [];
+        // this.PropertyAccessRequiresParenthesisRemoval.push(...propertyAccessRemoval);
 
     }
 
