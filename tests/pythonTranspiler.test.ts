@@ -580,6 +580,16 @@ describe('python tests', () => {
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);
     })
+    test('should replace string if StringLiteralReplacements contains replacement', () => {
+        transpiler.setPythonStringLiteralReplacements({
+            'sha256': 'hashlib.sha256',
+        })
+        const ts = "const x = \"sha256\"";
+        const python ="x = hashlib.sha256";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+        transpiler.setPythonUncamelCaseIdentifiers(false);
+    })
     test('basic try-catch block', () => {
         const ts =
         "try {\n" +

@@ -108,7 +108,6 @@ export default class Transpiler {
             content: transpiledContent,
             imports,
             exports
-
         };
     }
 
@@ -158,6 +157,9 @@ export default class Transpiler {
         this.pythonTranspiler.asyncTranspiling = async;
     }
 
+    setPythonStringLiteralReplacements(replacements): void {
+        this.pythonTranspiler.StringLiteralReplacements = replacements;
+    }
 }   
 
 export {

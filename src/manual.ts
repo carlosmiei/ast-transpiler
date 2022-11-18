@@ -14,7 +14,9 @@ const transpiler = new Transpiler({
 
 transpiler.setPHPPropResolution(['super', 'Precise']);
 
-
+transpiler.setPythonStringLiteralReplacements({
+    'sha256': 'hashlib.sha256',
+});
 
 const file = "tmp.ts";
 
