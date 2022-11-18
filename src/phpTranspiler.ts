@@ -109,20 +109,24 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     getCustomOperatorIfAny(left, right, operator) {
-        const CONCAT_TOKEN = '.';
-        if (operator.kind == SyntaxKind.PlusToken) {
+        const STRING_CONCAT = '.';
+        const PLUS_EQUALS_TOKEN = '.=';
+        if (operator.kind == SyntaxKind.PlusToken || operator.kind == SyntaxKind.PlusEqualsToken) {
+
+            const TOKEN = operator.kind == SyntaxKind.PlusToken ? STRING_CONCAT : PLUS_EQUALS_TOKEN;
+
             if (left.kind == SyntaxKind.StringLiteral || right.kind == SyntaxKind.StringLiteral) {
-                return CONCAT_TOKEN;
+                return TOKEN;
             }
             
             const leftType = global.checker.getTypeAtLocation(left);
             const rightType = global.checker.getTypeAtLocation(right);
             
             if (leftType.flags === ts.TypeFlags.String || rightType.flags === ts.TypeFlags.String) {
-                return CONCAT_TOKEN;
+                return TOKEN;
             }
             if (leftType.flags === ts.TypeFlags.StringLiteral || rightType.flags === ts.TypeFlags.StringLiteral) {
-                return CONCAT_TOKEN;
+                return TOKEN;
             }
         }
         return undefined;

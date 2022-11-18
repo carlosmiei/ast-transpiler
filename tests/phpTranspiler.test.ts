@@ -428,7 +428,8 @@ describe('php transpiling tests', () => {
     })
     test('basic string methods', () => {
         const ts =
-        "const a = 'test';\n" +
+        "let a = 'test';\n" +
+        "a+= \"mundo\"\n" +
         "const t = a.split (',');\n" +
         "const b = a.length;\n" +
         "const c = a.indexOf ('t');\n" +
@@ -436,6 +437,7 @@ describe('php transpiling tests', () => {
         "const e = a.toLowerCase ();";
         const php =
         "$a = 'test';\n" +
+        "$a .= 'mundo';\n" +
         "$t = explode(',', $a);\n" +
         "$b = strlen($a);\n" +
         "$c = mb_strpos($a, 't');\n" +
