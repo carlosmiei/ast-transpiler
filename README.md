@@ -5,11 +5,11 @@
 ![Lines](./badges/coverage-lines.svg)
 ![Statements](./badges/coverage-statements.svg)
 
-Transpiler is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker. 
+`ast-transpiling` is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker. 
 
 As expected, it's not possible to transpile Typescript to Python or PHP in a 1:1 parity because they are different languages a lot of features are not interchangeable. Nonetheless, this library supports as many features as possible doing some adaptions (more to come).
 
-Although we transpile TS code directly to the other languages, this library does touch import statements because each language has its own module/namespace model. Instead, we return a unified list of imports separately, allowing the user to adapt it to the target language easily and append it to the generated code (check `IFileImport`).
+Although we transpile TS code directly to the other languages, this library does touch import or exports statements because each language has its own module/namespace model. Instead, we return a unified list of imports and exports separately, allowing the user to adapt it to the target language easily and append it to the generated code (check `IFileImport` and `IFileExport`).
 
 In order to faciliate the transpilation process we should try to add as many types as possible otherwise we might get invalid results.
 
@@ -34,6 +34,9 @@ argument's type is known so all good, no ambiguities here.
 #### What about javascript?** 
 Obviously all Javascript code is valid Typescript, so in theory it should transpile Javascript seamlessy as well. This is in part true, but for the lacking of types we might get some invalid results when the types are not clear (check bad example).
 
+#### ESM or CJS?
+This library works better with ESM because has dedicated `import/export` tokens in the AST whereas CJS `require/module.exports` are just regular properties and call expressions. **Nonetheless, both are supported**.
+
 ## Currently supported languages
 - Python
 - PHP
@@ -48,11 +51,11 @@ npm install transpiler
 
 ## Usage
 
-NAME_HERE is a hybrid package, supporting ESM and CJS out of the box. Choose the one that fits you better.
+`ast-transpiling` is a hybrid package, supporting ESM and CJS out of the box. Choose the one that fits you better.
 
-- Transpiling Typescript to Python from string
+### Transpiling Typescript to Python from string
 ```Javascript 
-import Transpiler from 'IMPORT-HERE'
+import Transpiler from 'ast-transpiling'
 
 const transpiler = new Transpiler({
     python: {
@@ -66,16 +69,18 @@ const transpiledCode = transpiler.transpilePython(ts);
 console.log(transpileCode.content) // prints my_var = 1
 ```
 
-- Transpiling Typescript to PHP from file
+### Transpiling Typescript to PHP from file
+(preferred way if needs to resolve imports)
 
 ```Javascript
-const Transpiler = require('IMPORT-HERE');
+const Transpiler = require(`ast-transpling`);
 
 const transpiler = new Transpiler();
 const transpiledCode = transpiler.transpilePhpByPath("./my/path/file.ts");
 
 console.log(transpiler.content) // prints transpiled php
 console.log(transpiler.imports) // prints unified imports statements if any
+console.log(transpiler.exports) // prints unified export statements if any
 ```
 
 ## Supported Features
@@ -113,7 +118,7 @@ As mentioned above, this library allows for some customization through the offer
 
 ### Options
 
-Currently there are two generic transpiling options, `uncamelcaseIdentifiers` and `asyncTranspiling`. As the name suggests the former defines if all identifiers (variables, methods, functions, expression calls) should uncamelcased and the latter if we want our transpiled code to be async. 
+Currently there are two generic boolean transpiling options, `uncamelcaseIdentifiers` and `asyncTranspiling`. As the name suggests the former defines if all identifiers (variables, methods, functions, expression calls) should uncamelcased and the latter if we want our transpiled code to be async. 
 
 They can be set upon instantiating our transpiler, or using setter methods
 
@@ -187,6 +192,7 @@ const config = {
         "LeftPropertyAccessReplacements": LeftPropertyAccessReplacements
     }
 }
+// this.x will be converted to self.x
 ```
 #### RightPropertyAccessReplacements
 - Same story as for `FullPropertyAccessReplacements` but only replaces the `right` side.
@@ -201,6 +207,7 @@ const config = {
         "RightPropertyAccessReplacements": customRightPropertyAccessReplacements
     }
 }
+// x.toUpperCase() will be converted to x.upper()
 ```
 
 #### CallExpressionReplacements
@@ -217,6 +224,24 @@ const config = {
         "CallExpressionReplacements": CallExpressionReplacements
     }
 }
+// parseInt("1") will be converted to float("1")
+```
+
+#### StringLiteralReplacements
+Similar to `FullPropertyAccessReplacements` but applies to string literals
+
+
+```Javascript
+const StringLiteralReplacements = {
+    'sha256': 'hashlib.sha256',
+}
+
+const config = {
+    "python": {
+        "StringLiteralReplacements": StringLiteralReplacements
+    }
+}
+// "sha256" will be converted to hashlib.sha256
 ```
 
 #### ScopeResolutionProps (PHP only)
@@ -241,7 +266,7 @@ const config = {
 
 Due to the nature of this process, there are a lot of things that can't be transpiled by directly replacements so we need to add custom logic depending on the target language. For that reason there are a lot of small atomic methods that can be overriden to add custom modifications.
 
-##### Example 1: Removing JSDocs from PHP code
+##### Example 1: Removing all comments from PHP code
 
 ```Javascript
 
@@ -251,7 +276,8 @@ function myPrintFunctionComment (comment) {
     return "";
 }
 
-transpiler.phpTranspiler.printFunctionComment = myPrintFunctionComment;
+transpiler.phpTranspiler.transformLeadingComment = myPrintFunctionComment;
+transpiler.phpTranspiler.transformTrailingComment = myPrintFunctionComment;
 ```
 
 ##### Example 2: Custom call expression modification in Python
