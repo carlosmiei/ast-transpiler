@@ -672,4 +672,23 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
+    test('should remove cjs import from transpiled code', () => {
+        const ts =
+        "const {a,b,x} = require  ('ola')  \n" +
+        "const myVar = a.b;";
+        const php = "$myVar = $a->b;"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('should remove cjs exports from transpiled code', () => {
+        const ts =
+        "module.exports = {\n" +
+        "    a,\n" +
+        "    b,\n" +
+        "    c,\n" +
+        "}";
+        const php = ""
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
   });

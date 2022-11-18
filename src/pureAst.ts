@@ -265,6 +265,7 @@ class BaseTranspiler {
     }
 
     printBinaryExpression(node, identation) {
+
         const {left, right, operatorToken} = node;
 
         const customBinaryExp = this.printCustomBinaryExpressionIfAny(node, identation);
@@ -497,7 +498,7 @@ class BaseTranspiler {
 
     printVariableStatement(node, identation){
 
-        if (this.isRequireStatement(node)) {
+        if (this.isCJSRequireStatement(node)) {
             return ""; // remove cjs imports
         }
 
@@ -793,11 +794,18 @@ class BaseTranspiler {
         return blockOpen + statements + blockClose;
     }
 
+    printExpressionStatement(node, identation) {
+        if (this.isCJSModuleExportsExpressionStatement(node)) {
+            return ""; // remove module.exports = ...
+        }
+
+        return this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
+    }
+
     printNode(node, identation = 0): string {
 
         if(ts.isExpressionStatement(node)) {
-            // return printExpressionStatement(node.expression, identation);
-            return this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
+            return this.printExpressionStatement(node, identation);
         } else if(ts.isBlock(node)) {
             return this.printBlock(node, identation);
         } else if (ts.isFunctionDeclaration(node)){
@@ -877,7 +885,7 @@ class BaseTranspiler {
                 return this.printNode(m, identation + 1);
             });
 
-            return transformedStatements.join("\n");
+            return transformedStatements.filter(st => st.length > 0 ).join("\n");
         }
         return "";
     }
@@ -913,9 +921,19 @@ class BaseTranspiler {
         return result;
     }
 
-    isRequireStatement(node): boolean {
+    isCJSRequireStatement(node): boolean {
         const dec = node.declarationList.declarations[0];
         return ts.isCallExpression(dec.initializer) && dec.initializer.expression.getText() === "require";
+    }
+
+    isCJSModuleExportsExpressionStatement(node): boolean {
+        if (node.expression && node.expression.kind === ts.SyntaxKind.BinaryExpression ) {
+            if (node.expression.left.kind === ts.SyntaxKind.PropertyAccessExpression) {
+                const left = node.expression.left as ts.PropertyAccessExpression;
+                return left.expression.getText() === "module" && left.name.getText() === "exports";
+            }
+        }
+        return false;
     }
 
     getCJSImports(node): IFileImport[] {
@@ -996,14 +1014,68 @@ class BaseTranspiler {
         return result;
     }
 
+    getCJSExports(node): IFileExport[] {
+        const result = [];
+        const moduleExports = node.statements.filter(s => this.isCJSModuleExportsExpressionStatement(s)).map(s => s.expression as ts.BinaryExpression);
+
+        moduleExports.forEach(node => {
+            const right = node.right;
+            if (right.kind === ts.SyntaxKind.ObjectLiteralExpression) {
+                const props = right.properties;
+                props.forEach(prop => {
+                    const name = prop.name.getText();
+                    const fileExport: IFileExport = {
+                        name,
+                        isDefault: false
+                    };
+                    result.push(fileExport);
+                });
+            }
+            if (right.kind === ts.SyntaxKind.Identifier) {
+                const name = right.getText();
+                const fileExport: IFileExport = {
+                    name,
+                    isDefault: true
+                };
+                result.push(fileExport);
+            }
+        });
+        return result;
+    }
+
+    getExportDeclarations(node): IFileExport[] {
+        // example export default class X
+        const result = [];
+        const classDeclarations = node.statements.filter((s) => ts.isClassDeclaration(s));
+        const functionDeclarations = node.statements.filter((s) => ts.isFunctionDeclaration(s));
+
+        const both = classDeclarations.concat(functionDeclarations);
+        both.forEach(classNode => {
+            const modifiers = classNode.modifiers;
+            if (modifiers) {
+                const isDefault = modifiers.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword);
+                if (isDefault) {
+                    const name = classNode.name.text;
+                    const fileExport: IFileExport = {
+                        name,
+                        isDefault: true
+                    };
+                    result.push(fileExport);
+                }
+            }
+        });
+        return result;
+    }
+
     getFileExports(node): IFileExport[] {
-        const esmExports = this.getESMExports(node);
-        if (esmExports) {
+        const defaultClassAndFunctionsExports = this.getExportDeclarations(node);
+        const esmExports = this.getESMExports(node).concat(defaultClassAndFunctionsExports);
+        if (esmExports.length > 0) {
             return esmExports;
         }
+        return this.getCJSExports(node);
     }
 }
-
 
 export {
     BaseTranspiler

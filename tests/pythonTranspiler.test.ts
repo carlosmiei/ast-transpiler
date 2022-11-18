@@ -596,4 +596,23 @@ describe('python tests', () => {
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);
     })
+    test('should remove cjs import from transpiled code', () => {
+        const ts =
+        "const {a,b,x} = require  ('ola')  \n" +
+        "const myVar = a.b;";
+        const python = "myVar = a.b"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
+    test('should remove cjs exports from transpiled code', () => {
+        const ts =
+        "module.exports = {\n" +
+        "    a,\n" +
+        "    b,\n" +
+        "    c,\n" +
+        "}";
+        const python = ""
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
 });

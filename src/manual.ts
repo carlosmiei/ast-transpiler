@@ -12,7 +12,7 @@ const transpiler = new Transpiler({
     }
 });
 
-transpiler.setPHPPropResolution(['Precise']);
+transpiler.setPHPPropResolution(['super', 'Precise']);
 
 
 
