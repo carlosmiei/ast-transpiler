@@ -675,7 +675,6 @@ class BaseTranspiler {
         let trailingComment = this.printTraillingComment(node, identation);
         trailingComment = trailingComment ? " " + trailingComment : trailingComment;
         
-
         return this.getIden(identation) + nameAsString +  this.PROPERTY_ASSIGNMENT_TOKEN + " " + valueAsString.trim() + trailingComment;
     }
 
@@ -811,8 +810,9 @@ class BaseTranspiler {
         if (this.isCJSModuleExportsExpressionStatement(node)) {
             return ""; // remove module.exports = ...
         }
-
-        return this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
+        const leadingComment = this.printLeadingComments(node, identation);
+        const trailingComment = this.printTraillingComment(node, identation);
+        return leadingComment + this.printNode(node.expression, identation) + this.LINE_TERMINATOR + trailingComment;
     }
 
     printNode(node, identation = 0): string {
