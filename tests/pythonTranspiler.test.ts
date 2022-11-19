@@ -4,7 +4,14 @@ import { readFileSync } from 'fs';
 let transpiler: Transpiler;
 
 beforeAll(() => {
-    transpiler = new Transpiler();
+    const config = {
+        'python': {
+            'parser': {
+                'NUM_LINES_END_FILE': 0
+            }
+        }
+    }
+    transpiler = new Transpiler(config);
 })
 
 
@@ -36,7 +43,7 @@ describe('python tests', () => {
         "}"
         const python =
         "for i in range(0, 10):\n" +
-        "    break\n";
+        "    break";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });

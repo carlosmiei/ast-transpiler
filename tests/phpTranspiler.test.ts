@@ -9,7 +9,14 @@ jest.mock('module',()=>({
 let transpiler: Transpiler;
 
 beforeAll(() => {
-    transpiler = new Transpiler();
+    const config = {
+        'php': {
+            'parser': {
+                'NUM_LINES_END_FILE': 0
+            }
+        }
+    }
+    transpiler = new Transpiler(config);
 })
 
 describe('php transpiling tests', () => {
