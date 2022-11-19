@@ -315,16 +315,39 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
 
+    isComment(line){
+        line = line.trim();
+        return line.startsWith("//") || line.startsWith("/*") || line.startsWith("*");
+    }
+
     printFunctionBody(node, identation) {
 
         if (this.asyncTranspiling && this.isAsyncFunction(node)) {
             const blockOpen = this.getBlockOpen();
             const blockClose = this.getBlockClose(identation);
 
-            const funcBody = node.body.statements.map((s) => this.printNode(s, identation+2)).join("\n");
             const parsedArgs = node.parameters.map(param => this.printParameter(param, false)).join(", ");
             const params = parsedArgs ? " use (" + parsedArgs + ")" : "";
-            const result = this.getIden(identation+1) +  "return Async\\async(function ()" + params + "{\n"
+
+            const bodyStms = node.body.statements;
+            const firstBodyStm = this.printNode(bodyStms[0], identation+2);
+            bodyStms.shift();
+            const funcBody = bodyStms.map((s) => this.printNode(s, identation+2)).join("\n");
+
+            // reformat first comment
+            const bodyParts = firstBodyStm.split("\n");
+            const commentPart = bodyParts.filter(line => this.isComment(line));
+            const isComment = commentPart.length > 0;
+            let header = this.getIden(identation+1) +  "return Async\\async(function ()" + params + "{\n";
+            if (isComment) {
+                const commentPartString = commentPart.map((c) => this.getIden(identation+1) + c.trim()).join("\n");
+                const firstStmNoComment = bodyParts.filter(line => !this.isComment(line)).join("\n");
+                header = commentPartString + "\n" + header + firstStmNoComment + "\n";
+            } else {
+                header += firstBodyStm + "\n";
+            }
+
+            const result = header
             + funcBody + "\n"
             + this.getIden(identation+1) + "}) ();";
 
@@ -353,8 +376,6 @@ export class PhpTranspiler extends BaseTranspiler {
     initConfig() {
         this.LeftPropertyAccessReplacements = {
             'this': '$this',
-            // custom should be passed as config
-            'Precise': 'Precise',
         };
 
         this.RightPropertyAccessReplacements = {

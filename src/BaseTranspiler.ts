@@ -386,7 +386,11 @@ class BaseTranspiler {
             for (const commentRange of commentsRange) {
                 const commentText = fullText.slice(commentRange.pos, commentRange.end);
                 if (commentText !== undefined) {
-                    res+= this.getIden(identation) + this.transformLeadingComment(commentText) + "\n";
+                    const formatted = commentText
+                    .split("\n")
+                    .map(line=>line.trim())
+                    .map(line => !(line.trim().startsWith("*")) ? this.getIden(identation) + line : this.getIden(identation) + " " + line) .join("\n");
+                    res+= this.transformLeadingComment(formatted) + "\n";
                 }
             }
         }

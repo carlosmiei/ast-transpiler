@@ -407,6 +407,9 @@ describe('php transpiling tests', () => {
         expect(output).toBe(php);
     })
     test('custom scope resolution access', () => {
+        const prev = transpiler.phpTranspiler.LeftPropertyAccessReplacements;
+        prev["Precise"]= "Precise";
+        transpiler.phpTranspiler.LeftPropertyAccessReplacements = prev;
         transpiler.setPHPPropResolution(['Precise'])
         const ts =
         "const d = Precise.describe ();"
