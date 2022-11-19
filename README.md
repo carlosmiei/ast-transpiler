@@ -7,6 +7,8 @@
 
 `ast-transpiling` is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker. 
 
+### [Install](#install) · [Usage](#usage) · [Options](#options) . [Overrides](#overrides) 
+
 As expected, it's not possible to transpile Typescript to Python or PHP in a 1:1 parity because they are different languages a lot of features are not interchangeable. Nonetheless, this library supports as many features as possible doing some adaptions (more to come).
 
 Although we transpile TS code directly to the other languages, this library does touch import or exports statements because each language has its own module/namespace model. Instead, we return a unified list of imports and exports separately, allowing the user to adapt it to the target language easily and append it to the generated code (check `IFileImport` and `IFileExport`).
@@ -111,7 +113,6 @@ console.log(transpiler.exports) // prints unified export statements if any
 
 We will try to add more features/conversions in the future but this process is also customizable, check the Overrides section.
 
-
 ## Options and Overrides
 
 As mentioned above, this library allows for some customization through the offered options and available overrides.
@@ -142,7 +143,7 @@ transpiler.setPythonAsyncTranspiling(false);
 ### Overrides
 
 There is no perfect recipe for transpiling one language in another completely different so we have to made some choices that you might not find the most correct or might want to change it slightly. For that reason this library exposes some objects and methods that you might load up with your own options.
-#### parser
+#### Parser
 
 This object contains all tokens used to convert one language into another (if token, return token, while token, etc). Let's say that you prefer the `array()` notation instead of the default `[]` syntax. You can easily do that by overriding the  `ARRAY_OPENING_TOKEN` and `ARRAY_CLOSING_TOKEN`. 
 
