@@ -1,6 +1,7 @@
 import { BaseTranspiler } from "./BaseTranspiler.js";
 import ts, { TypeChecker } from 'typescript';
 import { unCamelCase, regexAll } from "./utils.js";
+import { parse } from "path";
 
 const SyntaxKind = ts.SyntaxKind;
 
@@ -178,11 +179,19 @@ export class PhpTranspiler extends BaseTranspiler {
         if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
             const expressionText = node.expression.getText().trim();
             const args = node.arguments;
-            switch (expressionText) {
-                case "JSON.parse":
-                    return "json_decode(" + this.printNode(args[0], 0) + ",$as_associative_array = true)";
+            if (args.length === 1) {
+                const parsedArg = this.printNode(args[0], 0);
+                switch (expressionText) {
+                    case "JSON.parse":
+                        return `json_decode(${parsedArg}, $as_associative_array = true)`;
+                    case "Array.isArray":
+                        return `gettype(${parsedArg}) === 'array' && array_keys(${parsedArg}) === array_keys(array_keys(${parsedArg}))`;
+                    case "Object.keys":
+                        return `is_array(${parsedArg}) ? array_keys(${parsedArg}) : array()`;
+                    case "Object.values":
+                        return `is_array(${parsedArg}) ? array_values(${parsedArg}) : array()`;
+                }
             }
-
             const transformedProp = this.transformPropertyInsideCallExpressionIfNeeded(node.expression);
 
             if (transformedProp) {

@@ -369,6 +369,7 @@ describe('python tests', () => {
     test('basic string methods', () => {
         const ts =
         "const a = 'test';\n" +
+        "const w = a.toString();\n" +
         "const t = a.split (',');\n" +
         "const b = a.length;\n" +
         "const c = a.indexOf ('t');\n" +
@@ -376,6 +377,7 @@ describe('python tests', () => {
         "const e = a.toLowerCase ();";
         const python =
         "a = 'test'\n" +
+        "w = str(a)\n" +
         "t = a.split(',')\n" +
         "b = len(a)\n" +
         "c = a.find('t')\n" +
@@ -386,6 +388,7 @@ describe('python tests', () => {
     })
     test('basic array manipulation', () => {
         const ts = "const myList = [1, 2, 3];\n" +
+        "const b = Array.isArray (myList);\n" +
         "const y = myList.join (',')\n" +
         "const i = myList.indexOf(1);\n" +
         "const listLength = myList.length;\n" +
@@ -395,6 +398,7 @@ describe('python tests', () => {
         "myList.shift ();"
         const python = 
         "myList = [1, 2, 3]\n" +
+        "b = isinstance(myList, list)\n" +
         "y = ','.join(myList)\n" +
         "i = myList.find(1)\n" +
         "listLength = len(myList)\n" +
@@ -402,6 +406,18 @@ describe('python tests', () => {
         "myList.append(4)\n" +
         "myList.pop()\n" +
         "myList.pop(0)"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    })
+    test('basic object methods', () => {
+        const ts =
+        "const x = {};\n" +
+        "const y = Object.keys (x);\n" +
+        "const yy = Object.values (x);"
+        const python =
+        "x = {}\n" +
+        "y = list(x.keys())\n" +
+        "yy = list(x.values())"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })

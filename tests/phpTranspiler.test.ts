@@ -361,6 +361,7 @@ describe('php transpiling tests', () => {
     })
     test('basic math functions', () => {
         const ts =
+        "const ceil = Math.ceil (num);\n" +
         "const a = Math.min (0, 5);\n" +
         "const b = Math.max (0, 5);\n" +
         "const c = parseFloat ('1.3');\n" +
@@ -371,6 +372,7 @@ describe('php transpiling tests', () => {
         "const h = Math.round (5);\n" +
         "const i = Math.floor (5.5);\n";
         const php =
+        "$ceil = (int) ceil($num);\n" +
         "$a = min(0, 5);\n" +
         "$b = max(0, 5);\n" +
         "$c = floatval('1.3');\n" +
@@ -392,7 +394,7 @@ describe('php transpiling tests', () => {
         "    'a' => 1,\n" +
         "    'b' => 2,\n" +
         "));\n" +
-        "$k = json_decode($j,$as_associative_array = true);";
+        "$k = json_decode($j, $as_associative_array = true);";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
@@ -436,6 +438,7 @@ describe('php transpiling tests', () => {
     test('basic string methods', () => {
         const ts =
         "let a = 'test';\n" +
+        "const w = a.toString();\n" + 
         "a+= \"mundo\"\n" +
         "const t = a.split (',');\n" +
         "const b = a.length;\n" +
@@ -444,6 +447,7 @@ describe('php transpiling tests', () => {
         "const e = a.toLowerCase ();";
         const php =
         "$a = 'test';\n" +
+        "$w = (string) $a;\n" +
         "$a .= 'mundo';\n" +
         "$t = explode(',', $a);\n" +
         "$b = strlen($a);\n" +
@@ -482,6 +486,18 @@ describe('php transpiling tests', () => {
         const php =
         "$frase = \'ola\';\n" +
         "$test = $frase ? strlen($frase) : 0;"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    })
+    test('basic object methods', () => {
+        const ts =
+        "const x = {};\n" +
+        "const y = Object.keys (x);\n" +
+        "const yy = Object.values (x);"
+        const php =
+        "$x = array();\n" +
+        "$y = is_array($x) ? array_keys($x) : array();\n" +
+        "$yy = is_array($x) ? array_values($x) : array();"
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
