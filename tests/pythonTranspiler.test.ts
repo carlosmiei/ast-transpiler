@@ -57,7 +57,7 @@ describe('python tests', () => {
         "    return 1;\n" +
         "}"
         const python =
-        "def teste(x = 'foo', y = None, params = {}):\n" +
+        "def teste(x='foo', y=None, params={}):\n" +
         "    return 1"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
@@ -334,13 +334,13 @@ describe('python tests', () => {
         "const h = Math.round (5);\n" +
         "const i = Math.floor (5.5);"
         const python =
-        "a = min(0,5)\n" +
-        "b = max(0,5)\n" +
+        "a = min(0, 5)\n" +
+        "b = max(0, 5)\n" +
         "c = float('1.3')\n" +
         "d = int('1.3')\n" +
         "e = float('inf')\n" +
         "f = abs(-2)\n" +
-        "g = math.pow(1,2)\n" +
+        "g = math.pow(1, 2)\n" +
         "h = int(round(5))\n" +
         "i = int(math.floor(5.5))";
         const output = transpiler.transpilePython(ts).content;

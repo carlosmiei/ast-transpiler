@@ -7,6 +7,7 @@ const SyntaxKind = ts.SyntaxKind;
 class BaseTranspiler {
 
     NUM_LINES_BETWEEN_CLASS_MEMBERS = 1;
+    SPACE_DEFAULT_PARAM = "";
     BLOCK_OPENING_TOKEN = ':';
     BLOCK_CLOSING_TOKEN = '';
     SPACE_BEFORE_BLOCK_OPENING = '';
@@ -348,7 +349,7 @@ class BaseTranspiler {
         const name = this.printNode(node.name, 0);
         const initializer = node.initializer;
         if (defaultValue && initializer) {
-            return name + " = " + this.printNode(initializer, 0);
+            return name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + this.printNode(initializer, 0);
         }
         return name;
     }
@@ -489,11 +490,13 @@ class BaseTranspiler {
 
     printStringLiteral(node) {
         const token = this.STRING_QUOTE_TOKEN;
-        const text = node.text;
+        let text = node.text;
         if (text in this.StringLiteralReplacements) {
             return this.StringLiteralReplacements[text];
         }
-        return token + node.text.replace(token, "\\" + token) + token;
+        text = text.replaceAll("'", "\\" + "'");
+        text = text.replaceAll("\"", "\\" + "\"");
+        return token + text + token;
     }
 
     printNumericLiteral(node) {
@@ -547,7 +550,7 @@ class BaseTranspiler {
 
         const parsedArgs = args.map((a) => {
             return this.printNode(a, identation).trim();
-        }).join(",");
+        }).join(", ");
         
         const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
 
@@ -706,7 +709,7 @@ class BaseTranspiler {
         const elseExists = node.elseStatement !== undefined;
         const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
 
-        const needChainBlock = elseExists || isElseIf;
+        const needChainBlock = elseExists;
         const ifBody = this.printBlock(node.thenStatement, identation, needChainBlock);
 
         let ifComplete = this.CONDITION_OPENING + expression + this.CONDITION_CLOSE + ifBody;

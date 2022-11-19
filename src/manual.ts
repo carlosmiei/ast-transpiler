@@ -20,24 +20,24 @@ transpiler.setPythonStringLiteralReplacements({
 
 const file = "tmp.ts";
 
-let i = 0;
-while (i < 150) {
+const i = 0;
+// while (i < 150) {
     const pythonRes = transpiler.transpilePythonByPath(file);
     const php = transpiler.transpilePhpByPath(file);
-    i++;
-}
+    // i++;
+// }
 
-// const phpRes = `<?php\n${php.content}\n?>`;
+const phpRes = `<?php\n${php.content}\n?>`;
 
 
-// const phpSyncRes = `<?php\n${transpiler.transpilePhpByPath(file)}\n?>`;
+const phpSyncRes = `<?php\n${transpiler.transpilePhpByPath(file)}\n?>`;
 
 const PHP_OUTPUT = "./out/output.php";
 const PHP_SYNC_OUTPUT = "./out/output-sync.php";
 const PYTHON_OUTPUT = "./out/output.py";
 
-// writeFileSync(PHP_OUTPUT, phpRes);
-// writeFileSync(PYTHON_OUTPUT, pythonRes.content ?? "");
+writeFileSync(PHP_OUTPUT, phpRes);
+writeFileSync(PYTHON_OUTPUT, pythonRes.content ?? "");
 // writeFileSync(PHP_SYNC_OUTPUT, phpSyncRes);
 
 console.log("TRANSPILED!!");
