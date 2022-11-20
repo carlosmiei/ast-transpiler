@@ -1,0 +1,5 @@
+coverage/
+badges/
+examples/
+node_modules/
+tests/
