@@ -1,5 +1,6 @@
 {
-  "name": "transpiler",
+  "name": "ast-transpiler",
+  "version": "0.0.0",
   "type": "module",
   "module": "./dist/transpiler.js",
   "types": "./dist/transpiler.d.ts",
@@ -18,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/carlosmiei/ast-transpiler"
   },
   "readme": "README.md",
   "scripts": {
@@ -26,13 +27,9 @@
     "build2": "npm run lint && tsc",
     "start": "node --loader ts-node/esm manual.ts",
     "start-py": "node --loader ts-node/esm src/pythonTranspiler.ts",
-    "start2": " ts-node-esm src/transpiler.ts",
     "test-ci": "jest --ci --coverage",
     "test": "jest --verbose",
     "testv": "jest --verbose --coverage",
-    "test2": "node --experimental-vm-modules node_modules/.bin/jest",
-    "test3": "NODE_OPTIONS=--experimental-vm-modules jest --verbose",
-    "test4": "node --loader ts-node/esm --experimental-specifier-resolution=node src/manual.ts",
     "lint": "eslint src/ --ext .ts"
   },
   "devDependencies": {
@@ -50,5 +47,26 @@
   "dependencies": {
     "colorette": "^2.0.19",
     "typescript": "^4.8.4"
-  }
+  },
+  "author": {
+    "name": "Carlos Gonçalves",
+    "url": "https://github.com/carlosmiei"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ccxt/ccxt/issues"
+  },
+  "homepage": "https://ccxt.com",
+  "keywords": [
+    "transpiling",
+    "transpiler",
+    "ast",
+    "javascript",
+    "typescript",
+    "python",
+    "php",
+    "compiler",
+    "esm",
+    "cjs"
+  ]
 }
