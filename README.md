@@ -15,23 +15,23 @@ Although we transpile TS code directly to the other languages, this library does
 
 ⚠️ In order to facilitate the transpilation process, we should try to add as many types as possible otherwise, we might get invalid results.
 
-**Bad Example**
+**❌ Bad Example**
 ```Javascript
 function importantFunction(argument) { // type of argumment is unknown
     const length = argument.length;
 }
 ```
 
-❌ In this case, we have no means to infer the argument's type, so for instance in PHP we don't know if `.length` should be transpiled to `str_len` or `count`.
+⬆️ In this case, we have no means to infer the argument's type, so for instance in PHP we don't know if `.length` should be transpiled to `str_len` or `count`.
 
-**Good Example**
+**✅ Good Example**
 
 ```Javascript
 function importantFunction(argument: string[]) {
     const length = argument.length;
 }
 ```
-✅ argument's type is known so all good, no ambiguities here.
+⬆️ argument's type is known so all good, no ambiguities here.
 
 #### What about javascript?
 Obviously, all Javascript code is valid Typescript, so in theory, it should transpile Javascript seamlessly as well. This is in part true, but for the lacking of types, we might get some invalid results when the types are not clear (check bad example).
