@@ -20,10 +20,6 @@ export class PythonTranspiler extends BaseTranspiler {
 
         // user overrides
         this.applyUserOverrides(config);
-
-        // const propertyAccessRemoval = config['PropertyAccessRequiresParenthesisRemoval'] ?? [];
-        // this.PropertyAccessRequiresParenthesisRemoval.push(...propertyAccessRemoval);
-
     }
 
     initConfig() {

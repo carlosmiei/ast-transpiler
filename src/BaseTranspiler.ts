@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { IFileImport, IFileExport, TranspilingError } from './types.js';
 import { unCamelCase } from "./utils.js";
+import { Logger } from "./logger.js";
 class BaseTranspiler {
 
     NUM_LINES_BETWEEN_CLASS_MEMBERS = 1;
@@ -11,7 +12,6 @@ class BaseTranspiler {
     SPACE_BEFORE_BLOCK_OPENING = '';
     CONDITION_OPENING = '';
     CONDITION_CLOSE = '';
-
     DEFAULT_IDENTATION = "    ";
     STRING_QUOTE_TOKEN = "'";
     UNDEFINED_TOKEN = "None";
@@ -50,16 +50,8 @@ class BaseTranspiler {
     SUPER_TOKEN = "super()";
     PROPERTY_ACCESS_TOKEN = ".";
     TRY_TOKEN = "try";
-    // TRY_OPEN = ":";
-    // TRY_CLOSE = "";
     CATCH_TOKEN = "except";
-    // CATCH_COND_OPEN = "";
-    // CATCH_COND_CLOSE = "";
-    // CATCH_OPEN = ":";
-    // CATCH_CLOSE = "";
     CATCH_DECLARATION = "Exception as";
-    // TRY_CONDITION_OPEN_TOKEN = "";
-
     BREAK_TOKEN = "break";
     IN_TOKEN = "in";
     LESS_THAN_TOKEN = "<";
@@ -68,18 +60,9 @@ class BaseTranspiler {
     LESS_THAN_EQUALS_TOKEN = "<=";
     PLUS_PLUS_TOKEN = " += 1";
     MINUS_MINUS_TOKEN = " -= 1";
-
-    // CLASS_OPENING_TOKEN = ":";
-    // CLASS_CLOSING_TOKEN = "";
     CONSTRUCTOR_TOKEN = "def __init__";
     SUPER_CALL_TOKEN = "super().__init__";
-
     WHILE_TOKEN = "while";
-    // WHILE_OPEN = "";
-    // WHILE_COND_OPEN = "";
-    // WHILE_COND_CLOSE = ":";
-    // WHILE_CLOSE = "";
-
     FOR_TOKEN = "for";
     FOR_COND_OPEN = "(";
     FOR_COND_CLOSE = ")";
@@ -88,19 +71,9 @@ class BaseTranspiler {
 
     PROPERTY_ASSIGNMENT_TOKEN = ":";
 
-    // IF_COND_CLOSE = ":";
-    // IF_COND_OPEN = "";
-    // IF_CLOSE = "";
-    // IF_OPEN = "";
-    // ELSE_OPEN_TOKEN = ":";
-    // ELSE_CLOSE_TOKEN = "";
-
     LINE_TERMINATOR = "";
 
     FUNCTION_TOKEN="def";
-    // FUNCTION_DEF_OPEN = ":";
-    // FUNCTION_CLOSE = "";
-
     ASYNC_TOKEN = "async";
 
     NEW_TOKEN = "";
@@ -196,6 +169,16 @@ class BaseTranspiler {
 
     isStringType(flags: ts.TypeFlags) {
         return flags === ts.TypeFlags.String || flags === ts.TypeFlags.StringLiteral;
+    }
+
+    isAnyType(flags: ts.TypeFlags) {
+        return flags === ts.TypeFlags.Any;
+    }
+
+    warnIfAnyType(flags, variable, target) {
+        if (this.isAnyType(flags)) {
+            Logger.warning(`${variable} has any type, ${target} might be incorrectly transpiled`);
+        }
     }
 
     isAsyncFunction(node) {

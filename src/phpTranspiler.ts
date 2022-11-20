@@ -1,6 +1,7 @@
 import { BaseTranspiler } from "./BaseTranspiler.js";
 import ts, { TypeChecker } from 'typescript';
 import { unCamelCase, regexAll } from "./utils.js";
+import { Logger } from "./logger.js";
 
 const SyntaxKind = ts.SyntaxKind;
 
@@ -142,6 +143,7 @@ export class PhpTranspiler extends BaseTranspiler {
         switch(rightSide) {
             case 'length':
                 const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
+                this.warnIfAnyType(type.flags, leftSide, "length");
                 rawExpression = this.isStringType(type.flags) ? "strlen(" + leftSide + ")" : "count(" + leftSide + ")";
                 break;
         }
@@ -212,12 +214,14 @@ export class PhpTranspiler extends BaseTranspiler {
                     case 'push':
                         return leftSideText + "[] = " + argText;
                     case 'includes': // "ol".includes("o") -> str_contains("ol", "o") or [12,3,4].includes(3) -> in_array(3, [12,3,4])
+                        this.warnIfAnyType(type.flags, leftSideText, "includes");
                         if (this.isStringType(type.flags)) {
                             return "str_contains(" + leftSideText + ", " + argText + ")";
                         } else {
                             return "in_array(" + argText + ", " + leftSideText + ")";
                         }
                     case 'indexOf':
+                        this.warnIfAnyType(type.flags, leftSideText, "indexOf");
                         if (this.isStringType(type.flags)) {
                             return "mb_strpos(" + leftSideText + ", " + argText + ")";
                         } else {
@@ -305,6 +309,7 @@ export class PhpTranspiler extends BaseTranspiler {
             switch(prop) {
                 case 'indexOf':
                     if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
+                        this.warnIfAnyType(rightType.flags,leftSide, "indexOf");
                         if (this.isStringType(rightType.flags)) {
                             return this.getIden(identation) + "mb_strpos(" + leftSide + ", " + parsedArg + ") !== false";
                         } else {
