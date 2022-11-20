@@ -7,13 +7,13 @@
 
 `ast-transpiler` is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker. 
 
-### [Install](#Installation) · [Usage](#usage) · [Options](#options) · [Overrides](#overrides) · [Examples](#overrides) 
+### [Install](#Installation) · [Usage](#usage) · [Languages](#options) · [Options](#options) · [Overrides](#overrides) · [Examples](#overrides) 
 
 As expected, it's not possible to transpile Typescript to Python or PHP in a 1:1 parity because they are different languages a lot of features are not interchangeable. Nonetheless, this library supports as many features as possible, doing some adaptions (more to come).
 
 Although we transpile TS code directly to the other languages, this library does touch import or exports statements because each language has its own module/namespace model. Instead, we return a unified list of imports and exports separately, allowing the user to adapt it to the target language easily and append it to the generated code (check `IFileImport` and `IFileExport`).
 
-⚠️ In order to facilitate the transpilation process, we should try to add as many types as possible otherwise, we might get invalid results.
+In order to facilitate the transpilation process, we should try to add as many types as possible otherwise, we might get invalid results.
 
 **❌ Bad Example**
 ```Javascript
@@ -39,11 +39,12 @@ Obviously, all Javascript code is valid Typescript, so in theory, it should tran
 #### ESM or CJS?
 This library works better with ESM because has dedicated `import/export` tokens in the AST whereas CJS `require/module.exports` are just regular properties and call expressions. **Nonetheless, both are supported**.
 
-## Currently supported languages
+## 🎯 Languages
+Currently the following languages are supported:
 - Python
 - PHP
 
-## Installation
+## 🔌 Installation
 
 Use the package manager [npm](https://www.npmjs.com/) to install foobar.
 
@@ -51,7 +52,7 @@ Use the package manager [npm](https://www.npmjs.com/) to install foobar.
 npm install ast-transpiler
 ```
 
-## Usage
+## 📌 Usage
 
 `ast-transpiler` is a hybrid package, supporting ESM and CJS out of the box. Choose the one that fits you better.
 
