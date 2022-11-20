@@ -24,7 +24,7 @@
   "scripts": {
     "build": "npm run lint &&  tsup src/transpiler.ts --format cjs,esm --dts --clean",
     "build2": "npm run lint && tsc",
-    "start": "node --loader ts-node/esm src/manual.ts",
+    "start": "node --loader ts-node/esm manual.ts",
     "start-py": "node --loader ts-node/esm src/pythonTranspiler.ts",
     "start2": " ts-node-esm src/transpiler.ts",
     "test-ci": "jest --ci --coverage",
@@ -44,11 +44,11 @@
     "jest": "^29.2.2",
     "test-jest": "^1.0.1",
     "ts-jest": "^29.0.3",
-    "ts-morph": "^16.0.0",
     "ts-node": "^10.9.1",
     "tsup": "^6.4.0"
   },
   "dependencies": {
+    "colorette": "^2.0.19",
     "typescript": "^4.8.4"
   }
 }
