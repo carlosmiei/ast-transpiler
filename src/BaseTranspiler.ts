@@ -1,9 +1,6 @@
 import ts from 'typescript';
-import { IFileImport, IFileExport } from './types.js';
+import { IFileImport, IFileExport, TranspilingError } from './types.js';
 import { unCamelCase } from "./utils.js";
-
-const SyntaxKind = ts.SyntaxKind;
-
 class BaseTranspiler {
 
     NUM_LINES_BETWEEN_CLASS_MEMBERS = 1;
@@ -831,90 +828,96 @@ class BaseTranspiler {
 
     printNode(node, identation = 0): string {
 
-        if(ts.isExpressionStatement(node)) {
-            return this.printExpressionStatement(node, identation);
-        } else if(ts.isBlock(node)) {
-            return this.printBlock(node, identation);
-        } else if (ts.isFunctionDeclaration(node)){
-            return this.printFunctionDeclaration(node, identation);
-        } else if (ts.isClassDeclaration(node)) {
-            return this.printClass(node, identation); 
-        } else if (ts.isVariableStatement(node)) {
-            return this.printVariableStatement(node, identation);
-        } else if (ts.isMethodDeclaration(node)) {
-            return this.printMethodDeclaration(node, identation); 
-        } else if (ts.isStringLiteral(node)) {
-            return this.printStringLiteral(node);
-        } else if (ts.isNumericLiteral(node)) {
-            return this.printNumericLiteral(node);
-        } else if (ts.isPropertyAccessExpression(node)) {
-            return this.printPropertyAccessExpression(node, identation); 
-        } else if (ts.isArrayLiteralExpression(node)) {
-            return this.printArrayLiteralExpression(node);
-        } else if (ts.isCallExpression(node)) {
-            return this.printCallExpression(node, identation);
-        } else if (ts.isWhileStatement(node)) {
-            return this.printWhileStatement(node, identation);
-        } else if (ts.isBinaryExpression(node)) {
-            return this.printBinaryExpression(node, identation);
-        } else if (ts.isBreakStatement(node)) {
-            return this.printBreakStatement(node, identation);
-        } else if (ts.isForStatement(node)) {
-            return this.printForStatement(node, identation);
-        } else if (ts.isPostfixUnaryExpression(node)) {
-            return this.printPostFixUnaryExpression(node, identation);
-        } else if (ts.isVariableDeclarationList(node)) {
-            return this.printVariableDeclarationList(node, identation); // statements are slightly different if inside a for
-        } else if (ts.isObjectLiteralExpression(node)) {
-            return this.printObjectLiteralExpression(node, identation);
-        } else if (ts.isPropertyAssignment(node)) {
-            return this.printPropertyAssignment(node, identation);
-        } else if (ts.isIdentifier(node)) {
-            return this.printIdentifier(node);
-        } else if (ts.isElementAccessExpression(node)) {
-            return this.printElementAccessExpression(node, identation);
-        } else if (ts.isIfStatement(node)) {
-            return this.printIfStatement(node, identation);
-        } else if (ts.isParenthesizedExpression(node)) {
-            return this.printParenthesizedExpression(node, identation);
-        } else if ((ts as any).isBooleanLiteral(node)) {
-            return this.printBooleanLiteral(node);
-        } else if (ts.SyntaxKind.ThisKeyword === node.kind) {
-            return this.THIS_TOKEN;
-        } else if (ts.SyntaxKind.SuperKeyword === node.kind) {
-            return this.SUPER_TOKEN;
-        }else if (ts.isTryStatement(node)){
-            return this.printTryStatement(node, identation);
-        } else if (ts.isPrefixUnaryExpression(node)) {
-            return this.printPrefixUnaryExpression(node, identation);
-        } else if (ts.isNewExpression(node)) {
-            return this.printNewExpression(node, identation);
-        } else if (ts.isThrowStatement(node)) {
-            return this.printThrowStatement(node, identation);
-        } else if (ts.isAwaitExpression(node)) {
-            return this.printAwaitExpression(node, identation);
-        } else if (ts.isConditionalExpression(node)) {
-            return this.printConditionalExpression(node, identation);
-        } else if (ts.isAsExpression(node)) {
-            return this.printAsExpression(node, identation);
-        } else if (ts.isReturnStatement(node)) {
-            return this.printReturnStatement(node, identation);
-        } else if (ts.isArrayBindingPattern(node)) {
-            return this.printArrayBindingPattern(node, identation);
-        } else if (ts.isParameter(node)) {
-            return this.printParameter(node);
-        } else if (ts.isConstructorDeclaration(node)) {
-            return this.printConstructorDeclaration(node, identation);
-        } 
+        try {
 
-        if (node.statements) {
-            const transformedStatements = node.statements.map((m)=> {
-                return this.printNode(m, identation + 1);
-            });
+            if(ts.isExpressionStatement(node)) {
+                return this.printExpressionStatement(node, identation);
+            } else if(ts.isBlock(node)) {
+                return this.printBlock(node, identation);
+            } else if (ts.isFunctionDeclaration(node)){
+                return this.printFunctionDeclaration(node, identation);
+            } else if (ts.isClassDeclaration(node)) {
+                return this.printClass(node, identation); 
+            } else if (ts.isVariableStatement(node)) {
+                return this.printVariableStatement(node, identation);
+            } else if (ts.isMethodDeclaration(node)) {
+                return this.printMethodDeclaration(node, identation); 
+            } else if (ts.isStringLiteral(node)) {
+                return this.printStringLiteral(node);
+            } else if (ts.isNumericLiteral(node)) {
+                return this.printNumericLiteral(node);
+            } else if (ts.isPropertyAccessExpression(node)) {
+                return this.printPropertyAccessExpression(node, identation); 
+            } else if (ts.isArrayLiteralExpression(node)) {
+                return this.printArrayLiteralExpression(node);
+            } else if (ts.isCallExpression(node)) {
+                return this.printCallExpression(node, identation);
+            } else if (ts.isWhileStatement(node)) {
+                return this.printWhileStatement(node, identation);
+            } else if (ts.isBinaryExpression(node)) {
+                return this.printBinaryExpression(node, identation);
+            } else if (ts.isBreakStatement(node)) {
+                return this.printBreakStatement(node, identation);
+            } else if (ts.isForStatement(node)) {
+                return this.printForStatement(node, identation);
+            } else if (ts.isPostfixUnaryExpression(node)) {
+                return this.printPostFixUnaryExpression(node, identation);
+            } else if (ts.isVariableDeclarationList(node)) {
+                return this.printVariableDeclarationList(node, identation); // statements are slightly different if inside a for
+            } else if (ts.isObjectLiteralExpression(node)) {
+                return this.printObjectLiteralExpression(node, identation);
+            } else if (ts.isPropertyAssignment(node)) {
+                return this.printPropertyAssignment(node, identation);
+            } else if (ts.isIdentifier(node)) {
+                return this.printIdentifier(node);
+            } else if (ts.isElementAccessExpression(node)) {
+                return this.printElementAccessExpression(node, identation);
+            } else if (ts.isIfStatement(node)) {
+                return this.printIfStatement(node, identation);
+            } else if (ts.isParenthesizedExpression(node)) {
+                return this.printParenthesizedExpression(node, identation);
+            } else if ((ts as any).isBooleanLiteral(node)) {
+                return this.printBooleanLiteral(node);
+            } else if (ts.SyntaxKind.ThisKeyword === node.kind) {
+                return this.THIS_TOKEN;
+            } else if (ts.SyntaxKind.SuperKeyword === node.kind) {
+                return this.SUPER_TOKEN;
+            }else if (ts.isTryStatement(node)){
+                return this.printTryStatement(node, identation);
+            } else if (ts.isPrefixUnaryExpression(node)) {
+                return this.printPrefixUnaryExpression(node, identation);
+            } else if (ts.isNewExpression(node)) {
+                return this.printNewExpression(node, identation);
+            } else if (ts.isThrowStatement(node)) {
+                return this.printThrowStatement(node, identation);
+            } else if (ts.isAwaitExpression(node)) {
+                return this.printAwaitExpression(node, identation);
+            } else if (ts.isConditionalExpression(node)) {
+                return this.printConditionalExpression(node, identation);
+            } else if (ts.isAsExpression(node)) {
+                return this.printAsExpression(node, identation);
+            } else if (ts.isReturnStatement(node)) {
+                return this.printReturnStatement(node, identation);
+            } else if (ts.isArrayBindingPattern(node)) {
+                return this.printArrayBindingPattern(node, identation);
+            } else if (ts.isParameter(node)) {
+                return this.printParameter(node);
+            } else if (ts.isConstructorDeclaration(node)) {
+                return this.printConstructorDeclaration(node, identation);
+            } 
+    
+            if (node.statements) {
+                const transformedStatements = node.statements.map((m)=> {
+                    return this.printNode(m, identation + 1);
+                });
+    
+                return transformedStatements.filter(st => st.length > 0 ).join("\n") + "\n".repeat(this.NUM_LINES_END_FILE);
+            }
+            return "";
 
-            return transformedStatements.filter(st => st.length > 0 ).join("\n") + "\n".repeat(this.NUM_LINES_END_FILE);
+        } catch (e) {
+            throw TranspilingError(e.messageText);
         }
-        return "";
     }
 
     getFileESMImports(node): IFileImport[] {

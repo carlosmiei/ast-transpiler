@@ -5,6 +5,7 @@ let transpiler: Transpiler;
 
 beforeAll(() => {
     const config = {
+        'verbose': false,
         'python': {
             'parser': {
                 'NUM_LINES_END_FILE': 0

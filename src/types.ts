@@ -15,8 +15,14 @@ interface ITranspiledFile {
     exports: IFileExport[];
 }
 
+const TranspilingError = (message) => ({
+    error: new Error(message),
+    code: 'TRANSPILING ERROR'
+});
+
 export {
     IFileImport,
     ITranspiledFile,
-    IFileExport
+    IFileExport,
+    TranspilingError
 };

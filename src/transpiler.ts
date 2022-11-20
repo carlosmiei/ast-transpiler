@@ -2,10 +2,8 @@ import ts from 'typescript';
 import currentPath from "./dirname.cjs";
 import { PythonTranspiler } from './pythonTranspiler.js';
 import { PhpTranspiler } from './phpTranspiler.js';
-import * as fs from 'fs';
 import * as path from "path";
-import { fileURLToPath } from 'url';
-
+import { Logger } from './logger.js';
 import { IFileExport, IFileImport, ITranspiledFile } from './types.js';
 
 const __dirname_mock = currentPath;
@@ -53,7 +51,6 @@ function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, opti
     return [ program, typeChecker, sourceFile];
 }
 
-
 export default class Transpiler {
     config;
     pythonTranspiler: PythonTranspiler;
@@ -62,8 +59,18 @@ export default class Transpiler {
         this.config = config;
         const phpConfig = config["php"] || {};
         const pythonConfig = config["python"] || {};
+
+        if ("verbose" in config) {
+            Logger.setVerboseMode(config['verbose']);
+        }
+
         this.pythonTranspiler = new PythonTranspiler(pythonConfig);
         this.phpTranspiler = new PhpTranspiler(phpConfig);
+
+    }
+
+    setVerboseMode(verbose: boolean) {
+        Logger.setVerboseMode(verbose);
     }
     
     createProgramInMemoryAndSetGlobals(content) {
@@ -74,7 +81,6 @@ export default class Transpiler {
     }
 
     createProgramByPathAndSetGlobals(path) {
-        // const filename = path.split("/").pop();
         const program = ts.createProgram([path], {});
         const sourceFile = program.getSourceFile(path);
         const typeChecker = program.getTypeChecker();
@@ -84,6 +90,17 @@ export default class Transpiler {
         global.program = program;
     }
 
+    checkFileDiagnostics() {
+        const diagnostics = ts.getPreEmitDiagnostics(global.program, global.src);
+        if (diagnostics.length > 0) {
+            let errorMessage = "Errors found in the typescript code. Transpilation might produce invalid results:\n";
+            diagnostics.forEach( msg => {
+                errorMessage+= "  - " + msg.messageText + "\n";
+            });
+            Logger.warning(errorMessage);
+        }
+    }
+
     transpile(lang: Languages, mode: TranspilationMode, file: string): ITranspiledFile {
 
         if (mode === TranspilationMode.ByPath) {
@@ -91,6 +108,9 @@ export default class Transpiler {
         } else {
             this.createProgramInMemoryAndSetGlobals(file);
         }
+
+        // check for warnings and errors
+        this.checkFileDiagnostics();
 
         let transpiledContent = undefined;
         switch(lang) {
@@ -104,6 +124,9 @@ export default class Transpiler {
 
         const imports = this.pythonTranspiler.getFileImports(global.src);
         const exports = this.pythonTranspiler.getFileExports(global.src);
+
+        Logger.success("transpilation finished successfully");
+
         return {
             content: transpiledContent,
             imports,

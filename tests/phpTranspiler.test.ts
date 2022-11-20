@@ -10,6 +10,7 @@ let transpiler: Transpiler;
 
 beforeAll(() => {
     const config = {
+        'verbose': false,
         'php': {
             'parser': {
                 'NUM_LINES_END_FILE': 0
