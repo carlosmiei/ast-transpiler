@@ -329,6 +329,28 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })
+    test('basic comparison operators', () => {
+        const ts =
+        "const a = 1;\n" +
+        "const b = 1+1;\n" +
+        "const c = a === b;\n" +
+        "const d = a !== b;\n" +
+        "const e = a < b;\n" +
+        "const f = a > b;\n" +
+        "const g = a >= b;\n" +
+        "const h = a <= b;";
+        const python =
+        "a = 1\n" +
+        "b = 1 + 1\n" +
+        "c = a == b\n" +
+        "d = a != b\n" +
+        "e = a < b\n" +
+        "f = a > b\n" +
+        "g = a >= b\n" +
+        "h = a <= b";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    })
     test('basic math functions', () => {
         const ts =
         "const a = Math.min (0, 5);\n" +

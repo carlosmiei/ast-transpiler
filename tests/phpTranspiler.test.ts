@@ -201,7 +201,7 @@ describe('php transpiling tests', () => {
         "}\n"
         const php =
         "function camelCase() {\n" +
-        "    return Async\\async(function (){\n" +
+        "    return Async\\async(function () {\n" +
         "        $this->myFunc();\n" +
         "        Async\\await($this->loadMarkets());\n" +
         "    }) ();\n" +
@@ -217,7 +217,7 @@ describe('php transpiling tests', () => {
         "}\n"
         const php =
         "function camelCase($foo, $bar) {\n" +
-        "    return Async\\async(function () use ($foo, $bar){\n" +
+        "    return Async\\async(function () use ($foo, $bar) {\n" +
         "        $this->myFunc();\n" +
         "        Async\\await($this->loadMarkets());\n" +
         "    }) ();\n" +
@@ -356,6 +356,28 @@ describe('php transpiling tests', () => {
         "function test() {\n" +
         "    throw new InvalidOrder('error');\n" +
         "}";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    })
+    test('basic comparison operators', () => {
+        const ts =
+        "const a = 1;\n" +
+        "const b = 1+1;\n" +
+        "const c = a === b;\n" +
+        "const d = a !== b;\n" +
+        "const e = a < b;\n" +
+        "const f = a > b;\n" +
+        "const g = a >= b;\n" +
+        "const h = a <= b;";
+        const php =
+        "$a = 1;\n" +
+        "$b = 1 + 1;\n" +
+        "$c = $a === $b;\n" +
+        "$d = $a !== $b;\n" +
+        "$e = $a < $b;\n" +
+        "$f = $a > $b;\n" +
+        "$g = $a >= $b;\n" +
+        "$h = $a <= $b;";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
