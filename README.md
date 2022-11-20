@@ -5,9 +5,9 @@
 ![Lines](./badges/coverage-lines.svg)
 ![Statements](./badges/coverage-statements.svg)
 
-`ast-transpiler` is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker. 
+`ast-transpiler` is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker in an easy way abstracting most of the complexity behind the process.
 
-### [Install](#Installation) · [Usage](#usage) · [Languages](#options) · [Options](#options) · [Overrides](#overrides) · [Examples](#overrides) 
+### [Install](#-installation) · [Usage](#-usage) · [Languages](#-languages) · [Options](#-options) · [Overrides](#-overrides) · [Examples](https://github.com/carlosmiei/ast-transpiler/tree/master/examples) 
 
 As expected, it's not possible to transpile Typescript to Python or PHP in a 1:1 parity because they are different languages a lot of features are not interchangeable. Nonetheless, this library supports as many features as possible, doing some adaptions (more to come).
 
@@ -152,7 +152,7 @@ transpiler.setPythonAsyncTranspiling(false);
 There is no perfect recipe for transpiling one language in another completely different so we have to made some choices that you might not find the most correct or might want to change it slightly. For that reason this library exposes some objects and methods that you might load up with your own options.
 ### Parser
 
-This object contains all tokens used to convert one language into another (if token, return token, while token, etc). Let's say that you prefer the `array()` notation instead of the default `[]` syntax. You can easily do that by overriding the  `ARRAY_OPENING_TOKEN` and `ARRAY_CLOSING_TOKEN`. 
+This object contains all tokens used to convert one language into another (if token, return token, while token, etc). Let's say that you prefer the `array()` notation instead of the default `[]` syntax. You can easily do that by overriding the  `ARRAY_OPENING_TOKEN` and `ARRAY_CLOSING_TOKEN`. You can check all available tokens [here](https://github.com/carlosmiei/ast-transpiler/blob/master/dist/transpiler.d.ts#L19)
 
 Example:
 
