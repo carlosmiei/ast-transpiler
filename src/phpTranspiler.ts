@@ -1,7 +1,6 @@
 import { BaseTranspiler } from "./BaseTranspiler.js";
 import ts, { TypeChecker } from 'typescript';
 import { unCamelCase, regexAll } from "./utils.js";
-import { parse } from "path";
 
 const SyntaxKind = ts.SyntaxKind;
 
@@ -58,6 +57,8 @@ const parserConfig = {
     'PLUS_PLUS_TOKEN': '++',
     'MINUS_MINUS_TOKEN': '--',
     'SPACE_DEFAULT_PARAM': ' ',
+    'EXCLAMATION_EQUALS_EQUALS_TOKEN': '!==',
+    'EQUALS_EQUALS_EQUALS_TOKEN': '==='
 };
 
 export class PhpTranspiler extends BaseTranspiler {
@@ -338,7 +339,7 @@ export class PhpTranspiler extends BaseTranspiler {
             const bodyParts = firstBodyStm.split("\n");
             const commentPart = bodyParts.filter(line => this.isComment(line));
             const isComment = commentPart.length > 0;
-            let header = this.getIden(identation+1) +  "return Async\\async(function ()" + params + "{\n";
+            let header = this.getIden(identation+1) +  "return Async\\async(function ()" + params + " {\n";
             if (isComment) {
                 const commentPartString = commentPart.map((c) => this.getIden(identation+1) + c.trim()).join("\n");
                 const firstStmNoComment = bodyParts.filter(line => !this.isComment(line)).join("\n");

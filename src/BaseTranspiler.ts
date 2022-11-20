@@ -29,6 +29,8 @@ class BaseTranspiler {
     EQUALS_TOKEN = "=";
     EQUALS_EQUALS_TOKEN = "==";
     EXCLAMATION_EQUALS_TOKEN = "!=";
+    EXCLAMATION_EQUALS_EQUALS_TOKEN = "!=";
+    EQUALS_EQUALS_EQUALS_TOKEN = "==";
     AMPERSTAND_APERSAND_TOKEN = "and";
     PLUS_EQUALS = "+=";
     BAR_BAR_TOKEN = "or";
@@ -154,12 +156,12 @@ class BaseTranspiler {
             [ts.SyntaxKind.GreaterThanToken]: this.GREATER_THAN_TOKEN,
             [ts.SyntaxKind.GreaterThanEqualsToken]: this.GREATER_THAN_EQUALS_TOKEN,
             [ts.SyntaxKind.EqualsEqualsToken]: this.EQUALS_EQUALS_TOKEN,
-            [ts.SyntaxKind.EqualsEqualsEqualsToken]: this.EQUALS_EQUALS_TOKEN,
+            [ts.SyntaxKind.EqualsEqualsEqualsToken]: this.EQUALS_EQUALS_EQUALS_TOKEN,
             [ts.SyntaxKind.EqualsToken]: this.EQUALS_TOKEN, 
             [ts.SyntaxKind.PlusEqualsToken]: this.PLUS_EQUALS,
             [ts.SyntaxKind.BarBarToken]: this.BAR_BAR_TOKEN,
             [ts.SyntaxKind.AmpersandAmpersandToken]: this.AMPERSTAND_APERSAND_TOKEN,
-            [ts.SyntaxKind.ExclamationEqualsEqualsToken]: this.EXCLAMATION_EQUALS_TOKEN,
+            [ts.SyntaxKind.ExclamationEqualsEqualsToken]: this.EXCLAMATION_EQUALS_EQUALS_TOKEN,
             [ts.SyntaxKind.ExclamationEqualsToken]: this.EXCLAMATION_EQUALS_TOKEN,
             [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
             [ts.SyntaxKind.AwaitKeyword]: this.AWAIT_TOKEN,
