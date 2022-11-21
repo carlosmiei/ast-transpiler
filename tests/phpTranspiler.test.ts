@@ -635,7 +635,7 @@ describe('php transpiling tests', () => {
         const php =
         "function camel_case() {\n" +
         "    $this->my_func();\n" +
-        "    $my_func();\n" +
+        "    my_func();\n" +
         "}"
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);

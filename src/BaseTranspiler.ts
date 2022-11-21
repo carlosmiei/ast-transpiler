@@ -214,7 +214,6 @@ class BaseTranspiler {
 
     unCamelCaseIfNeeded(name: string): string {
 
-
         if (this.uncamelcaseIdentifiers && !this.startsWithUpperCase(name) ) { // avoid snake_case constant (MY_CONSTANT) or exception errors (BadRequestException)
             return unCamelCase(name) ?? name;
         }
@@ -556,7 +555,12 @@ class BaseTranspiler {
         if (this.CallExpressionReplacements.hasOwnProperty(expression.escapedText)) { // eslint-disable-line
             parsedExpression = this.CallExpressionReplacements[expression.escapedText];
         } else {
-            parsedExpression = this.printNode(expression, 0);
+            if (expression.kind === ts.SyntaxKind.Identifier) {
+                const idValue = expression.text ?? expression.escapedText;
+                parsedExpression = this.unCamelCaseIfNeeded(idValue);
+            } else {
+                parsedExpression = this.printNode(expression, 0);
+            }
         }
 
         let parsedCall = this.getIden(identation) + parsedExpression;
