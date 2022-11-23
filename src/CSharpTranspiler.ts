@@ -6,6 +6,9 @@ import { unCamelCase, regexAll } from "./utils.js";
 const parserConfig = {
     'ELSEIF_TOKEN': 'else if',
     'OBJECT_OPENING': 'new Dictionary<string, object>() {',
+    'PROPERTY_ASSIGNMENT_TOKEN': ',',
+    'VAR_TOKEN': 'var',
+    'METHOD_TOKEN': ''
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
@@ -15,7 +18,26 @@ export class CSharpTranspiler extends BaseTranspiler {
         super(config);
 
         // user overrides
-        this.applyUserOverrides(config);
+        // this.applyUserOverrides(config);
+
+        this.initConfig();
+    }
+
+    initConfig() {
+        this.LeftPropertyAccessReplacements = {
+            'this': '$this',
+        };
+
+        this.RightPropertyAccessReplacements = {
+
+        };
+
+        this.FullPropertyAccessReplacements = {
+            'console.log': 'Console.WriteLine',
+        };
+
+        this.CallExpressionReplacements = {
+        };
     }
 
     getBlockOpen(identation){

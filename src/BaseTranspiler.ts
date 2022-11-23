@@ -64,12 +64,14 @@ class BaseTranspiler {
     SUPER_CALL_TOKEN = "super().__init__";
     WHILE_TOKEN = "while";
     FOR_TOKEN = "for";
+    VAR_TOKEN = "";
 
     PROPERTY_ASSIGNMENT_TOKEN = ":";
 
     LINE_TERMINATOR = ";";
 
-    FUNCTION_TOKEN="function";
+    FUNCTION_TOKEN = "function";
+    METHOD_TOKEN = "function";
     ASYNC_TOKEN = "async";
 
     NEW_TOKEN = "new";
@@ -449,8 +451,8 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : "";
 
-
-        const methodDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
+        const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
+        const methodDef = this.getIden(identation) + modifiers + methodToken + name
             + "(" + parsedArgs + ")";
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
@@ -498,7 +500,8 @@ class BaseTranspiler {
         const declaration = node.declarations[0];
         // const name = declaration.name.escapedText;
         const parsedValue = this.printNode(declaration.initializer, identation);
-        return this.getIden(identation) + this.printNode(declaration.name) + " = " + parsedValue.trim();
+        const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
+        return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + parsedValue.trim();
     }
 
     printVariableStatement(node, identation){
