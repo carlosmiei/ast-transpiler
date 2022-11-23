@@ -156,6 +156,7 @@ class BaseTranspiler {
             [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
             [ts.SyntaxKind.PublicKeyword]: this.PUBLIC_KEYWORD,
             [ts.SyntaxKind.PrivateKeyword]: this.PRIVATE_KEYWORD,
+            [ts.SyntaxKind.StaticKeyword]: this.STATIC_TOKEN,
         };
     }
 
@@ -572,10 +573,18 @@ class BaseTranspiler {
     }
 
     printClassBody(node, identation) {
-        return node.members.map((m)=> {
-            return this.printNode(m, identation+1);
-        }).join("\n".repeat( 1+ this.NUM_LINES_BETWEEN_CLASS_MEMBERS)); 
+        // const parsedMembers = node.members.map(m => this.printNode(m, identation+1));
 
+        const parsedMembers = [];
+        node.members.forEach( (m, index) => {
+            const parsedNode = this.printNode(m, identation+1);
+            if (m.kind  === ts.SyntaxKind.PropertyDeclaration || index === 0) {
+                parsedMembers.push(parsedNode);
+            } else {
+                parsedMembers.push("\n".repeat(this.NUM_LINES_BETWEEN_CLASS_MEMBERS) + parsedNode);
+            }   
+        });
+        return parsedMembers.join("\n");
     }
 
     printClassDefinition(node, identation) {
@@ -813,10 +822,17 @@ class BaseTranspiler {
         return this.printNodeCommentsIfAny(node, identation, expStatement);
     }
 
+    printPropertyDeclaration(node, identation) {
+        let modifiers = this.printModifiers(node);
+        modifiers = modifiers ? modifiers + " " : modifiers;
+        const name = this.printNode(node.name, 0);
+        const initializer = this.printNode(node.initializer, 0);
+        return this.getIden(identation) + modifiers + name + " = " + initializer + this.LINE_TERMINATOR;
+    }
+
     printNode(node, identation = 0): string {
 
         try {
-
             if(ts.isExpressionStatement(node)) {
                 return this.printExpressionStatement(node, identation);
             } else if(ts.isBlock(node)) {
@@ -891,7 +907,9 @@ class BaseTranspiler {
                 return this.printParameter(node);
             } else if (ts.isConstructorDeclaration(node)) {
                 return this.printConstructorDeclaration(node, identation);
-            } 
+            } if (ts.isPropertyDeclaration(node)) {
+                return this.printPropertyDeclaration(node, identation);
+            }
     
             if (node.statements) {
                 const transformedStatements = node.statements.map((m)=> {

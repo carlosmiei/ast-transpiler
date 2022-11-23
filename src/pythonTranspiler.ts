@@ -5,7 +5,8 @@ import ts from 'typescript';
 const SyntaxKind = ts.SyntaxKind;
 
 const parserConfig = {
-
+    'STATIC_TOKEN': '', // to do static decorator
+    'PUBLIC_KEYWORD': '',
 };
 export class PythonTranspiler extends BaseTranspiler {
     constructor(config = {}) {

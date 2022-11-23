@@ -258,6 +258,27 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('basic class declaration with props', () => {
+        const ts = 
+        "class MyClass {\n" +
+        "    public static x: number = 10;\n" +
+        "    public static y: string = \"test\";\n" +
+        "    mainFeature(message) {\n" +
+        "        console.log(\"Hello! I'm inside main class:\" + message)\n" +
+        "    }\n" +
+        "}"
+        const php =
+        "class MyClass {\n" +
+        "    public static $x = 10;\n" +
+        "    public static $y = 'test';\n" +
+        "\n" +
+        "    function mainFeature($message) {\n" +
+        "        var_dump('Hello! I\\'m inside main class:' . $message);\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic class inheritance', () => {
         const ts =
         "class teste extends extended {\n" +

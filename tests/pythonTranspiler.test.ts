@@ -219,6 +219,25 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('basic class declaration with props', () => {
+        const ts = 
+        "class MyClass {\n" +
+        "    public static x: number = 10;\n" +
+        "    public static y: string = \"test\";\n" +
+        "    mainFeature(message) {\n" +
+        "        console.log(\"Hello! I'm inside main class:\" + message)\n" +
+        "    }\n" +
+        "}"
+        const python =
+        "class MyClass:\n" +
+        "    x = 10\n" +
+        "    y = 'test'\n" +
+        "\n" +
+        "    def mainFeature(self, message):\n" +
+        "        print('Hello! I\\'m inside main class:' + message)"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    })
     test('basic class inheritance', () => {
         const ts =
         "class teste extends extended {\n" +
