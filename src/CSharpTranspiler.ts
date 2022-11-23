@@ -8,7 +8,9 @@ const parserConfig = {
     'OBJECT_OPENING': 'new Dictionary<string, object>() {',
     'PROPERTY_ASSIGNMENT_TOKEN': ',',
     'VAR_TOKEN': 'var',
-    'METHOD_TOKEN': ''
+    'METHOD_TOKEN': '',
+    'PROPERTY_ASSIGNMENT_OPEN': '{',
+    'PROPERTY_ASSIGNMENT_CLOSE': '}',
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
@@ -16,6 +18,9 @@ export class CSharpTranspiler extends BaseTranspiler {
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
         
         super(config);
+
+        this.requiresParameterType = true;
+        this.requiresReturnType = true;
 
         // user overrides
         // this.applyUserOverrides(config);

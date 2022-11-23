@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { IFileImport, IFileExport, TranspilingError } from './types.js';
+import { IFileImport, IFileExport, TranspilationError, FunctionReturnTypeError } from './types.js';
 import { unCamelCase } from "./utils.js";
 import { Logger } from "./logger.js";
 class BaseTranspiler {
@@ -67,6 +67,8 @@ class BaseTranspiler {
     VAR_TOKEN = "";
 
     PROPERTY_ASSIGNMENT_TOKEN = ":";
+    PROPERTY_ASSIGNMENT_OPEN = "";
+    PROPERTY_ASSIGNMENT_CLOSE = "";
 
     LINE_TERMINATOR = ";";
 
@@ -77,11 +79,13 @@ class BaseTranspiler {
     NEW_TOKEN = "new";
 
     STRING_LITERAL_KEYWORD = "StringLiteral";
-    STRING_KEYWORD = "String";
-    NUMBER_KEYWORD = "Number";
+    STRING_KEYWORD = "string";
+    NUMBER_KEYWORD = "float";
 
     PUBLIC_KEYWORD = "public";
     PRIVATE_KEYWORD = "private";
+    VOID_KEYWORD = "void";
+    BOOLEAN_KEYWORD = "boolean";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -100,10 +104,14 @@ class BaseTranspiler {
 
     uncamelcaseIdentifiers;
     asyncTranspiling;
+    requiresReturnType;
+    requiresParameterType;
 
     constructor(config) {
         Object.assign (this, (config['parser'] || {}));
         this.uncamelcaseIdentifiers = false;
+        this.requiresReturnType = false;
+        this.requiresParameterType = false;
         this.initOperators();
     }
 
@@ -134,6 +142,10 @@ class BaseTranspiler {
             [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
             [ts.SyntaxKind.AwaitKeyword]: this.AWAIT_TOKEN,
             [ts.SyntaxKind.StaticKeyword]: this.STATIC_TOKEN,
+            [ts.SyntaxKind.PublicKeyword]: this.PUBLIC_KEYWORD,
+            [ts.SyntaxKind.PrivateKeyword]: this.PRIVATE_KEYWORD,
+            [ts.SyntaxKind.VoidKeyword]: this.VOID_KEYWORD,
+            [ts.SyntaxKind.BooleanKeyword]: this.BOOLEAN_KEYWORD,
         };
 
         this.PostFixOperators = {
@@ -329,8 +341,15 @@ class BaseTranspiler {
     printParameter(node, defaultValue = true) {
         const name = this.printNode(node.name, 0);
         const initializer = node.initializer;
-        if (defaultValue && initializer) {
-            return name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + this.printNode(initializer, 0);
+
+        let type = this.printParameterType(node);
+        type = type ? type + " " : "";
+        
+        if (defaultValue) {
+            if (initializer) {
+                return type + name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + this.printNode(initializer, 0);
+            }
+            return type + name;
         }
         return name;
     }
@@ -399,8 +418,53 @@ class BaseTranspiler {
         return leadingComment + parsedNode + trailingComment;
     }
 
+    getType(node) {
+        const type = node.type;
+        if (type.kind === ts.SyntaxKind.TypeReference) {
+            return type.typeName.escapedText;
+        } else if (this.SupportedKindNames.hasOwnProperty(type.kind)) { // eslint-disable-line
+            return this.SupportedKindNames[type.kind];
+        } else {
+            return undefined;
+        }
+    }
+
     printFunctionBody(node, identation) {
         return this.printBlock(node.body, identation);
+    }
+
+    printParameterType(node) {
+        if (!this.requiresParameterType) {
+            return "";
+        }
+
+        const type = node.type;
+        if (type === undefined) {
+            throw new FunctionReturnTypeError(`Parameter [ ${node.name.escapedText} ] type is undefined`);
+        }
+
+        const typeText = this.getType(node);
+        if (typeText === undefined) {
+            throw new FunctionReturnTypeError("Parameter type is not supported");
+        }
+        return typeText;
+
+    }
+
+    printFunctionType(node){
+        if (!this.requiresReturnType) {
+            return "";
+        }
+        const type = node.type;
+        if (type === undefined) {
+            throw new FunctionReturnTypeError(`Function [ ${node.name.escapedText} ] return type is undefined`);
+        }
+
+        const typeText = this.getType(node);
+        if (typeText === undefined) {
+            throw new FunctionReturnTypeError("Function return type is not supported");
+        }
+        return typeText;
     }
 
     printFunctionDefinition(node, identation) {
@@ -412,11 +476,11 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : modifiers;
 
-        const functionDef = this.getIden(identation) + modifiers + this.FUNCTION_TOKEN + " " + name
+        let returnType = this.printFunctionType(node);
+        returnType = returnType ? returnType + " " : returnType;
+
+        const functionDef = this.getIden(identation) + modifiers + returnType + this.FUNCTION_TOKEN + " " + name
             + "(" + parsedArgs + ")";
-            // // NOTE - must have RETURN TYPE in TS
-            // + SupportedKindNames[returnType.kind]
-            // +" {\n";
 
         return functionDef;
     }
@@ -451,8 +515,11 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : "";
 
+        let returnType = this.printFunctionType(node);
+        returnType = returnType ? returnType + " " : returnType;
+
         const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
-        const methodDef = this.getIden(identation) + modifiers + methodToken + name
+        const methodDef = this.getIden(identation) + modifiers + returnType + methodToken + name
             + "(" + parsedArgs + ")";
             // // NOTE - must have RETURN TYPE in TS
             // + SupportedKindNames[returnType.kind]
@@ -682,7 +749,16 @@ class BaseTranspiler {
         let trailingComment = this.printTraillingComment(node, identation);
         trailingComment = trailingComment ? " " + trailingComment : trailingComment;
         
-        return this.getIden(identation) + nameAsString +  this.PROPERTY_ASSIGNMENT_TOKEN + " " + valueAsString.trim() + trailingComment;
+        const propOpen = this.PROPERTY_ASSIGNMENT_OPEN ? this.PROPERTY_ASSIGNMENT_OPEN  + " ": "";
+        const propClose = this.PROPERTY_ASSIGNMENT_CLOSE ? " " + this.PROPERTY_ASSIGNMENT_CLOSE : "";
+
+        return this.getIden(identation) +
+                propOpen +               
+                nameAsString +
+                this.PROPERTY_ASSIGNMENT_TOKEN + " " +
+                valueAsString.trim() + 
+                propClose +
+                trailingComment;
     }
 
     printElementAccessExpressionExceptionIfAny(node) {
@@ -920,7 +996,11 @@ class BaseTranspiler {
             return "";
 
         } catch (e) {
-            throw TranspilingError(e.messageText);
+            if (!(e instanceof TranspilationError)) {
+                throw new TranspilationError(e.messageText);
+            } else {
+                throw e;
+            }
         }
     }
 
