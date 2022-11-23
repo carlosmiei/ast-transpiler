@@ -107,6 +107,8 @@ declare class BaseTranspiler {
     initOperators(): void;
     applyUserOverrides(config: any): void;
     isStringType(flags: ts.TypeFlags): boolean;
+    isAnyType(flags: ts.TypeFlags): boolean;
+    warnIfAnyType(flags: any, variable: any, target: any): void;
     isAsyncFunction(node: any): boolean;
     getIden(num: any): string;
     getBlockOpen(): string;
@@ -147,7 +149,7 @@ declare class BaseTranspiler {
     printOutOfOrderCallExpressionIfAny(node: any, identation: any): any;
     printSuperCallInsideConstructor(node: any, identation: any): string;
     printCallExpression(node: any, identation: any): string;
-    printClassBody(node: any, identation: any): any;
+    printClassBody(node: any, identation: any): string;
     printClassDefinition(node: any, identation: any): string;
     printClass(node: any, identation: any): string;
     printConstructorDeclaration(node: any, identation: any): string;
@@ -174,6 +176,7 @@ declare class BaseTranspiler {
     printArrayBindingPattern(node: any, identation: any): string;
     printBlock(node: any, identation: any, chainBlock?: boolean): string;
     printExpressionStatement(node: any, identation: any): string;
+    printPropertyDeclaration(node: any, identation: any): string;
     printNode(node: any, identation?: number): string;
     getFileESMImports(node: any): IFileImport[];
     isCJSRequireStatement(node: any): boolean;

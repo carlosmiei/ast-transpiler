@@ -54,6 +54,29 @@ function unCamelCase(s) {
   return s.match(/[A-Z]/) ? s.replace(/[a-z0-9][A-Z]/g, (x) => x[0] + "_" + x[1]).replace(/[A-Z0-9][A-Z0-9][a-z][^$]/g, (x) => x[0] + "_" + x[1] + x[2] + x[3]).replace(/[a-z][0-9]$/g, (x) => x[0] + "_" + x[1]).toLowerCase() : void 0;
 }
 
+// src/logger.ts
+import { green, yellow, red } from "colorette";
+var Logger = class {
+  static setVerboseMode(verbose) {
+    this.verbose = verbose;
+  }
+  static log(message) {
+    if (this.verbose) {
+      console.log(message);
+    }
+  }
+  static success(message) {
+    this.log(green(`[SUCCESS]: ${message}`));
+  }
+  static warning(message) {
+    this.log(yellow(`[WARNING]: ${message}`));
+  }
+  static error(message) {
+    this.log(red(`[ERROR]: ${message}`));
+  }
+};
+Logger.verbose = true;
+
 // src/BaseTranspiler.ts
 var BaseTranspiler = class {
   constructor(config) {
@@ -188,7 +211,8 @@ var BaseTranspiler = class {
     this.FuncModifiers = {
       [ts.SyntaxKind.AsyncKeyword]: this.ASYNC_TOKEN,
       [ts.SyntaxKind.PublicKeyword]: this.PUBLIC_KEYWORD,
-      [ts.SyntaxKind.PrivateKeyword]: this.PRIVATE_KEYWORD
+      [ts.SyntaxKind.PrivateKeyword]: this.PRIVATE_KEYWORD,
+      [ts.SyntaxKind.StaticKeyword]: this.STATIC_TOKEN
     };
   }
   applyUserOverrides(config) {
@@ -200,6 +224,14 @@ var BaseTranspiler = class {
   }
   isStringType(flags) {
     return flags === ts.TypeFlags.String || flags === ts.TypeFlags.StringLiteral;
+  }
+  isAnyType(flags) {
+    return flags === ts.TypeFlags.Any;
+  }
+  warnIfAnyType(flags, variable, target) {
+    if (this.isAnyType(flags)) {
+      Logger.warning(`${variable} has any type, ${target} might be incorrectly transpiled`);
+    }
   }
   isAsyncFunction(node) {
     let modifiers = node.modifiers;
@@ -463,7 +495,12 @@ var BaseTranspiler = class {
     if (this.CallExpressionReplacements.hasOwnProperty(expression.escapedText)) {
       parsedExpression = this.CallExpressionReplacements[expression.escapedText];
     } else {
-      parsedExpression = this.printNode(expression, 0);
+      if (expression.kind === ts.SyntaxKind.Identifier) {
+        const idValue = expression.text ?? expression.escapedText;
+        parsedExpression = this.unCamelCaseIfNeeded(idValue);
+      } else {
+        parsedExpression = this.printNode(expression, 0);
+      }
     }
     let parsedCall = this.getIden(identation) + parsedExpression;
     if (!removeParenthesis) {
@@ -472,9 +509,16 @@ var BaseTranspiler = class {
     return parsedCall;
   }
   printClassBody(node, identation) {
-    return node.members.map((m) => {
-      return this.printNode(m, identation + 1);
-    }).join("\n".repeat(1 + this.NUM_LINES_BETWEEN_CLASS_MEMBERS));
+    const parsedMembers = [];
+    node.members.forEach((m, index) => {
+      const parsedNode = this.printNode(m, identation + 1);
+      if (m.kind === ts.SyntaxKind.PropertyDeclaration || index === 0) {
+        parsedMembers.push(parsedNode);
+      } else {
+        parsedMembers.push("\n".repeat(this.NUM_LINES_BETWEEN_CLASS_MEMBERS) + parsedNode);
+      }
+    });
+    return parsedMembers.join("\n");
   }
   printClassDefinition(node, identation) {
     const className = node.name.escapedText;
@@ -646,6 +690,13 @@ var BaseTranspiler = class {
     const expStatement = this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
     return this.printNodeCommentsIfAny(node, identation, expStatement);
   }
+  printPropertyDeclaration(node, identation) {
+    let modifiers = this.printModifiers(node);
+    modifiers = modifiers ? modifiers + " " : modifiers;
+    const name = this.printNode(node.name, 0);
+    const initializer = this.printNode(node.initializer, 0);
+    return this.getIden(identation) + modifiers + name + " = " + initializer + this.LINE_TERMINATOR;
+  }
   printNode(node, identation = 0) {
     try {
       if (ts.isExpressionStatement(node)) {
@@ -722,6 +773,9 @@ var BaseTranspiler = class {
         return this.printParameter(node);
       } else if (ts.isConstructorDeclaration(node)) {
         return this.printConstructorDeclaration(node, identation);
+      }
+      if (ts.isPropertyDeclaration(node)) {
+        return this.printPropertyDeclaration(node, identation);
       }
       if (node.statements) {
         const transformedStatements = node.statements.map((m) => {
@@ -908,7 +962,10 @@ var BaseTranspiler = class {
 // src/pythonTranspiler.ts
 import ts2 from "typescript";
 var SyntaxKind = ts2.SyntaxKind;
-var parserConfig = {};
+var parserConfig = {
+  "STATIC_TOKEN": "",
+  "PUBLIC_KEYWORD": ""
+};
 var PythonTranspiler = class extends BaseTranspiler {
   constructor(config = {}) {
     config["parser"] = Object.assign({}, parserConfig, config["parser"] ?? {});
@@ -1252,6 +1309,7 @@ var PhpTranspiler = class extends BaseTranspiler {
     switch (rightSide) {
       case "length":
         const type = global.checker.getTypeAtLocation(expression);
+        this.warnIfAnyType(type.flags, leftSide, "length");
         rawExpression = this.isStringType(type.flags) ? "strlen(" + leftSide + ")" : "count(" + leftSide + ")";
         break;
     }
@@ -1313,12 +1371,14 @@ var PhpTranspiler = class extends BaseTranspiler {
           case "push":
             return leftSideText + "[] = " + argText;
           case "includes":
+            this.warnIfAnyType(type.flags, leftSideText, "includes");
             if (this.isStringType(type.flags)) {
               return "str_contains(" + leftSideText + ", " + argText + ")";
             } else {
               return "in_array(" + argText + ", " + leftSideText + ")";
             }
           case "indexOf":
+            this.warnIfAnyType(type.flags, leftSideText, "indexOf");
             if (this.isStringType(type.flags)) {
               return "mb_strpos(" + leftSideText + ", " + argText + ")";
             } else {
@@ -1388,6 +1448,7 @@ var PhpTranspiler = class extends BaseTranspiler {
       switch (prop) {
         case "indexOf":
           if (op === SyntaxKind2.GreaterThanEqualsToken && right === "0") {
+            this.warnIfAnyType(rightType.flags, leftSide, "indexOf");
             if (this.isStringType(rightType.flags)) {
               return this.getIden(identation) + "mb_strpos(" + leftSide + ", " + parsedArg + ") !== false";
             } else {
@@ -1472,31 +1533,6 @@ var PhpTranspiler = class extends BaseTranspiler {
 
 // src/transpiler.ts
 import * as path from "path";
-
-// src/logger.ts
-import { green, yellow, red } from "colorette";
-var Logger = class {
-  static setVerboseMode(verbose) {
-    this.verbose = verbose;
-  }
-  static log(message) {
-    if (this.verbose) {
-      console.log(message);
-    }
-  }
-  static success(message) {
-    this.log(green(`[SUCCESS]: ${message}`));
-  }
-  static warning(message) {
-    this.log(yellow(`[WARNING]: ${message}`));
-  }
-  static error(message) {
-    this.log(red(`[ERROR]: ${message}`));
-  }
-};
-Logger.verbose = true;
-
-// src/transpiler.ts
 var __dirname_mock = import_dirname.default;
 function getProgramAndTypeCheckerFromMemory(rootDir, text, options = {}) {
   options = options || ts4.getDefaultCompilerOptions();
