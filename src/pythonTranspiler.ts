@@ -32,7 +32,8 @@ const parserConfig = {
     'FUNCTION_TOKEN': 'def',
     'UPER_TOKEN': 'super()',
     'NEW_TOKEN': '',
-    'STRING_QUOTE_TOKEN': '\''
+    'STRING_QUOTE_TOKEN': '\'',
+    'LINE_TERMINATOR': '',
 };
 export class PythonTranspiler extends BaseTranspiler {
     constructor(config = {}) {

@@ -28,7 +28,6 @@ const parserConfig = {
     'CATCH_TOKEN': 'catch',
     'BLOCK_OPENING_TOKEN' :'{',
     'BLOCK_CLOSING_TOKEN' :'}',
-    'SPACE_BEFORE_BLOCK_OPENING' :' ',
     'CONDITION_OPENING' :'(',
     'CONDITION_CLOSE' :')',
     'PLUS_PLUS_TOKEN': '++',
@@ -297,7 +296,7 @@ export class PhpTranspiler extends BaseTranspiler {
     printFunctionBody(node, identation) {
 
         if (this.asyncTranspiling && this.isAsyncFunction(node)) {
-            const blockOpen = this.getBlockOpen();
+            const blockOpen = this.getBlockOpen(identation);
             const blockClose = this.getBlockClose(identation);
 
             const parsedArgs = node.parameters.map(param => this.printParameter(param, false)).join(", ");

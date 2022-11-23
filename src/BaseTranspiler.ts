@@ -7,11 +7,11 @@ class BaseTranspiler {
     NUM_LINES_BETWEEN_CLASS_MEMBERS = 1;
     NUM_LINES_END_FILE = 1;
     SPACE_DEFAULT_PARAM = "";
-    BLOCK_OPENING_TOKEN = ':';
-    BLOCK_CLOSING_TOKEN = '';
-    SPACE_BEFORE_BLOCK_OPENING = '';
-    CONDITION_OPENING = '';
-    CONDITION_CLOSE = '';
+    BLOCK_OPENING_TOKEN = '{';
+    BLOCK_CLOSING_TOKEN = '}';
+    SPACE_BEFORE_BLOCK_OPENING = ' ';
+    CONDITION_OPENING = '(';
+    CONDITION_CLOSE = ')';
     DEFAULT_IDENTATION = "    ";
     STRING_QUOTE_TOKEN = '"';
     UNDEFINED_TOKEN = "null";
@@ -67,12 +67,12 @@ class BaseTranspiler {
 
     PROPERTY_ASSIGNMENT_TOKEN = ":";
 
-    LINE_TERMINATOR = "";
+    LINE_TERMINATOR = ";";
 
     FUNCTION_TOKEN="function";
     ASYNC_TOKEN = "async";
 
-    NEW_TOKEN = "";
+    NEW_TOKEN = "new";
 
     STRING_LITERAL_KEYWORD = "StringLiteral";
     STRING_KEYWORD = "String";
@@ -192,7 +192,7 @@ class BaseTranspiler {
         return this.DEFAULT_IDENTATION.repeat(num);
     }
 
-    getBlockOpen(){
+    getBlockOpen(identation){
         return this.SPACE_BEFORE_BLOCK_OPENING + this.BLOCK_OPENING_TOKEN + "\n";
     }
 
@@ -588,7 +588,7 @@ class BaseTranspiler {
         const heritageClauses = node.heritageClauses;
 
         let classInit = "";
-        const classOpening = this.getBlockOpen();
+        const classOpening = this.getBlockOpen(identation);
         if (heritageClauses !== undefined) {
             const classExtends = heritageClauses[0].types[0].expression.escapedText;
             classInit = this.getIden(identation) + "class " + className + " extends " + classExtends + classOpening;
@@ -803,7 +803,7 @@ class BaseTranspiler {
     }
 
     printBlock(node, identation, chainBlock = false) {
-        const blockOpen = this.getBlockOpen();
+        const blockOpen = this.getBlockOpen(identation);
         const blockClose = this.getBlockClose(identation, chainBlock);
         const statements = node.statements.map((s) => this.printNode(s, identation+1)).join("\n");
 

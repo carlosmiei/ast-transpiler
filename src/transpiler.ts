@@ -2,6 +2,7 @@ import ts from 'typescript';
 import currentPath from "./dirname.cjs";
 import { PythonTranspiler } from './pythonTranspiler.js';
 import { PhpTranspiler } from './phpTranspiler.js';
+import { CSharpTranspiler } from './CSharpTranspiler.js';
 import * as path from "path";
 import { Logger } from './logger.js';
 import { IFileExport, IFileImport, ITranspiledFile } from './types.js';
@@ -10,7 +11,8 @@ const __dirname_mock = currentPath;
 
 enum Languages {
     Python,
-    Php
+    Php,
+    CSharp,
 }
 
 enum TranspilationMode {
@@ -55,10 +57,12 @@ export default class Transpiler {
     config;
     pythonTranspiler: PythonTranspiler;
     phpTranspiler: PhpTranspiler;
+    csharpTranspiler: CSharpTranspiler;
     constructor(config = {}) {
         this.config = config;
         const phpConfig = config["php"] || {};
         const pythonConfig = config["python"] || {};
+        const csharpConfig = config["csharp"] || {};
 
         if ("verbose" in config) {
             Logger.setVerboseMode(config['verbose']);
@@ -66,7 +70,7 @@ export default class Transpiler {
 
         this.pythonTranspiler = new PythonTranspiler(pythonConfig);
         this.phpTranspiler = new PhpTranspiler(phpConfig);
-
+        this.csharpTranspiler = new CSharpTranspiler(csharpConfig);
     }
 
     setVerboseMode(verbose: boolean) {
@@ -120,6 +124,8 @@ export default class Transpiler {
             case Languages.Php:
                 transpiledContent = this.phpTranspiler.printNode(global.src, -1);
                 break;
+            case Languages.CSharp:
+                transpiledContent = this.csharpTranspiler.printNode(global.src, -1);
         }
 
         const imports = this.pythonTranspiler.getFileImports(global.src);
@@ -148,6 +154,14 @@ export default class Transpiler {
 
     transpilePhpByPath(path): ITranspiledFile {
         return this.transpile(Languages.Php, TranspilationMode.ByPath, path);
+    }
+
+    transpileCSharp(content): ITranspiledFile {
+        return this.transpile(Languages.CSharp, TranspilationMode.ByContent, content);
+    }
+
+    transpileCSharpByPath(path): ITranspiledFile {
+        return this.transpile(Languages.CSharp, TranspilationMode.ByPath, path);
     }
 
     getFileImports(content: string): IFileImport[] {
