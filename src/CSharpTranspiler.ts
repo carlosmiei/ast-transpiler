@@ -38,6 +38,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             'indexOf': 'IndexOf', // list method
             'toUpperCase': 'ToUpper',
             'toLowerCase': 'ToLower',
+            'toString': 'ToString',
         };
 
         this.FullPropertyAccessReplacements = {
@@ -51,6 +52,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             'Math.round': 'Math.Round',
             'Math.floor': 'Math.Floor',
             'Math.pow': 'Math.Pow',
+            'Promise.all': 'Task.WhenAll',
         };
 
         this.CallExpressionReplacements = {
@@ -106,5 +108,67 @@ export class CSharpTranspiler extends BaseTranspiler {
             }
         }
         return undefined;
+    }
+
+    handleTypeOfInsideBinaryExpression(node, identation) {
+        const left = node.left;
+        const right = node.right.text;
+        const op = node.operatorToken.kind;
+        const expression = left.expression;
+
+        const isDifferentOperator = op === ts.SyntaxKind.ExclamationEqualsEqualsToken || op === ts.SyntaxKind.ExclamationEqualsToken;
+        const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
+
+        const target = this.printNode(expression, 0);
+        switch (right) {
+            case "string":
+                return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(string)`;
+            case "number":
+                return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double)`;
+            case "boolean":
+                return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(bool)`;
+            case "object":
+                return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(Dictionary<string, object>)`;
+        }
+
+        return undefined;
+
+    }
+
+    printCustomBinaryExpressionIfAny(node, identation) {
+        const left = node.left;
+        const right = node.right;
+
+        const op = node.operatorToken.kind;
+
+        if (left.kind === ts.SyntaxKind.TypeOfExpression) {
+            const typeOfExpression = this.handleTypeOfInsideBinaryExpression(node, identation);
+            if (typeOfExpression) {
+                return typeOfExpression;
+            }
+        }
+
+        if (op === ts.SyntaxKind.InKeyword) {
+            return `${this.getIden(identation)}${this.printNode(right, 0)}?.ContainsKey(${this.printNode(left, 0)})`;
+        }
+
+        return undefined;
+    }
+
+    transformPropertyAcessExpressionIfNeeded(node) {
+        const expression = node.expression;
+        const leftSide = this.printNode(expression, 0);
+        const rightSide = node.name.escapedText;
+        
+        let rawExpression = undefined;
+
+        switch(rightSide) {
+            case 'length':
+                const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
+                this.warnIfAnyType(type.flags, leftSide, "length");
+                rawExpression = this.isStringType(type.flags) ? `${leftSide}.Length` : `${leftSide}.Count`;
+                break;
+        }
+        return rawExpression;
     }
 }
