@@ -13,12 +13,12 @@ class BaseTranspiler {
     CONDITION_OPENING = '';
     CONDITION_CLOSE = '';
     DEFAULT_IDENTATION = "    ";
-    STRING_QUOTE_TOKEN = "'";
-    UNDEFINED_TOKEN = "None";
+    STRING_QUOTE_TOKEN = '"';
+    UNDEFINED_TOKEN = "null";
     IF_TOKEN = "if";
     ELSE_TOKEN = "else";
-    ELSEIF_TOKEN = "elif";
-    THIS_TOKEN = "self";
+    ELSEIF_TOKEN = "else if";
+    THIS_TOKEN = "this";
     SLASH_TOKEN = "/";
     ASTERISK_TOKEN = "*";
     PLUS_TOKEN = "+";
@@ -28,9 +28,9 @@ class BaseTranspiler {
     EXCLAMATION_EQUALS_TOKEN = "!=";
     EXCLAMATION_EQUALS_EQUALS_TOKEN = "!=";
     EQUALS_EQUALS_EQUALS_TOKEN = "==";
-    AMPERSTAND_APERSAND_TOKEN = "and";
+    AMPERSTAND_APERSAND_TOKEN = "&&";
     PLUS_EQUALS = "+=";
-    BAR_BAR_TOKEN = "or";
+    BAR_BAR_TOKEN = "||";
     PERCENT_TOKEN = "%";
     RETURN_TOKEN = "return";
     OBJECT_OPENING = "{";
@@ -39,14 +39,14 @@ class BaseTranspiler {
     RIGHT_PARENTHESIS = ")";
     ARRAY_OPENING_TOKEN = "[";
     ARRAY_CLOSING_TOKEN = "]";
-    TRUE_KEYWORD = "True";
-    FALSE_KEYWORD = "False";
+    TRUE_KEYWORD = "true";
+    FALSE_KEYWORD = "false";
     NEW_CORRESPODENT = "new";
-    THROW_TOKEN = "raise";
+    THROW_TOKEN = "throw";
     AWAIT_TOKEN = "await";
     STATIC_TOKEN = "static";
     EXTENDS_TOKEN = "extends";
-    NOT_TOKEN = "not ";
+    NOT_TOKEN = "!";
     SUPER_TOKEN = "super()";
     PROPERTY_ACCESS_TOKEN = ".";
     TRY_TOKEN = "try";
@@ -58,22 +58,18 @@ class BaseTranspiler {
     GREATER_THAN_TOKEN = ">";
     GREATER_THAN_EQUALS_TOKEN = ">=";
     LESS_THAN_EQUALS_TOKEN = "<=";
-    PLUS_PLUS_TOKEN = " += 1";
-    MINUS_MINUS_TOKEN = " -= 1";
+    PLUS_PLUS_TOKEN = "++";
+    MINUS_MINUS_TOKEN = "--";
     CONSTRUCTOR_TOKEN = "def __init__";
     SUPER_CALL_TOKEN = "super().__init__";
     WHILE_TOKEN = "while";
     FOR_TOKEN = "for";
-    FOR_COND_OPEN = "(";
-    FOR_COND_CLOSE = ")";
-    FOR_OPEN = "{";
-    FOR_CLOSE = "}";
 
     PROPERTY_ASSIGNMENT_TOKEN = ":";
 
     LINE_TERMINATOR = "";
 
-    FUNCTION_TOKEN="def";
+    FUNCTION_TOKEN="function";
     ASYNC_TOKEN = "async";
 
     NEW_TOKEN = "";
@@ -641,9 +637,9 @@ class BaseTranspiler {
 
         const forStm = this.getIden(identation) +
                 this.FOR_TOKEN + " " +
-                this.FOR_COND_OPEN + 
+                this.CONDITION_OPENING + 
                 initializer + "; " + condition + "; " + incrementor +
-                this.FOR_COND_CLOSE +
+                this.CONDITION_CLOSE +
                 this.printBlock(node.statement, identation);
         return this.printNodeCommentsIfAny(node, identation, forStm);
     }
@@ -782,8 +778,8 @@ class BaseTranspiler {
         const condition = this.printNode(node.condition, 0);
         const whenTrue = this.printNode(node.whenTrue, 0);
         const whenFalse = this.printNode(node.whenFalse, 0);
-
-        return this.getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
+        
+        return this.getIden(identation) + condition + " ? " + whenTrue + " : " + whenFalse;
     }
 
     printAsExpression(node, identation) {

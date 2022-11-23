@@ -7,6 +7,32 @@ const SyntaxKind = ts.SyntaxKind;
 const parserConfig = {
     'STATIC_TOKEN': '', // to do static decorator
     'PUBLIC_KEYWORD': '',
+    'UNDEFINED_TOKEN': 'None',
+    'IF_TOKEN': 'if',
+    'ELSE_TOKEN': 'else',
+    'ELSEIF_TOKEN': 'elif',
+    'THIS_TOKEN': 'self',
+    'AMPERSTAND_APERSAND_TOKEN': 'and',
+    'BAR_BAR_TOKEN': 'or',
+    'SPACE_DEFAULT_PARAM': '',
+    'BLOCK_OPENING_TOKEN': ':',
+    'BLOCK_CLOSING_TOKEN': '',
+    'SPACE_BEFORE_BLOCK_OPENING': '',
+    'CONDITION_OPENING': '',
+    'CONDITION_CLOSE': '',
+    'TRUE_KEYWORD': 'True',
+    'FALSE_KEYWORD': 'False',
+    'THROW_TOKEN': 'raise',
+    'NOT_TOKEN': 'not ',
+    'PLUS_PLUS_TOKEN': ' += 1',
+    'MINUS_MINUS_TOKEN': ' -= 1',
+    'CONSTRUCTOR_TOKEN': 'def __init__',
+    'SUPER_CALL_TOKEN': 'super().__init__',
+    'PROPERTY_ASSIGNMENT_TOKEN': ':',
+    'FUNCTION_TOKEN': 'def',
+    'UPER_TOKEN': 'super()',
+    'NEW_TOKEN': '',
+    'STRING_QUOTE_TOKEN': '\''
 };
 export class PythonTranspiler extends BaseTranspiler {
     constructor(config = {}) {
@@ -259,6 +285,14 @@ export class PythonTranspiler extends BaseTranspiler {
             }
         }
         return undefined;
+    }
+
+    printConditionalExpression(node, identation) {
+        const condition = this.printNode(node.condition, 0);
+        const whenTrue = this.printNode(node.whenTrue, 0);
+        const whenFalse = this.printNode(node.whenFalse, 0);
+
+        return this.getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
     }
 
     getCustomOperatorIfAny(left, right, operator) {

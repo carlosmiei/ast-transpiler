@@ -8,47 +8,23 @@ const SyntaxKind = ts.SyntaxKind;
 const parserConfig = {
     'ELSEIF_TOKEN': 'elseif',
     'THIS_TOKEN': '$this',
-    'AMPERSTAND_APERSAND_TOKEN': '&&',
-    'BAR_BAR_TOKEN': '||',
-    'TRUE_KEYWORD': 'true',
-    'FALSE_KEYWORD': 'false',
     'PROPERTY_ACCESS_TOKEN': '->',
     'UNDEFINED_TOKEN': 'null',
-    'IF_COND_CLOSE': ')',
-    'IF_COND_OPEN': '(',
-    'IF_OPEN': '{',
-    'IF_CLOSE': '}',
     'NOT_TOKEN': '!',
-    'ELSE_OPEN_TOKEN': ' {',
-    'ELSE_CLOSE_TOKEN': '}',
     'LINE_TERMINATOR': ';',
     'ARRAY_OPENING_TOKEN':"[",
     'ARRAY_CLOSING_TOKEN':"]",
     'OBJECT_OPENING':"array(",
     'OBJECT_CLOSING':")",
     'FUNCTION_TOKEN': 'function',
-    'FUNCTION_DEF_OPEN': '{',
-    'FUNCTION_CLOSE': '}',
     'ASYNC_TOKEN': '',
-    'WHILE_COND_OPEN' : "(",
-    'WHILE_COND_CLOSE' : ")",
-    'WHILE_CLOSE': "}",
-    'WHILE_OPEN': "{",
     'PROPERTY_ASSIGNMENT_TOKEN': ' =>',
     'NEW_TOKEN': 'new',
     'THROW_TOKEN': 'throw',
     'SUPER_TOKEN': 'parent',
-    'CLASS_CLOSING_TOKEN': '}',
-    'CLASS_OPENING_TOKEN': '{',
     'CONSTRUCTOR_TOKEN': 'function __construct',
     'SUPER_CALL_TOKEN': 'parent::__construct',
     'CATCH_DECLARATION': 'Exception',
-    'CATCH_OPEN': '{',
-    'CATCH_CLOSE': '}',
-    'TRY_OPEN': '{',
-    'TRY_CLOSE': '}',
-    'CATCH_COND_OPEN': '(',
-    'CATCH_COND_CLOSE': ')',
     'CATCH_TOKEN': 'catch',
     'BLOCK_OPENING_TOKEN' :'{',
     'BLOCK_CLOSING_TOKEN' :'}',
@@ -59,7 +35,8 @@ const parserConfig = {
     'MINUS_MINUS_TOKEN': '--',
     'SPACE_DEFAULT_PARAM': ' ',
     'EXCLAMATION_EQUALS_EQUALS_TOKEN': '!==',
-    'EQUALS_EQUALS_EQUALS_TOKEN': '==='
+    'EQUALS_EQUALS_EQUALS_TOKEN': '===',
+    'STRING_QUOTE_TOKEN': '\''
 };
 
 export class PhpTranspiler extends BaseTranspiler {
@@ -249,15 +226,6 @@ export class PhpTranspiler extends BaseTranspiler {
         }
         return undefined;
     }
-
-    printConditionalExpression(node, identation) {
-        const condition = this.printNode(node.condition, 0);
-        const whenTrue = this.printNode(node.whenTrue, 0);
-        const whenFalse = this.printNode(node.whenFalse, 0);
-        
-        return this.getIden(identation) + condition + " ? " + whenTrue + " : " + whenFalse;
-    }
-
 
     handleTypeOfInsideBinaryExpression(node, identation) {
         const left = node.left;
