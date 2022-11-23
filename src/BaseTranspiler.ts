@@ -47,7 +47,7 @@ class BaseTranspiler {
     STATIC_TOKEN = "static";
     EXTENDS_TOKEN = "extends";
     NOT_TOKEN = "!";
-    SUPER_TOKEN = "super()";
+    SUPER_TOKEN = "super";
     PROPERTY_ACCESS_TOKEN = ".";
     TRY_TOKEN = "try";
     CATCH_TOKEN = "except";
@@ -75,6 +75,7 @@ class BaseTranspiler {
     FUNCTION_TOKEN = "function";
     METHOD_TOKEN = "function";
     ASYNC_TOKEN = "async";
+    PROMISE_TYPE_KEYWORD = "Task";
 
     NEW_TOKEN = "new";
 
@@ -421,6 +422,22 @@ class BaseTranspiler {
     getType(node) {
         const type = node.type;
         if (type.kind === ts.SyntaxKind.TypeReference) {
+            const typeRef = type.typeName.escapedText;
+            if (typeRef === "Promise") {
+                const typeArgs = type.typeArguments.filter(t => t.kind !== ts.SyntaxKind.VoidKeyword);
+                const insideTypes = typeArgs.map(type => {
+                    if (this.SupportedKindNames.hasOwnProperty(type.kind)) {  // eslint-disable-line
+                        return this.SupportedKindNames[type.kind];
+                    } else {
+                        return type.escapedText;
+                    }   
+                }).join(",");
+
+                if (insideTypes.length > 0) {
+                    return `${this.PROMISE_TYPE_KEYWORD}<${insideTypes}>`;
+                } 
+                return this.PROMISE_TYPE_KEYWORD;
+            }
             return type.typeName.escapedText;
         } else if (this.SupportedKindNames.hasOwnProperty(type.kind)) { // eslint-disable-line
             return this.SupportedKindNames[type.kind];
