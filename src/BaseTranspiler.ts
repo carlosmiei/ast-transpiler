@@ -51,7 +51,7 @@ class BaseTranspiler {
     PROPERTY_ACCESS_TOKEN = ".";
     TRY_TOKEN = "try";
     CATCH_TOKEN = "except";
-    CATCH_DECLARATION = "Exception as";
+    CATCH_DECLARATION = "Exception e";
     BREAK_TOKEN = "break";
     IN_TOKEN = "in";
     LESS_THAN_TOKEN = "<";
