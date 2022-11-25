@@ -6,7 +6,7 @@ class BaseTranspiler {
 
     NUM_LINES_BETWEEN_CLASS_MEMBERS = 1;
     NUM_LINES_END_FILE = 1;
-    SPACE_DEFAULT_PARAM = "";
+    SPACE_DEFAULT_PARAM = " ";
     BLOCK_OPENING_TOKEN = '{';
     BLOCK_CLOSING_TOKEN = '}';
     SPACE_BEFORE_BLOCK_OPENING = ' ';
@@ -87,6 +87,9 @@ class BaseTranspiler {
     PRIVATE_KEYWORD = "private";
     VOID_KEYWORD = "void";
     BOOLEAN_KEYWORD = "boolean";
+
+    ARRAY_TYPE_TOKEN = "List<object>";
+    OBJECT_TYPE_TOKEN = "Dictionary<string, object>";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -177,6 +180,11 @@ class BaseTranspiler {
         this.FullPropertyAccessReplacements = Object.assign ({}, this.FullPropertyAccessReplacements, config['FullPropertyAccessReplacements'] ?? {});
         this.CallExpressionReplacements = Object.assign ({}, this.CallExpressionReplacements, config['CallExpressionReplacements'] ?? {});
         this.StringLiteralReplacements = Object.assign ({}, this.StringLiteralReplacements, config['StringLiteralReplacements'] ?? {});
+    }
+
+    isComment(line: string){
+        line = line.trim();
+        return line.startsWith("//") || line.startsWith("/*") || line.startsWith("*");
     }
 
     isStringType(flags: ts.TypeFlags) {
@@ -339,6 +347,10 @@ class BaseTranspiler {
         return this.getIden(identation) + rawExpression;
     }
 
+    printCustomDefaultValueIfNeeded(node) {
+        return undefined;
+    }
+
     printParameter(node, defaultValue = true) {
         const name = this.printNode(node.name, 0);
         const initializer = node.initializer;
@@ -348,7 +360,9 @@ class BaseTranspiler {
         
         if (defaultValue) {
             if (initializer) {
-                return type + name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + this.printNode(initializer, 0);
+                const customDefaultValue = this.printCustomDefaultValueIfNeeded(initializer);
+                const defaultValue = customDefaultValue ? customDefaultValue : this.printNode(initializer, 0);
+                return type + name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + defaultValue;
             }
             return type + name;
         }
@@ -421,29 +435,41 @@ class BaseTranspiler {
 
     getType(node) {
         const type = node.type;
-        if (type.kind === ts.SyntaxKind.TypeReference) {
-            const typeRef = type.typeName.escapedText;
-            if (typeRef === "Promise") {
-                const typeArgs = type.typeArguments.filter(t => t.kind !== ts.SyntaxKind.VoidKeyword);
-                const insideTypes = typeArgs.map(type => {
-                    if (this.SupportedKindNames.hasOwnProperty(type.kind)) {  // eslint-disable-line
-                        return this.SupportedKindNames[type.kind];
-                    } else {
-                        return type.escapedText;
-                    }   
-                }).join(",");
-
-                if (insideTypes.length > 0) {
-                    return `${this.PROMISE_TYPE_KEYWORD}<${insideTypes}>`;
-                } 
-                return this.PROMISE_TYPE_KEYWORD;
+        if (type) {
+            if (type.kind === ts.SyntaxKind.TypeReference) {
+                const typeRef = type.typeName.escapedText;
+                if (typeRef === "Promise") {
+                    const typeArgs = type.typeArguments.filter(t => t.kind !== ts.SyntaxKind.VoidKeyword);
+                    const insideTypes = typeArgs.map(type => {
+                        if (this.SupportedKindNames.hasOwnProperty(type.kind)) {  // eslint-disable-line
+                            return this.SupportedKindNames[type.kind];
+                        } else {
+                            return type.escapedText;
+                        }   
+                    }).join(",");
+    
+                    if (insideTypes.length > 0) {
+                        return `${this.PROMISE_TYPE_KEYWORD}<${insideTypes}>`;
+                    } 
+                    return this.PROMISE_TYPE_KEYWORD;
+                }
+                return type.typeName.escapedText;
+            } else if (this.SupportedKindNames.hasOwnProperty(type.kind)) { // eslint-disable-line
+                return this.SupportedKindNames[type.kind];
             }
-            return type.typeName.escapedText;
-        } else if (this.SupportedKindNames.hasOwnProperty(type.kind)) { // eslint-disable-line
-            return this.SupportedKindNames[type.kind];
-        } else {
-            return undefined;
         }
+
+        // todo: re-think this logic
+        const initializer = node.initializer;
+        if (initializer) {
+            if (ts.isArrayLiteralExpression(initializer)) {
+                return this.ARRAY_TYPE_TOKEN;
+            } 
+            if (ts.isObjectLiteralExpression(initializer)) {
+                return this.OBJECT_TYPE_TOKEN;
+            }
+        }
+        return undefined;
     }
 
     printFunctionBody(node, identation) {
@@ -455,14 +481,9 @@ class BaseTranspiler {
             return "";
         }
 
-        const type = node.type;
-        if (type === undefined) {
-            throw new FunctionReturnTypeError(`Parameter [ ${node.name.escapedText} ] type is undefined`);
-        }
-
         const typeText = this.getType(node);
         if (typeText === undefined) {
-            throw new FunctionReturnTypeError("Parameter type is not supported");
+            throw new FunctionReturnTypeError("Parameter type is not supported or undefined");
         }
         return typeText;
 

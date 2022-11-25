@@ -20,7 +20,7 @@ beforeAll(() => {
     transpiler = new Transpiler(config);
 })
 
-describe('php transpiling tests', () => {
+describe('csharp transpiling tests', () => {
     test('basic variable declaration', () => {
         const ts = "const x = 1;"
         const csharp = "var x = 1;"

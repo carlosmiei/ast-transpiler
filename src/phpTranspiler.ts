@@ -288,11 +288,6 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
 
-    isComment(line){
-        line = line.trim();
-        return line.startsWith("//") || line.startsWith("/*") || line.startsWith("*");
-    }
-
     printFunctionBody(node, identation) {
 
         if (this.asyncTranspiling && this.isAsyncFunction(node)) {
