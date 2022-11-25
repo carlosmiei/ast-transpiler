@@ -311,7 +311,7 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
-    test('basic dictonary', () => {
+    test('basic dictionary', () => {
         const ts =
         "const types = {\n" +
         "    'limit': 'limit',\n" +

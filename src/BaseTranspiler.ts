@@ -50,8 +50,8 @@ class BaseTranspiler {
     SUPER_TOKEN = "super";
     PROPERTY_ACCESS_TOKEN = ".";
     TRY_TOKEN = "try";
-    CATCH_TOKEN = "except";
-    CATCH_DECLARATION = "Exception e";
+    CATCH_TOKEN = "catch";
+    CATCH_DECLARATION = "Exception";
     BREAK_TOKEN = "break";
     IN_TOKEN = "in";
     LESS_THAN_TOKEN = "<";

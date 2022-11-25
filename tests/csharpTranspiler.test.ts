@@ -23,9 +23,9 @@ beforeAll(() => {
 describe('php transpiling tests', () => {
     test('basic variable declaration', () => {
         const ts = "const x = 1;"
-        const php = "var x = 1;"
+        const csharp = "var x = 1;"
         const output = transpiler.transpileCSharp(ts).content;
-        expect(output).toBe(php);
+        expect(output).toBe(csharp);
     });
     test('basic while loop', () => {
         const ts =
@@ -34,25 +34,25 @@ describe('php transpiling tests', () => {
         "    break;\n" +
         "}"
         
-        const php =
+        const csharp =
         "while (true)\n{\n" +
         "    var x = 1;\n" +
         "    break;\n" +
         "}"
         const output = transpiler.transpileCSharp(ts).content;
-        expect(output).toBe(php);
+        expect(output).toBe(csharp);
     });
     test('basic for loop', () => {
         const ts =
         "for (let i = 0; i < 10; i++) {\n" +
         "    break;\n" +
         "}"
-        const php =
+        const csharp =
         "for (var i = 0; i < 10; i++)\n{\n" +
         "    break;\n" +
         "}"
         const output = transpiler.transpileCSharp(ts).content;
-        expect(output).toBe(php);
+        expect(output).toBe(csharp);
     });
     test('basic method declaration', () => {
         const ts =
@@ -61,7 +61,7 @@ describe('php transpiling tests', () => {
         "        console.log(\"Hello\")\n" +
         "    }\n" +
         "}"
-        const php =
+        const csharp =
         "class T\n" +
         "{\n" +
         "    void test()\n" +
@@ -70,7 +70,7 @@ describe('php transpiling tests', () => {
         "    }\n" +
         "}"
         const output = transpiler.transpileCSharp(ts).content;
-        expect(output).toBe(php);
+        expect(output).toBe(csharp);
     });
     test('basic basic declaration with default parameters', () => {
         const ts = 
@@ -79,7 +79,7 @@ describe('php transpiling tests', () => {
         "        console.log(\"Hello\")\n" +
         "    }\n" +
         "}"
-        const php =
+        const csharp =
         "class T\n" +
         "{\n" +
         "    void test(string s)\n" +
@@ -88,7 +88,7 @@ describe('php transpiling tests', () => {
         "    }\n" +
         "}"
         const output = transpiler.transpileCSharp(ts).content;
-        expect(output).toBe(php);
+        expect(output).toBe(csharp);
     });
     test('basic identation check [nested if]', () => {
         const ts =
@@ -127,7 +127,7 @@ describe('php transpiling tests', () => {
         "} else {\n" +
         "    console.log(\"else\")\n" +
         "}"
-        const php =
+        const csharp =
         "if (false)\n" +
         "{\n" +
         "    Console.WriteLine(\"if\");\n" +
@@ -139,7 +139,7 @@ describe('php transpiling tests', () => {
         "    Console.WriteLine(\"else\");\n" +
         "}";
         const output = transpiler.transpileCSharp(ts).content;
-        expect(output).toBe(php);
+        expect(output).toBe(csharp);
     });
     // test('basic identation check [nested objects]', () => {
     //     const ts =
@@ -150,7 +150,7 @@ describe('php transpiling tests', () => {
     //     "        }\n" +
     //     "    }\n" +
     //     "}"
-    //     const php =
+    //     const csharp =
     //     "$x = array(\n" +
     //     "    'world' => array(\n" +
     //     "        'hello' => array(\n" +
@@ -159,19 +159,19 @@ describe('php transpiling tests', () => {
     //     "    ),\n" +
     //     ");"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('basic if statement', () => {
     //     const ts =
     //     "if (1) {\n" +
     //     "    const x = 1;\n" +
     //     "}"
-    //     const php =
+    //     const csharp =
     //     "if (1) {\n" +
     //     "    $x = 1;\n" +
     //     "}" 
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('basic if else statement', () => {
     //     const ts =
@@ -180,14 +180,14 @@ describe('php transpiling tests', () => {
     //     "} else {\n" +
     //     "    const x = 2;\n" +
     //     "}";
-    //     const php =
+    //     const csharp =
     //     "if (1) {\n" +
     //     "    $x = 1;\n" +
     //     "} else {\n" +
     //     "    $x = 2;\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('basic if-elseif-else statement', () => {
     //     const ts =
@@ -198,7 +198,7 @@ describe('php transpiling tests', () => {
     //     "} else {\n" +
     //     "    const x = 3;\n" +
     //     "}"
-    //     const php =
+    //     const csharp =
     //     "if (1) {\n" +
     //     "    $x = 1;\n" +
     //     "} elseif (2) {\n" +
@@ -207,31 +207,36 @@ describe('php transpiling tests', () => {
     //     "    $x = 3;\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
-    // test('basic async function declaration [no args]', () => {
-    //     const ts =
-    //     "async function camelCase () {\n" +
-    //     "    this.myFunc()\n" +
-    //     "    await this.loadMarkets();\n" +
-    //     "}\n"
-    //     const php =
-    //     "function camelCase() {\n" +
-    //     "    return Async\\async(function () {\n" +
-    //     "        $this->myFunc();\n" +
-    //     "        Async\\await($this->loadMarkets());\n" +
-    //     "    }) ();\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // });
+    test('basic async function declaration [no args]', () => {
+        const ts =
+        "class t {\n" +
+        "    \n" +
+        "    async fn (): Promise<void> {\n" +
+        "        const x = await this.asyncMethod();\n" +
+        "        console.log(\"1\");\n" +
+        "    }\n" +
+        "}"
+        const csharp =
+        "class t\n" +
+        "{\n" +
+        "    async Task fn()\n" +
+        "    {\n" +
+        "        var x = await this.asyncMethod();\n" +
+        "        Console.WriteLine(\"1\");\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     // test('basic async function declaration [with args]', () => {
     //     const ts =
     //     "async function camelCase (foo,bar) {\n" +
     //     "    this.myFunc()\n" +
     //     "    await this.loadMarkets();\n" +
     //     "}\n"
-    //     const php =
+    //     const csharp =
     //     "function camelCase($foo, $bar) {\n" +
     //     "    return Async\\async(function () use ($foo, $bar) {\n" +
     //     "        $this->myFunc();\n" +
@@ -239,7 +244,7 @@ describe('php transpiling tests', () => {
     //     "    }) ();\n" +
     //     "}"; 
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('should convert async function declaration to sync', () => {
     //     transpiler.setPhpAsyncTranspiling(false);
@@ -248,14 +253,14 @@ describe('php transpiling tests', () => {
     //     "    this.myFunc()\n" +
     //     "    await this.loadMarkets();\n" +
     //     "}"
-    //     const php =
+    //     const csharp =
     //     "function camelCase() {\n" +
     //     "    $this->myFunc();\n" +
     //     "    $this->loadMarkets();\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;
     //     transpiler.setPhpAsyncTranspiling(true);
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('basic class declaration', () => {
     //     const ts =
@@ -264,14 +269,14 @@ describe('php transpiling tests', () => {
     //     "        return \"foo\";\n" +
     //     "    }\n" +
     //     "}\n" 
-    //     const php =
+    //     const csharp =
     //     "class Test {\n" +
     //     "    function describe() {\n" +
     //     "        return 'foo';\n" +
     //     "    }\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('basic class declaration with props', () => {
     //     const ts = 
@@ -282,7 +287,7 @@ describe('php transpiling tests', () => {
     //     "        console.log(\"Hello! I'm inside main class:\" + message)\n" +
     //     "    }\n" +
     //     "}"
-    //     const php =
+    //     const csharp =
     //     "class MyClass {\n" +
     //     "    public static $x = 10;\n" +
     //     "    public static $y = 'test';\n" +
@@ -292,7 +297,7 @@ describe('php transpiling tests', () => {
     //     "    }\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('basic class inheritance', () => {
     //     const ts =
@@ -301,14 +306,14 @@ describe('php transpiling tests', () => {
     //     "        return 1;\n" +
     //     "    }\n" +
     //     "}";
-    //     const php =
+    //     const csharp =
     //     "class teste extends extended {\n" +
     //     "    function method() {\n" +
     //     "        return 1;\n" +
     //     "    }\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('basic class with constructor', () => {
     //     const ts =
@@ -317,14 +322,14 @@ describe('php transpiling tests', () => {
     //     "        super(x);\n" +
     //     "    }\n" +
     //     "}" 
-    //     const php =
+    //     const csharp =
     //     "class teste extends extended {\n" +
     //     "    function __construct($x) {\n" +
     //     "        parent::__construct($x);\n" +
     //     "    }\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
     // test('basic dictonary', () => {
     //     const ts =
@@ -333,91 +338,91 @@ describe('php transpiling tests', () => {
     //     "    'market': 'market',\n" +
     //     "    'margin': 'market',\n" +
     //     "}\n" 
-    //     const php =
+    //     const csharp =
     //     "$types = array(\n" +
     //     "    'limit' => 'limit',\n" +
     //     "    'market' => 'market',\n" +
     //     "    'margin' => 'market',\n" +
     //     ");"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
-    // test('basic binary expressions', () => {
-    //     const ts =
-    //     "const a = 1 + 1;\n" +
-    //     "const b = 2 * 2;\n" +
-    //     "const c = 3 / 3;\n" +
-    //     "const d = 4 - 4;\n" +
-    //     "const e = 5 % 5;\n" +
-    //     "const f = \"foo\" + \"bar\";\n";
-    //     const php =
-    //     "$a = 1 + 1;\n" +
-    //     "$b = 2 * 2;\n" +
-    //     "$c = 3 / 3;\n" +
-    //     "$d = 4 - 4;\n" +
-    //     "$e = 5 % 5;\n" +
-    //     "$f = 'foo' . 'bar';"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('basic conditions expressions', () => {
-    //     const ts =
-    //     "const a = true;\n" +
-    //     "const b = false;\n" +
-    //     "const c = true;\n" +
-    //     "const d = (a && b) || (c && !b);\n" 
-    //     const php =
-    //     "$a = true;\n" +
-    //     "$b = false;\n" +
-    //     "$c = true;\n" +
-    //     "$d = ($a && $b) || ($c && !$b);"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('basic element access expression', () => {
-    //     const ts =
-    //     "const x = {};\n" +
-    //     "x['foo'] = 'bar'"
-    //     const php =
-    //     "$x = array();\n" +
-    //     "$x['foo'] = 'bar';"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
+    test('basic binary expressions', () => {
+        const ts =
+        "const a = 1 + 1;\n" +
+        "const b = 2 * 2;\n" +
+        "const c = 3 / 3;\n" +
+        "const d = 4 - 4;\n" +
+        "const e = 5 % 5;\n" +
+        "const f = \"foo\" + \"bar\";\n";
+        const csharp =
+        "var a = 1 + 1;\n" +
+        "var b = 2 * 2;\n" +
+        "var c = 3 / 3;\n" +
+        "var d = 4 - 4;\n" +
+        "var e = 5 % 5;\n" +
+        "var f = \"foo\" + \"bar\";";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('basic conditions expressions', () => {
+        const ts =
+        "const a = true;\n" +
+        "const b = false;\n" +
+        "const c = true;\n" +
+        "const d = (a && b) || (c && !b);\n" 
+        const csharp =
+        "var a = true;\n" +
+        "var b = false;\n" +
+        "var c = true;\n" +
+        "var d = (a && b) || (c && !b);"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('basic element access expression', () => {
+        const ts =
+        "const x = {};\n" +
+        "x[\"teste\"] = 1;";
+        const csharp =
+        "var x = new Dictionary<string, object>() {};\n" +
+        "x[\"teste\"] = 1;";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
     // test('basic throw statement', () => {
     //     const ts =
     //     "function test () {\n" +
     //     "    throw new InvalidOrder (\"error\")\n" +
     //     "}";
-    //     const php =
+    //     const csharp =
     //     "function test() {\n" +
     //     "    throw new InvalidOrder('error');\n" +
     //     "}";
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
-    // test('basic comparison operators', () => {
-    //     const ts =
-    //     "const a = 1;\n" +
-    //     "const b = 1+1;\n" +
-    //     "const c = a === b;\n" +
-    //     "const d = a !== b;\n" +
-    //     "const e = a < b;\n" +
-    //     "const f = a > b;\n" +
-    //     "const g = a >= b;\n" +
-    //     "const h = a <= b;";
-    //     const php =
-    //     "$a = 1;\n" +
-    //     "$b = 1 + 1;\n" +
-    //     "$c = $a === $b;\n" +
-    //     "$d = $a !== $b;\n" +
-    //     "$e = $a < $b;\n" +
-    //     "$f = $a > $b;\n" +
-    //     "$g = $a >= $b;\n" +
-    //     "$h = $a <= $b;";
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
+    test('basic comparison operators', () => {
+        const ts =
+        "const a = 1;\n" +
+        "const b = 1+1;\n" +
+        "const c = a === b;\n" +
+        "const d = a !== b;\n" +
+        "const e = a < b;\n" +
+        "const f = a > b;\n" +
+        "const g = a >= b;\n" +
+        "const h = a <= b;";
+        const csharp =
+        "var a = 1;\n" +
+        "var b = 1 + 1;\n" +
+        "var c = a == b;\n" +
+        "var d = a != b;\n" +
+        "var e = a < b;\n" +
+        "var f = a > b;\n" +
+        "var g = a >= b;\n" +
+        "var h = a <= b;";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
     // test('basic math functions', () => {
     //     const ts =
     //     "const ceil = Math.ceil (num);\n" +
@@ -430,7 +435,7 @@ describe('php transpiling tests', () => {
     //     "const g = Math.pow (1, 2);\n" +
     //     "const h = Math.round (5);\n" +
     //     "const i = Math.floor (5.5);\n";
-    //     const php =
+    //     const csharp =
     //     "$ceil = (int) ceil($num);\n" +
     //     "$a = min(0, 5);\n" +
     //     "$b = max(0, 5);\n" +
@@ -442,61 +447,41 @@ describe('php transpiling tests', () => {
     //     "$h = (int) round(5);\n" +
     //     "$i = (int) floor(5.5);"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
     // test('basic json methods', () => {
     //     const ts =
     //     "const j = JSON.stringify ({ 'a': 1, 'b': 2 });\n" +
     //     "const k = JSON.parse (j);\n";
-    //     const php =
+    //     const csharp =
     //     "$j = json_encode(array(\n" +
     //     "    'a' => 1,\n" +
     //     "    'b' => 2,\n" +
     //     "));\n" +
     //     "$k = json_decode($j, $as_associative_array = true);";
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
-    // test('basic scope resolution access', () => {
-    //     const ts =
-    //     "const d = super.describe ();"
-    //     const php =
-    //     "$d = parent::describe();"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('custom scope resolution access', () => {
-    //     const prev = transpiler.phpTranspiler.LeftPropertyAccessReplacements;
-    //     prev["Precise"]= "Precise";
-    //     transpiler.phpTranspiler.LeftPropertyAccessReplacements = prev;
-    //     transpiler.setPHPPropResolution(['Precise'])
-    //     const ts =
-    //     "const d = Precise.describe ();"
-    //     const php =
-    //     "$d = Precise::describe();"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('string length', () => {
-    //     const ts =
-    //     "const myStr = \"test\";\n" +
-    //     "const ff = myStr.length;"
-    //     const php =
-    //     "$myStr = 'test';\n" +
-    //     "$ff = strlen($myStr);"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('array length', () => {
-    //     const ts =
-    //     "const myArray = [1, 2, 3];\n" +
-    //     "const aa = myArray.length;"
-    //     const php =
-    //     "$myArray = [1, 2, 3];\n" +
-    //     "$aa = count($myArray);"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
+    test('string length', () => {
+        const ts =
+        "const myStr = \"test\";\n" +
+        "const ff = myStr.length;"
+        const csharp =
+        "var myStr = \"test\";\n" +
+        "var ff = myStr.Length;"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('array length', () => {
+        const ts =
+        "const myArray = [1, 2, 3];\n" +
+        "const aa = myArray.length;"
+        const csharp =
+        "var myArray = new List<object>() {1, 2, 3};\n" +
+        "var aa = myArray.Count;"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
     // test('basic string methods', () => {
     //     const ts =
     //     "let a = 'test';\n" +
@@ -507,7 +492,7 @@ describe('php transpiling tests', () => {
     //     "const c = a.indexOf ('t');\n" +
     //     "const d = a.toUpperCase ();\n" +
     //     "const e = a.toLowerCase ();";
-    //     const php =
+    //     const csharp =
     //     "$a = 'test';\n" +
     //     "$w = (string) $a;\n" +
     //     "$a .= 'mundo';\n" +
@@ -517,7 +502,7 @@ describe('php transpiling tests', () => {
     //     "$d = strtoupper($a);\n" +
     //     "$e = strtolower($a);";
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
     // test('basic array manipulation', () => {
     //     const ts =
@@ -529,7 +514,7 @@ describe('php transpiling tests', () => {
     //     "myList.push (4);\n" +
     //     "myList.pop ();\n" +
     //     "myList.shift ();"
-    //     const php =
+    //     const csharp =
     //     "$myList = [1, 2, 3];\n" +
     //     "$y = implode(',', $myList);\n" +
     //     "$i = array_search(1, $myList);\n" + 
@@ -539,41 +524,41 @@ describe('php transpiling tests', () => {
     //     "array_pop($myList);\n" +
     //     "array_shift($myList);"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
-    // test('basic conditional expression', () => {
-    //     const ts =
-    //     "const frase = \"ola\";\n" +
-    //     "const test = frase ? frase.length : 0;"
-    //     const php =
-    //     "$frase = \'ola\';\n" +
-    //     "$test = $frase ? strlen($frase) : 0;"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('basic object methods', () => {
-    //     const ts =
-    //     "const x = {};\n" +
-    //     "const y = Object.keys (x);\n" +
-    //     "const yy = Object.values (x);"
-    //     const php =
-    //     "$x = array();\n" +
-    //     "$y = is_array($x) ? array_keys($x) : array();\n" +
-    //     "$yy = is_array($x) ? array_values($x) : array();"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
+    test('basic conditional expression', () => {
+        const ts =
+        "const frase = \"ola\";\n" +
+        "const test = frase ? frase.length : 0;"
+        const csharp =
+        "var frase = \"ola\";\n" +
+        "var test = frase ? frase.Length : 0;"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('basic object methods', () => {
+        const ts =
+        "const x = {};\n" +
+        "const y = Object.keys(x);\n" +
+        "const z = Object.values(x);"
+        const csharp =
+        "var x = new Dictionary<string, object>() {};\n" +
+        "var y = new List<string>(x.Keys);\n" +
+        "var z = new List<object>(x.Values);";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
     // test('basic instanceof statement', () => {
     //     const ts =
     //     "if (e instanceof NullResponse) {\n" +
     //     "    return [];\n" +
     //     "}"
-    //     const php =
+    //     const csharp =
     //     "if (e instanceof NullResponse) {\n" +
     //     "    return [];\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
     // test('basic typeof expressions', () => {
     //     const ts =
@@ -582,111 +567,95 @@ describe('php transpiling tests', () => {
     //     "typeof response === 'object'\n" +
     //     "typeof response === 'boolean'\n" +
     //     "typeof response === 'number'";
-    //     const php =
+    //     const csharp =
     //     "$response = 'foo';\n" +
     //     "!is_string($response);\n" +
     //     "is_array($response);\n" +
     //     "is_bool($response);\n" +
     //     "(is_int($response) || is_float($response));";
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
     // test('basic indexOf string [check existence]', () => {
     //     const ts =
     //     "const myString = \'bar\'\n" +
     //     "const exists = myString.indexOf (\"b\") >= 0;"
-    //     const php =
+    //     const csharp =
     //     "$myString = 'bar';\n" +
     //     "$exists = mb_strpos($myString, 'b') !== false;"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
     // test('basic indexOf array [check existence]', () => {
     //     const ts =
     //     "const x = [1,2,3];\n" +
     //     "const y = x.indexOf(1) >= 0;"
-    //     const php =
+    //     const csharp =
     //     "$x = [1, 2, 3];\n" +
     //     "$y = in_array(1, $x);"
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
-    // test('basic includes string', () => {
-    //     const ts =
-    //     "const myString = \'bar\'\n" +
-    //     "const exists = myString.includes (\"b\");"
-    //     const php =
-    //     "$myString = 'bar';\n" +
-    //     "$exists = str_contains($myString, 'b');"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('basic includes array', () => {
-    //     const ts =
-    //     "const x = [1,2,3];\n" +
-    //     "const y = x.includes(1);"
-    //     const php =
-    //     "$x = [1, 2, 3];\n" +
-    //     "$y = in_array(1, $x);"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('basic as expression', () => {
-    //     const ts =
-    //     "const x = 1;\n" +
-    //     "const a = \"foo\";\n" +
-    //     "const y = x as any;\n" +
-    //     "const t = a as string;\n" +
-    //     "const z = x as number;"
-    //     const php =
-    //     "$x = 1;\n" +
-    //     "$a = 'foo';\n" +
-    //     "$y = $x;\n" +
-    //     "$t = $a;\n" +
-    //     "$z = $x;" 
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('basic postfixUnary expression', () => {
-    //     const ts =
-    //     "let x = 1;\n" +
-    //     "x++;\n" +
-    //     "let y = 1;\n" +
-    //     "y--;"
-    //     const php =
-    //     "$x = 1;\n" +
-    //     "$x++;\n" +
-    //     "$y = 1;\n" +
-    //     "$y--;"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // });
-    // test('should snake_case function and method calls', () => {
-    //     transpiler.setPhpUncamelCaseIdentifiers(true);
-    //     const ts =
-    //     "function camelCase () {\n" +
-    //     "    this.myFunc()\n" +
-    //     "    myFunc()\n" +
-    //     "}";
-    //     const php =
-    //     "function camel_case() {\n" +
-    //     "    $this->my_func();\n" +
-    //     "    my_func();\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    //     transpiler.setPhpUncamelCaseIdentifiers(false);
-    // })
+    test('basic includes string', () => {
+        const ts =
+        "const myString = \'bar\'\n" +
+        "const exists = myString.includes (\"b\");"
+        const csharp =
+        "var myString = \"bar\";\n" +
+        "var exists = myString.Contains(\"b\");"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('basic includes array', () => {
+        const ts =
+        "const x = [1,2,3];\n" +
+        "const y = x.includes(1);"
+        const csharp =
+        "var x = new List<object>() {1, 2, 3};\n" +
+        "var y = x.Contains(1);"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('basic as expression', () => {
+        const ts =
+        "const x = 1;\n" +
+        "const a = \"foo\";\n" +
+        "const y = x as any;\n" +
+        "const t = a as string;\n" +
+        "const z = x as number;"
+        const csharp =
+        "var x = 1;\n" +
+        "var a = \"foo\";\n" +
+        "var y = x;\n" +
+        "var t = a;\n" +
+        "var z = x;" 
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('basic postfixUnary expression', () => {
+        const ts =
+        "let x = 1;\n" +
+        "x++;\n" +
+        "let y = 1;\n" +
+        "y--;"
+        const csharp =
+        "var x = 1;\n" +
+        "x++;\n" +
+        "var y = 1;\n" +
+        "y--;"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     // test('should convert Promise.all to Promise\\all', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(true);
     //     const ts =
     //     "let promises = [ this.fetchSwapAndFutureMarkets (params), this.fetchUSDCMarkets (params) ];\n" +
     //     "promises = await Promise.all (promises);";
-    //     const php =
+    //     const csharp =
     //     "$promises = [$this->fetch_swap_and_future_markets($params), $this->fetch_usdc_markets($params)];\n" +
     //     "$promises = Async\\await(Promise\\all($promises));" 
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     //     transpiler.setPhpUncamelCaseIdentifiers(false);
     // })
     // test('should convert JS doc', () => {
@@ -701,7 +670,7 @@ describe('php transpiling tests', () => {
     //     "     */\n" +
     //     "    return 1;\n" +
     //     "}";
-    //     const php =
+    //     const csharp =
     //     "function fetchStatus($params) {\n" +
     //     "    /**\n" +
     //     "     * the latest known information on the availability of the exchange API\n" +
@@ -711,78 +680,83 @@ describe('php transpiling tests', () => {
     //     "    return 1;\n" +
     //     "}";
     //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // })
-    // test('should convert regular comment', () => {
-    //     const ts =
-    //     "function test () {\n" +
-    //     "    // comment 1\n" +
-    //     "    // comment 2\n" +
-    //     "    // comment 3\n" +
-    //     "    const x = 1;\n" +
-    //     "}";
-    //     const php =
-    //     "function test() {\n" +
-    //     "    // comment 1\n" +
-    //     "    // comment 2\n" +
-    //     "    // comment 3\n" +
-    //     "    $x = 1;\n" +
-    //     "}";
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('should convert leading and trailing comments', () => {
-    //     const ts =
-    //     "// I'm a leading comment\n" +
-    //     "const z = \"my var\" // I'm a trailing comment\n" +
-    //     "const a = \"bar\" // I'm second trailing comment\n";
-    //     const php =
-    //     "// I'm a leading comment\n" +
-    //     "$z = 'my var'; // I'm a trailing comment\n" +
-    //     "$a = 'bar'; // I'm second trailing comment";
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('basic try-catch-block', () => {
-    //     const ts =
-    //     "try {\n" +
-    //     "    const x = 1;\n" +
-    //     "} catch (e) {\n" +
-    //     "    console.log(e);\n" +
-    //     "}"
-    //     const php =
-    //     "try {\n" +
-    //     "    $x = 1;\n" +
-    //     "} catch(Exception $e) {\n" +
-    //     "    var_dump($e);\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // })
-    // test('should remove cjs import from transpiled code', () => {
-    //     const ts =
-    //     "const {a,b,x} = require  ('ola')  \n" +
-    //     "const myVar = a.b;";
-    //     const php = "$myVar = $a->b;"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // });
-    // test('should remove cjs exports from transpiled code', () => {
-    //     const ts =
-    //     "module.exports = {\n" +
-    //     "    a,\n" +
-    //     "    b,\n" +
-    //     "    c,\n" +
-    //     "}";
-    //     const php = ""
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(php);
-    // });
+    test('should convert regular comment', () => {
+        const ts =
+        "class t {\n" +
+        "\n" +
+        "    fn(): void {\n" +
+        "        // my comment 1\n" +
+        "        // my comment 2        \n" +
+        "        console.log(\"Hello World!\");\n" +
+        "    }\n" +
+        "}"
+        const csharp =
+        "class t\n" +
+        "{\n" +
+        "    void fn()\n" +
+        "    {\n" +
+        "        // my comment 1\n" +
+        "        // my comment 2\n" +
+        "        console.log(\"Hello World!\");\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('should convert leading and trailing comments', () => {
+        const ts =
+        "// I'm a leading comment\n" +
+        "const z = \"my var\" // I'm a trailing comment\n" +
+        "const a = \"bar\" // I'm second trailing comment\n";
+        const csharp =
+        "// I'm a leading comment\n" +
+        "var z = \"my var\"; // I'm a trailing comment\n" +
+        "var a = \"bar\"; // I'm second trailing comment";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('basic try-catch-block', () => {
+        const ts =
+        "try {\n" +
+        "    const x = 1;\n" +
+        "} catch (e) {\n" +
+        "    console.log(e);\n" +
+        "}"
+        const csharp =
+        "try\n{\n" +
+        "    var x = 1;\n" +
+        "} catch(Exception e)\n{\n" +
+        "    Console.WriteLine(e);\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('should remove cjs import from transpiled code', () => {
+        const ts =
+        "const {a,b,x} = require  ('ola')  \n" +
+        "const myVar = a.b;";
+        const csharp = "var myVar = a.b;"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
+    test('should remove cjs exports from transpiled code', () => {
+        const ts =
+        "module.exports = {\n" +
+        "    a,\n" +
+        "    b,\n" +
+        "    c,\n" +
+        "}";
+        const csharp = ""
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     // test('should transpile file from path', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(true);
-    //     const php = readFileSync ('./tests/files/output/php/test1.php', "utf8");
+    //     const csharp = readFileSync ('./tests/files/output/php/test1.php', "utf8");
     //     const output = transpiler.transpileCSharpByPath('./tests/files/input/test1.ts').content;
     //     transpiler.setPhpUncamelCaseIdentifiers(false);
-    //     expect(output).toBe(php);
+    //     expect(output).toBe(csharp);
     // });
   });

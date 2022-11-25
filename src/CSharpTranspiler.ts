@@ -21,6 +21,7 @@ export class CSharpTranspiler extends BaseTranspiler {
 
         this.requiresParameterType = true;
         this.requiresReturnType = true;
+        this.asyncTranspiling = true;
 
         this.initConfig();
 
@@ -79,7 +80,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                     case "Object.keys":
                         return `new List<string>(${parsedArg}.Keys)`;
                     case "Object.values":
-                        return `new List<string>(${parsedArg}.Values)`;
+                        return `new List<object>(${parsedArg}.Values)`;
                 }
             }
             // const transformedProp = this.transformPropertyInsideCallExpressionIfNeeded(node.expression);
