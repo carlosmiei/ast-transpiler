@@ -86,10 +86,11 @@ class BaseTranspiler {
     PUBLIC_KEYWORD = "public";
     PRIVATE_KEYWORD = "private";
     VOID_KEYWORD = "void";
-    BOOLEAN_KEYWORD = "boolean";
+    BOOLEAN_KEYWORD = "bool";
 
-    ARRAY_TYPE_TOKEN = "List<object>";
-    OBJECT_TYPE_TOKEN = "Dictionary<string, object>";
+    ARRAY_KEYWORD = "List<object>";
+    OBJECT_KEYWORD = "Dictionary<string, object>";
+    INTEGER_KEYWORD = "int";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -434,6 +435,7 @@ class BaseTranspiler {
     }
 
     getType(node) {
+        // try to get type from declared type, example: x: string = "foo"
         const type = node.type;
         if (type) {
             if (type.kind === ts.SyntaxKind.TypeReference) {
@@ -459,18 +461,88 @@ class BaseTranspiler {
             }
         }
 
-        // todo: re-think this logic
+        // todo: infer from initializer re-think this logic ex: x = 1;
+        // can we use the type checker here?
         const initializer = node.initializer;
         if (initializer) {
             if (ts.isArrayLiteralExpression(initializer)) {
-                return this.ARRAY_TYPE_TOKEN;
+                return this.ARRAY_KEYWORD;
             } 
             if (ts.isObjectLiteralExpression(initializer)) {
-                return this.OBJECT_TYPE_TOKEN;
+                return this.OBJECT_KEYWORD;
+            }
+            if (ts.isNumericLiteral(initializer)) {
+                // return this.NUMBER_TYPE_TOKEN;
+                const value = initializer.text;
+                const num = Number(value);
+                if (Number.isInteger(num)) {
+                    return this.INTEGER_KEYWORD;
+                } 
+                return this.NUMBER_KEYWORD;
+            }
+            if (ts.isStringLiteralLike(initializer)) {
+                return this.STRING_KEYWORD;
+            }
+            if ((ts as any).isBooleanLiteral(initializer)) {
+                return this.BOOLEAN_KEYWORD;
             }
         }
         return undefined;
     }
+
+    getTypeFromRawType(type) {
+        // check for primitive types
+        if (type.flags === ts.TypeFlags.Any) {
+            return undefined;
+        }
+        if (type.flags === ts.TypeFlags.Void) {
+            return this.VOID_KEYWORD;
+        }
+        if (type.flags === ts.TypeFlags.Number) {
+            return this.NUMBER_KEYWORD;
+        }
+        if (type.flags === ts.TypeFlags.String) {
+            return this.STRING_KEYWORD;
+        }
+        if (type.flags === ts.TypeFlags.Boolean) {
+            return this.BOOLEAN_KEYWORD;
+        }
+
+        // check for array or object
+
+        if (type?.symbol.escapedName === 'Array') {
+            return this.ARRAY_KEYWORD;
+        }
+        if (type?.symbol.escapedName === '__object') {
+            return this.OBJECT_KEYWORD;
+        }
+
+        // check for promise type
+
+        if (type?.symbol.escapedName === 'Promise') {
+                return this.PROMISE_TYPE_KEYWORD;
+            }
+        return undefined;
+    }
+
+    getFunctionType(node){
+        // use type checker to do it here
+        const type = global.checker.getReturnTypeOfSignature(global.checker.getSignatureFromDeclaration(node));
+
+        const parsedTtype = this.getTypeFromRawType(type);
+
+        if (parsedTtype === this.PROMISE_TYPE_KEYWORD) {
+            if (type.resolvedTypeArguments.length === 0) {
+                return this.PROMISE_TYPE_KEYWORD;
+            }
+            const insideTypes = type.resolvedTypeArguments.map(type => this.getTypeFromRawType(type)).filter(t => t !== "void").join(",");
+            if (insideTypes.length > 0) {
+                return `${this.PROMISE_TYPE_KEYWORD}<${insideTypes}>`;
+            }
+            return this.PROMISE_TYPE_KEYWORD;
+        }
+        return parsedTtype;
+    }   
 
     printFunctionBody(node, identation) {
         return this.printBlock(node.body, identation);
@@ -493,12 +565,8 @@ class BaseTranspiler {
         if (!this.requiresReturnType) {
             return "";
         }
-        const type = node.type;
-        if (type === undefined) {
-            throw new FunctionReturnTypeError(`Function [ ${node.name.escapedText} ] return type is undefined`);
-        }
 
-        const typeText = this.getType(node);
+        const typeText = this.getFunctionType(node);
         if (typeText === undefined) {
             throw new FunctionReturnTypeError("Function return type is not supported");
         }
