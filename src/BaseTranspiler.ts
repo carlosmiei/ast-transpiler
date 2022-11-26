@@ -91,6 +91,7 @@ class BaseTranspiler {
     ARRAY_KEYWORD = "List<object>";
     OBJECT_KEYWORD = "Dictionary<string, object>";
     INTEGER_KEYWORD = "int";
+    DEFAULT_RETURN_TYPE = "object";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -535,11 +536,15 @@ class BaseTranspiler {
             if (type.resolvedTypeArguments.length === 0) {
                 return this.PROMISE_TYPE_KEYWORD;
             }
-            const insideTypes = type.resolvedTypeArguments.map(type => this.getTypeFromRawType(type)).filter(t => t !== "void").join(",");
+            if (type.resolvedTypeArguments.length === 1 && type.resolvedTypeArguments[0].flags === ts.TypeFlags.Void) {
+                return this.PROMISE_TYPE_KEYWORD;
+            }
+
+            const insideTypes = type.resolvedTypeArguments.map(type => this.getTypeFromRawType(type)).join(",");
             if (insideTypes.length > 0) {
                 return `${this.PROMISE_TYPE_KEYWORD}<${insideTypes}>`;
             }
-            return this.PROMISE_TYPE_KEYWORD;
+            return undefined;
         }
         return parsedTtype;
     }   
@@ -568,7 +573,15 @@ class BaseTranspiler {
 
         const typeText = this.getFunctionType(node);
         if (typeText === undefined) {
-            throw new FunctionReturnTypeError("Function return type is not supported");
+            // throw new FunctionReturnTypeError("Function return type is not supported");
+            let res = "";
+            if (this.isAsyncFunction(node)) {
+                res = `${this.PROMISE_TYPE_KEYWORD}<${this.DEFAULT_RETURN_TYPE}>`;
+            } else {
+                res = this.DEFAULT_RETURN_TYPE;
+            }
+            Logger.warning("Function return type not found, will default to: " + res);
+            return res;
         }
         return typeText;
     }
