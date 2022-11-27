@@ -90,6 +90,24 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
+    test('basic class inheritance', () => {
+        const ts =
+        "class t extends ParentClass {\n" +
+        "    method () {\n" +
+        "\n" +
+        "    }\n" +
+        "}";
+        const csharp =
+        "class t : ParentClass\n" +
+        "{\n" +
+        "    void method()\n" +
+        "    {\n" +
+        "\n" +
+        "    }\n" +
+        "}";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     test('basic identation check [nested if]', () => {
         const ts =
         "if (1) {\n" +
@@ -230,38 +248,165 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
-    // test('basic async function declaration [with args]', () => {
-    //     const ts =
-    //     "async function camelCase (foo,bar) {\n" +
-    //     "    this.myFunc()\n" +
-    //     "    await this.loadMarkets();\n" +
-    //     "}\n"
-    //     const csharp =
-    //     "function camelCase($foo, $bar) {\n" +
-    //     "    return Async\\async(function () use ($foo, $bar) {\n" +
-    //     "        $this->myFunc();\n" +
-    //     "        Async\\await($this->loadMarkets());\n" +
-    //     "    }) ();\n" +
-    //     "}"; 
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
-    // test('should convert async function declaration to sync', () => {
-    //     transpiler.setPhpAsyncTranspiling(false);
-    //     const ts =
-    //     "async function camelCase () {\n" +
-    //     "    this.myFunc()\n" +
-    //     "    await this.loadMarkets();\n" +
-    //     "}"
-    //     const csharp =
-    //     "function camelCase() {\n" +
-    //     "    $this->myFunc();\n" +
-    //     "    $this->loadMarkets();\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     transpiler.setPhpAsyncTranspiling(true);
-    //     expect(output).toBe(csharp);
-    // });
+    test('basic function declaration [with typed args]', () => {
+        // to do add support for typed arrays and objects
+        const ts =
+        "class t {\n" +
+        "    parseOrder (a: string, b: number, c: boolean) {\n" +
+        "        console.log(\"here\");\n" +
+        "    }\n" +
+        "}";
+        const csharp =
+        "class t\n" +
+        "{\n" +
+        "    void parseOrder(string a, float b, bool c)\n" +
+        "    {\n" +
+        "        Console.WriteLine(\"here\");\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
+    test('basic function declaration [with initialized args]', () => {
+        const ts =
+        "class t {\n" +
+        "    parseOrder (a = \"hi\", b = 3, bb= 3.2, c = false, d = [], e = {}) {\n" +
+        "        // I'm a comment\n" +
+        "        console.log(\"here\");\n" +
+        "    }\n" +
+        "}";
+        const csharp =
+        "class t\n" +
+        "{\n" +
+        "    void parseOrder(string a = \"hi\", int b = 3, float bb = 3.2, bool c = false, List<object> d = null, Dictionary<string, object> e = null)\n" +
+        "    {\n" +
+        "        // I'm a comment\n" +
+        "        d ??= new List<object>();\n" +
+        "        e ??= new Dictionary<string, object>();\n" +
+        "        console.log(\"here\");\n" +
+        "    }\n" +
+        "}";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
+    test('basic async function declaration [with typed return type]', () => {
+        const ts =
+        "class t {\n" +
+        "    method (s:string): number {\n" +
+        "        return 1;\n" +
+        "    }\n" +
+        "    method2(): void {\n" +
+        "        console.log(1)\n" +
+        "    }\n" +
+        "    method3(): string {\n" +
+        "        return \"1\"\n" +
+        "    }\n" +
+        "    async method4(): Promise<string> {\n" +
+        "        return \"1\"\n" +
+        "    }\n" +
+        "    async method5(): Promise<object> {\n" +
+        "        return {\n" +
+        "            \"foo\": \"bar\"\n" +
+        "        };\n" +
+        "    }\n" +
+        "}"
+        const csharp =
+        "class t\n" +
+        "{\n" +
+        "    float method(string s)\n" +
+        "    {\n" +
+        "        return 1;\n" +
+        "    }\n" +
+        "\n" +
+        "    void method2()\n" +
+        "    {\n" +
+        "        Console.WriteLine(1);\n" +
+        "    }\n" +
+        "\n" +
+        "    string method3()\n" +
+        "    {\n" +
+        "        return \"1\";\n" +
+        "    }\n" +
+        "\n" +
+        "    async Task<string> method4()\n" +
+        "    {\n" +
+        "        return \"1\";\n" +
+        "    }\n" +
+        "\n" +
+        "    async Task<Dictionary<string, object>> method5()\n" +
+        "    {\n" +
+        "        return new Dictionary<string, object>() {\n" +
+        "            { \"foo\", \"bar\" },\n" +
+        "        };\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
+    test('basic function declaration [with inferred return type]', () => {
+        transpiler.setPhpAsyncTranspiling(false);
+        const ts =
+        "class t {\n" +
+        "    method1() {\n" +
+        "        console.log(1);\n" +
+        "    }\n" +
+        "    method2() {\n" +
+        "        return 1;\n" +
+        "    }\n" +
+        "    method3() {\n" +
+        "        return \"1\";\n" +
+        "    }\n" +
+        "    method4() {\n" +
+        "        return true;\n" +
+        "    }\n" +
+        "    async method5() {\n" +
+        "        return \"1\";\n" +
+        "    }\n" +
+        "    async method6() {\n" +
+        "        return {\n" +
+        "            \"foo\": 1\n" +
+        "        }\n" +
+        "    }\n" +
+        "}"
+        const csharp =
+        "class t\n" +
+        "{\n" +
+        "    void method1()\n" +
+        "    {\n" +
+        "        Console.WriteLine(1);\n" +
+        "    }\n" +
+        "\n" +
+        "    float method2()\n" +
+        "    {\n" +
+        "        return 1;\n" +
+        "    }\n" +
+        "\n" +
+        "    string method3()\n" +
+        "    {\n" +
+        "        return \"1\";\n" +
+        "    }\n" +
+        "\n" +
+        "    bool method4()\n" +
+        "    {\n" +
+        "        return true;\n" +
+        "    }\n" +
+        "\n" +
+        "    async Task<string> method5()\n" +
+        "    {\n" +
+        "        return \"1\";\n" +
+        "    }\n" +
+        "\n" +
+        "    async Task<Dictionary<string, object>> method6()\n" +
+        "    {\n" +
+        "        return new Dictionary<string, object>() {\n" +
+        "            { \"foo\", 1 },\n" +
+        "        };\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        transpiler.setPhpAsyncTranspiling(true);
+        expect(output).toBe(csharp);
+    });
     // test('basic class declaration', () => {
     //     const ts =
     //     "class Test {\n" +
@@ -294,22 +439,6 @@ describe('csharp transpiling tests', () => {
     //     "\n" +
     //     "    function mainFeature($message) {\n" +
     //     "        var_dump('Hello! I\\'m inside main class:' . $message);\n" +
-    //     "    }\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
-    // test('basic class inheritance', () => {
-    //     const ts =
-    //     "class teste extends extended {\n" +
-    //     "    method() {\n" +
-    //     "        return 1;\n" +
-    //     "    }\n" +
-    //     "}";
-    //     const csharp =
-    //     "class teste extends extended {\n" +
-    //     "    function method() {\n" +
-    //     "        return 1;\n" +
     //     "    }\n" +
     //     "}"
     //     const output = transpiler.transpileCSharp(ts).content;

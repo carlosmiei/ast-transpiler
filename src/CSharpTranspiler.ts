@@ -11,9 +11,11 @@ const parserConfig = {
     'METHOD_TOKEN': '',
     'PROPERTY_ASSIGNMENT_OPEN': '{',
     'PROPERTY_ASSIGNMENT_CLOSE': '}',
+    'SUPER_TOKEN': 'base',
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
+    
     constructor(config = {}) {
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
         
@@ -31,11 +33,11 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     initConfig() {
         this.LeftPropertyAccessReplacements = {
-            'this': '$this',
+            // 'this': '$this',
         };
 
         this.RightPropertyAccessReplacements = {
-            'push': 'append', // list method
+            'push': 'Add', // list method
             'indexOf': 'IndexOf', // list method
             'toUpperCase': 'ToUpper',
             'toLowerCase': 'ToLower',
@@ -59,6 +61,11 @@ export class CSharpTranspiler extends BaseTranspiler {
         this.CallExpressionReplacements = {
             "parseInt": "Int32.Parse",
             "parseFloat": "float.Parse",
+        };
+
+        this.ReservedKeywordsReplacements = {
+            'params': 'parameters',
+            'base': 'bs'
         };
     }
 
@@ -216,9 +223,10 @@ export class CSharpTranspiler extends BaseTranspiler {
                 } else {
                     firstStatement = defaultInitializers + firstStatement;
                 }
-            }
+            } 
             const blockOpen = this.getBlockOpen(identation);
             const blockClose = this.getBlockClose(identation);
+            firstStatement = remainingString.length > 0 ? firstStatement + "\n" : firstStatement;
             return blockOpen + firstStatement + remainingString + blockClose;
         }
 

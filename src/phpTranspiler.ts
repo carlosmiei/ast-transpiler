@@ -35,7 +35,8 @@ const parserConfig = {
     'SPACE_DEFAULT_PARAM': ' ',
     'EXCLAMATION_EQUALS_EQUALS_TOKEN': '!==',
     'EQUALS_EQUALS_EQUALS_TOKEN': '===',
-    'STRING_QUOTE_TOKEN': '\''
+    'STRING_QUOTE_TOKEN': '\'',
+    'EXTENDS_TOKEN': 'extends',
 };
 
 export class PhpTranspiler extends BaseTranspiler {

@@ -45,7 +45,7 @@ class BaseTranspiler {
     THROW_TOKEN = "throw";
     AWAIT_TOKEN = "await";
     STATIC_TOKEN = "static";
-    EXTENDS_TOKEN = "extends";
+    EXTENDS_TOKEN = ":";
     NOT_TOKEN = "!";
     SUPER_TOKEN = "super";
     PROPERTY_ACCESS_TOKEN = ".";
@@ -92,6 +92,7 @@ class BaseTranspiler {
     OBJECT_KEYWORD = "Dictionary<string, object>";
     INTEGER_KEYWORD = "int";
     DEFAULT_RETURN_TYPE = "object";
+    DEFAULT_PARAMETER_TYPE = "object";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -104,6 +105,7 @@ class BaseTranspiler {
     StringLiteralReplacements = {};
 
     CallExpressionReplacements = {};
+    ReservedKeywordsReplacements = {};
     PropertyAccessRequiresParenthesisRemoval = [];
 
     FuncModifiers = {};
@@ -247,7 +249,11 @@ class BaseTranspiler {
     }
 
     printIdentifier(node) {
-        const idValue = node.text ?? node.escapedText;
+        let idValue = node.text ?? node.escapedText;
+
+        if (this.ReservedKeywordsReplacements[idValue]) {
+            idValue = this.ReservedKeywordsReplacements[idValue];
+        }
 
         if (idValue === "undefined") {
             return this.UNDEFINED_TOKEN;
@@ -505,24 +511,33 @@ class BaseTranspiler {
         if (type.flags === ts.TypeFlags.String) {
             return this.STRING_KEYWORD;
         }
-        if (type.flags === ts.TypeFlags.Boolean) {
-            return this.BOOLEAN_KEYWORD;
-        }
+        // if (type.flags === ts.TypeFlags.Boolean) {
+        //     return this.BOOLEAN_KEYWORD;
+        // }
 
         // check for array or object
 
-        if (type?.symbol.escapedName === 'Array') {
+        if (type?.symbol?.escapedName === 'Array') {
             return this.ARRAY_KEYWORD;
         }
-        if (type?.symbol.escapedName === '__object') {
+        if (type?.symbol?.escapedName === '__object') {
             return this.OBJECT_KEYWORD;
         }
 
         // check for promise type
 
-        if (type?.symbol.escapedName === 'Promise') {
+        if (type?.symbol?.escapedName === 'Promise') {
                 return this.PROMISE_TYPE_KEYWORD;
             }
+
+        // check this out not sure about this
+        if (type?.intrinsicName === 'object') {
+            return this.OBJECT_KEYWORD;
+        }   
+        if (type?.intrinsicName === 'boolean') {
+            return this.BOOLEAN_KEYWORD;
+        }   
+
         return undefined;
     }
 
@@ -560,7 +575,9 @@ class BaseTranspiler {
 
         const typeText = this.getType(node);
         if (typeText === undefined) {
-            throw new FunctionReturnTypeError("Parameter type is not supported or undefined");
+            // throw new FunctionReturnTypeError("Parameter type is not supported or undefined");
+            Logger.warning("Parameter type not found, will default to: " + this.DEFAULT_PARAMETER_TYPE);
+            return this.DEFAULT_PARAMETER_TYPE;
         }
         return typeText;
 
@@ -780,7 +797,7 @@ class BaseTranspiler {
         const classOpening = this.getBlockOpen(identation);
         if (heritageClauses !== undefined) {
             const classExtends = heritageClauses[0].types[0].expression.escapedText;
-            classInit = this.getIden(identation) + "class " + className + " extends " + classExtends + classOpening;
+            classInit = this.getIden(identation) + "class " + className + " " + this.EXTENDS_TOKEN + " " + classExtends + classOpening;
         } else {
             classInit = this.getIden(identation) + "class " + className + classOpening;
         }
