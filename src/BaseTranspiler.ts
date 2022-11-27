@@ -1029,6 +1029,12 @@ class BaseTranspiler {
         if (this.isCJSModuleExportsExpressionStatement(node)) {
             return ""; // remove module.exports = ...
         }
+        const exprStm = this.printNode(node.expression, identation);
+
+        // skip empty statements
+        if (exprStm.length === 0) {
+            return "";
+        }
         const expStatement = this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
         return this.printNodeCommentsIfAny(node, identation, expStatement);
     }

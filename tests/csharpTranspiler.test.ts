@@ -159,74 +159,6 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
-    // test('basic identation check [nested objects]', () => {
-    //     const ts =
-    //     "const x = {\n" +
-    //     "    'world': {\n" +
-    //     "        'hello': {\n" +
-    //     "            'foo': 'bar'\n" +
-    //     "        }\n" +
-    //     "    }\n" +
-    //     "}"
-    //     const csharp =
-    //     "$x = array(\n" +
-    //     "    'world' => array(\n" +
-    //     "        'hello' => array(\n" +
-    //     "            'foo' => 'bar',\n" +
-    //     "        ),\n" +
-    //     "    ),\n" +
-    //     ");"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
-    // test('basic if statement', () => {
-    //     const ts =
-    //     "if (1) {\n" +
-    //     "    const x = 1;\n" +
-    //     "}"
-    //     const csharp =
-    //     "if (1) {\n" +
-    //     "    $x = 1;\n" +
-    //     "}" 
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
-    // test('basic if else statement', () => {
-    //     const ts =
-    //     "if (1) {\n" +
-    //     "    const x = 1;\n" +
-    //     "} else {\n" +
-    //     "    const x = 2;\n" +
-    //     "}";
-    //     const csharp =
-    //     "if (1) {\n" +
-    //     "    $x = 1;\n" +
-    //     "} else {\n" +
-    //     "    $x = 2;\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
-    // test('basic if-elseif-else statement', () => {
-    //     const ts =
-    //     "if (1) {\n" +
-    //     "    const x = 1;\n" +
-    //     "} else if (2) {\n" +
-    //     "    const x = 2;\n" +
-    //     "} else {\n" +
-    //     "    const x = 3;\n" +
-    //     "}"
-    //     const csharp =
-    //     "if (1) {\n" +
-    //     "    $x = 1;\n" +
-    //     "} elseif (2) {\n" +
-    //     "    $x = 2;\n" +
-    //     "} else {\n" +
-    //     "    $x = 3;\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
     test('basic async function declaration [no args]', () => {
         const ts =
         "class t {\n" +
@@ -407,75 +339,42 @@ describe('csharp transpiling tests', () => {
         transpiler.setPhpAsyncTranspiling(true);
         expect(output).toBe(csharp);
     });
-    // test('basic class declaration', () => {
-    //     const ts =
-    //     "class Test {\n" +
-    //     "    describe() {\n" +
-    //     "        return \"foo\";\n" +
-    //     "    }\n" +
-    //     "}\n" 
-    //     const csharp =
-    //     "class Test {\n" +
-    //     "    function describe() {\n" +
-    //     "        return 'foo';\n" +
-    //     "    }\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
-    // test('basic class declaration with props', () => {
-    //     const ts = 
-    //     "class MyClass {\n" +
-    //     "    public static x: number = 10;\n" +
-    //     "    public static y: string = \"test\";\n" +
-    //     "    mainFeature(message) {\n" +
-    //     "        console.log(\"Hello! I'm inside main class:\" + message)\n" +
-    //     "    }\n" +
-    //     "}"
-    //     const csharp =
-    //     "class MyClass {\n" +
-    //     "    public static $x = 10;\n" +
-    //     "    public static $y = 'test';\n" +
-    //     "\n" +
-    //     "    function mainFeature($message) {\n" +
-    //     "        var_dump('Hello! I\\'m inside main class:' . $message);\n" +
-    //     "    }\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
-    // test('basic class with constructor', () => {
-    //     const ts =
-    //     "class teste extends extended {\n" +
-    //     "    constructor(x) {\n" +
-    //     "        super(x);\n" +
-    //     "    }\n" +
-    //     "}" 
-    //     const csharp =
-    //     "class teste extends extended {\n" +
-    //     "    function __construct($x) {\n" +
-    //     "        parent::__construct($x);\n" +
-    //     "    }\n" +
-    //     "}"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
-    // test('basic dictonary', () => {
-    //     const ts =
-    //     "const types = {\n" +
-    //     "    'limit': 'limit',\n" +
-    //     "    'market': 'market',\n" +
-    //     "    'margin': 'market',\n" +
-    //     "}\n" 
-    //     const csharp =
-    //     "$types = array(\n" +
-    //     "    'limit' => 'limit',\n" +
-    //     "    'market' => 'market',\n" +
-    //     "    'margin' => 'market',\n" +
-    //     ");"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // });
+    test('basic class with constructor', () => {
+        const ts =
+        "class teste extends Test {\n" +
+        "    constructor(config = {}) {\n" +
+        "        console.log('teste');\n" +
+        "        super(config)\n" +
+        "    }\n" +
+        "}"
+        const csharp =
+        "class teste : Test\n" +
+        "{\n" +
+        "    teste(Dictionary<string, object> config = null) : base(config)\n" +
+        "    {\n" +
+        "        config ??= new Dictionary<string, object>();\n" +
+        "        Console.WriteLine(\"teste\");\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
+    test('basic dictonary', () => {
+        const ts =
+        "const types = {\n" +
+        "    'limit': 'limit',\n" +
+        "    'market': 'market',\n" +
+        "    'margin': 'margin',\n" +
+        "}\n" 
+        const csharp =
+        "var types = new Dictionary<string, object>() {\n" +
+        "    { \"limit\", \"limit\" },\n" +
+        "    { \"market\", \"market\" },\n" +
+        "    { \"margin\", \"margin\" },\n" +
+        "};"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     test('basic binary expressions', () => {
         const ts =
         "const a = 1 + 1;\n" +
@@ -552,32 +451,34 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     })
-    // test('basic math functions', () => {
-    //     const ts =
-    //     "const ceil = Math.ceil (num);\n" +
-    //     "const a = Math.min (0, 5);\n" +
-    //     "const b = Math.max (0, 5);\n" +
-    //     "const c = parseFloat ('1.3');\n" +
-    //     "const d = parseInt ('1.3');\n" +
-    //     "const e = Number.MAX_SAFE_INTEGER;\n" +
-    //     "const f = Math.abs (-2);\n" +
-    //     "const g = Math.pow (1, 2);\n" +
-    //     "const h = Math.round (5);\n" +
-    //     "const i = Math.floor (5.5);\n";
-    //     const csharp =
-    //     "$ceil = (int) ceil($num);\n" +
-    //     "$a = min(0, 5);\n" +
-    //     "$b = max(0, 5);\n" +
-    //     "$c = floatval('1.3');\n" +
-    //     "$d = intval('1.3');\n" +
-    //     "$e = PHP_INT_MAX;\n" +
-    //     "$f = abs(-2);\n" +
-    //     "$g = pow(1, 2);\n" +
-    //     "$h = (int) round(5);\n" +
-    //     "$i = (int) floor(5.5);"
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // })
+    test('basic math functions', () => {
+        const ts =
+        "const num = 5\n" + 
+        "const ceil = Math.ceil (num);\n" +
+        "const a = Math.min (0, 5);\n" +
+        "const b = Math.max (0, 5);\n" +
+        "const c = parseFloat ('1.3');\n" +
+        "const d = parseInt ('1.3');\n" +
+        "const e = Number.MAX_SAFE_INTEGER;\n" +
+        "const f = Math.abs (-2);\n" +
+        "const g = Math.pow (1, 2);\n" +
+        "const h = Math.round (5);\n" +
+        "const i = Math.floor (5.5);\n";
+        const csharp =
+        "var num = 5;\n" +
+        "var ceil = Math.Ceiling((double)num);\n" +
+        "var a = Math.Min(0, 5);\n" +
+        "var b = Math.Max(0, 5);\n" +
+        "var c = float.Parse(\"1.3\");\n" +
+        "var d = Int32.Parse(\"1.3\");\n" +
+        "var e = Int32.MaxValue;\n" +
+        "var f = Math.Abs(-2);\n" +
+        "var g = Math.Pow(1, 2);\n" +
+        "var h = Math.Round((double)5);\n" +
+        "var i = Math.Floor(5.5);"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
     // test('basic json methods', () => {
     //     const ts =
     //     "const j = JSON.stringify ({ 'a': 1, 'b': 2 });\n" +
@@ -611,28 +512,28 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     })
-    // test('basic string methods', () => {
-    //     const ts =
-    //     "let a = 'test';\n" +
-    //     "const w = a.toString();\n" + 
-    //     "a+= \"mundo\"\n" +
-    //     "const t = a.split (',');\n" +
-    //     "const b = a.length;\n" +
-    //     "const c = a.indexOf ('t');\n" +
-    //     "const d = a.toUpperCase ();\n" +
-    //     "const e = a.toLowerCase ();";
-    //     const csharp =
-    //     "$a = 'test';\n" +
-    //     "$w = (string) $a;\n" +
-    //     "$a .= 'mundo';\n" +
-    //     "$t = explode(',', $a);\n" +
-    //     "$b = strlen($a);\n" +
-    //     "$c = mb_strpos($a, 't');\n" +
-    //     "$d = strtoupper($a);\n" +
-    //     "$e = strtolower($a);";
-    //     const output = transpiler.transpileCSharp(ts).content;
-    //     expect(output).toBe(csharp);
-    // })
+    test('basic string methods', () => {
+        const ts =
+        "let a = \"test\";\n" +
+        "const w = a.toString();\n" +
+        "a+= \"mundo\";\n" +
+        "const t = a.split(\",\");\n" +
+        "const b = a.length;\n" +
+        "const c = a.indexOf(\"t\");\n" +
+        "const d = a.toLowerCase();\n" +
+        "const e = a.toUpperCase();"
+        const csharp =
+        "var a = \"test\";\n" +
+        "var w = a.ToString();\n" +
+        "a += \"mundo\";\n" +
+        "var t = a.Split(\",\").ToList<string>();\n" +
+        "var b = a.Length;\n" +
+        "var c = a.IndexOf(\"t\");\n" +
+        "var d = a.ToLower();\n" +
+        "var e = a.ToUpper();"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
     // test('basic array manipulation', () => {
     //     const ts =
     //     "const myList = [1, 2, 3];\n" +

@@ -12,6 +12,7 @@ const parserConfig = {
     'PROPERTY_ASSIGNMENT_OPEN': '{',
     'PROPERTY_ASSIGNMENT_CLOSE': '}',
     'SUPER_TOKEN': 'base',
+    'SUPER_CALL_TOKEN': 'base'
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
@@ -51,8 +52,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             'Math.max': 'Math.Max',
             'Math.log': 'Math.Log',
             'Math.abs': 'Math.Abs',
-            'Math.ceil':  'Math.Ceil',
-            'Math.round': 'Math.Round',
+            // 'Math.ceil':  'Math.Ceiling', // need cast
+            // 'Math.round': 'Math.Round', // need to cast
             'Math.floor': 'Math.Floor',
             'Math.pow': 'Math.Pow',
             'Promise.all': 'Task.WhenAll',
@@ -73,6 +74,46 @@ export class CSharpTranspiler extends BaseTranspiler {
         return "\n" + this.getIden(identation)  + this.BLOCK_OPENING_TOKEN + "\n";
     }
 
+    printSuperCallInsideConstructor(node, identation) {
+        return ""; // csharp does not need super call inside constructor
+    }
+
+    printConstructorDeclaration (node, identation) {
+        const classNode = node.parent;
+        const className = this.printNode(classNode.name, 0);
+        const args = this.printMethodParameters(node);
+        const constructorBody = this.printFunctionBody(node, identation);
+
+        // find super call inside constructor and extract params
+        let superCallParams = '';
+        let hasSuperCall = false;
+        node.body?.statements.forEach(statement => {
+            if (ts.isExpressionStatement(statement)) {
+                const expression = statement.expression;
+                if (ts.isCallExpression(expression)) {
+                    const expressionText = expression.expression.getText().trim();
+                    if (expressionText === 'super') {
+                        hasSuperCall = true;
+                        superCallParams = expression.arguments.map((a) => {
+                            return this.printNode(a, identation).trim();
+                        }).join(", ");
+                    }
+                }
+            }
+        });
+
+        if (hasSuperCall) {
+            return this.getIden(identation) + className +
+                `(${args}) : ${this.SUPER_CALL_TOKEN}(${superCallParams})` +
+                constructorBody;
+        }
+        
+        return this.getIden(identation) +
+                className + 
+                "(" + args + ")" + 
+                constructorBody;
+    }
+
     printOutOfOrderCallExpressionIfAny(node, identation) {
         if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
             const expressionText = node.expression.getText().trim();
@@ -88,6 +129,10 @@ export class CSharpTranspiler extends BaseTranspiler {
                         return `new List<string>(${parsedArg}.Keys)`;
                     case "Object.values":
                         return `new List<object>(${parsedArg}.Values)`;
+                    case "Math.round":
+                        return `Math.Round((double)${parsedArg})`;
+                    case "Math.ceil":
+                        return `Math.Ceiling((double)${parsedArg})`;
                 }
             }
             // const transformedProp = this.transformPropertyInsideCallExpressionIfNeeded(node.expression);
