@@ -218,7 +218,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         switch(rightSide) {
             case 'length':
                 const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
-                this.warnIfAnyType(type.flags, leftSide, "length");
+                this.warnIfAnyType(node, type.flags, leftSide, "length");
                 rawExpression = this.isStringType(type.flags) ? `${leftSide}.Length` : `${leftSide}.Count`;
                 break;
         }

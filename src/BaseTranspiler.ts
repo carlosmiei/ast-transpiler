@@ -186,6 +186,12 @@ class BaseTranspiler {
         this.StringLiteralReplacements = Object.assign ({}, this.StringLiteralReplacements, config['StringLiteralReplacements'] ?? {});
     }
 
+    getLineAndCharacterOfNode(node): [number,number] {
+        const { line, character } = 
+        global.src.getLineAndCharacterOfPosition(node.getStart());
+        return [line + 1,character];
+    }
+
     isComment(line: string){
         line = line.trim();
         return line.startsWith("//") || line.startsWith("/*") || line.startsWith("*");
@@ -199,9 +205,11 @@ class BaseTranspiler {
         return flags === ts.TypeFlags.Any;
     }
 
-    warnIfAnyType(flags, variable, target) {
+    warnIfAnyType(node, flags, variable, target) {
+
         if (this.isAnyType(flags)) {
-            Logger.warning(`${variable} has any type, ${target} might be incorrectly transpiled`);
+            const [line, character] = this.getLineAndCharacterOfNode(node);
+            Logger.warning(`Line: ${line} char: ${character}: ${variable} has any type, ${target} might be incorrectly transpiled`);
         }
     }
 
