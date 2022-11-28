@@ -94,6 +94,9 @@ class BaseTranspiler {
     DEFAULT_RETURN_TYPE = "object";
     DEFAULT_PARAMETER_TYPE = "object";
 
+    FALSY_WRAPPER_OPEN = "";
+    FALSY_WRAPPER_CLOSE = "";
+
     SupportedKindNames = {};
     PostFixOperators = {};
     PrefixFixOperators = {};
@@ -114,12 +117,16 @@ class BaseTranspiler {
     asyncTranspiling;
     requiresReturnType;
     requiresParameterType;
+    supportsFalsyOrTruthyValues;
+    id;
 
     constructor(config) {
         Object.assign (this, (config['parser'] || {}));
+        this.id = "base";
         this.uncamelcaseIdentifiers = false;
         this.requiresReturnType = false;
         this.requiresParameterType = false;
+        this.supportsFalsyOrTruthyValues = true;
         this.initOperators();
     }
 
@@ -206,11 +213,15 @@ class BaseTranspiler {
     }
 
     warnIfAnyType(node, flags, variable, target) {
-
         if (this.isAnyType(flags)) {
             const [line, character] = this.getLineAndCharacterOfNode(node);
-            Logger.warning(`Line: ${line} char: ${character}: ${variable} has any type, ${target} might be incorrectly transpiled`);
+            Logger.warning(`[${this.id}] Line: ${line} char: ${character}: ${variable} has any type, ${target} might be incorrectly transpiled`);
         }
+    }
+
+    warn(node, target, message) {
+        const [line, character] = this.getLineAndCharacterOfNode(node);
+        Logger.warning(`[${this.id}] Line: ${line} char: ${character}: ${target} : ${message}`);
     }
 
     isAsyncFunction(node) {
@@ -922,8 +933,24 @@ class BaseTranspiler {
         return expressionAsString + "[" + argumentAsString + "]";
     }
 
+    printCondition (node, identation) {
+
+        let expression = this.printNode(node, 0);
+        // wrap falsy/truty expressions if needed
+        if (!this.supportsFalsyOrTruthyValues && node.kind !== ts.SyntaxKind.BinaryExpression) {
+            const typeFlags = global.checker.getTypeAtLocation(node).flags;
+            if (typeFlags !== ts.TypeFlags.BooleanLiteral && typeFlags  !== ts.TypeFlags.Boolean) {
+                this.warn(node,expression, "Falsy/Truthy expressions are not supported by this language, so adding the defined wrapper!");
+                expression = `${this.FALSY_WRAPPER_OPEN}${expression}${this.FALSY_WRAPPER_CLOSE}`;
+            }
+        }
+        return expression; // stub to override
+    }
+
+
     printIfStatement(node, identation) {
-        const expression = this.printNode(node.expression, 0);
+
+        const expression = this.printCondition(node.expression, identation);
 
         const elseExists = node.elseStatement !== undefined;
         const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
@@ -998,7 +1025,7 @@ class BaseTranspiler {
     }
 
     printConditionalExpression(node, identation) {
-        const condition = this.printNode(node.condition, 0);
+        const condition = this.printCondition(node.condition, identation);
         const whenTrue = this.printNode(node.whenTrue, 0);
         const whenFalse = this.printNode(node.whenFalse, 0);
         

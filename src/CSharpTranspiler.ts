@@ -12,7 +12,9 @@ const parserConfig = {
     'PROPERTY_ASSIGNMENT_OPEN': '{',
     'PROPERTY_ASSIGNMENT_CLOSE': '}',
     'SUPER_TOKEN': 'base',
-    'SUPER_CALL_TOKEN': 'base'
+    'SUPER_CALL_TOKEN': 'base',
+    'FALSY_WRAPPER_OPEN': 'isTrue(',
+    'FALSY_WRAPPER_CLOSE': ')',
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
@@ -25,6 +27,9 @@ export class CSharpTranspiler extends BaseTranspiler {
         this.requiresParameterType = true;
         this.requiresReturnType = true;
         this.asyncTranspiling = true;
+        this.supportsFalsyOrTruthyValues = false;
+        this.id = "C#";
+
 
         this.initConfig();
 

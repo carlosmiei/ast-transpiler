@@ -50,7 +50,7 @@ export class PhpTranspiler extends BaseTranspiler {
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
         
         super(config);
-        
+        this.id = "php";
         this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
 

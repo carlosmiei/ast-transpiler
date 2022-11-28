@@ -44,6 +44,7 @@ export class PythonTranspiler extends BaseTranspiler {
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
 
         super(config);
+        this.id = "python";
         
         this.initConfig();
         this.asyncTranspiling = config['async'] ?? true;
