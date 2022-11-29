@@ -407,6 +407,29 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     })
+    test('Should wrap falsy/truthy expressions [with the defined wrapper]', () => {
+        const ts =
+        "const a = \"hi\";\n" +
+        "const b = false;\n" +
+        "const c =  a && b;\n" +
+        "const d = !a && !b;\n" +
+        "const e = (a || !b);\n" +
+        "if (a) {\n" +
+        "    const f = 1;\n" +
+        "}"
+        const csharp =
+        "var a = \"hi\";\n" +
+        "var b = false;\n" +
+        "var c = isTrue(a) && b;\n" +
+        "var d = !isTrue(a) && !b;\n" +
+        "var e = (isTrue(a) || !b);\n" +
+        "if (isTrue(a))\n" +
+        "{\n" +
+        "    var f = 1;\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
     test('basic element access expression', () => {
         const ts =
         "const x = {};\n" +
