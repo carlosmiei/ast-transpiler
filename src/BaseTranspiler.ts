@@ -319,9 +319,9 @@ class BaseTranspiler {
             return this.printInstanceOfExpression(node, identation);
         }
 
-        const leftVar = this.printNode(left, 0);
+        const leftVar = this.printNode(left, 0); // check falsy/truthy values if needed
 
-        const rightVar = this.printNode(right, identation);
+        const rightVar = this.printNode(right, identation); // check falsy/truthy values if needed
 
         let operator = this.SupportedKindNames[operatorToken.kind];
 
@@ -884,6 +884,10 @@ class BaseTranspiler {
 
     printPrefixUnaryExpression(node, identation) {
         const {operand, operator} = node;
+        if (operator === ts.SyntaxKind.ExclamationToken) {
+            // not branch check falsy/turthy values if needed;
+            return this.getIden(identation) + this.PrefixFixOperators[operator] + this.printCondition(node.operand, 0);
+        }
         return this.getIden(identation) + this.PrefixFixOperators[operator] + this.printNode(operand, 0); 
     }
 
@@ -943,22 +947,29 @@ class BaseTranspiler {
 
     printCondition (node, identation) {
 
+        // can be called from ifs or conditional expressions so might contain the ! operator
+        if (node.kind  === ts.SyntaxKind.PrefixUnaryExpression && node.operator === ts.SyntaxKind.ExclamationToken) {
+            return this.printPrefixUnaryExpression(node, identation); // avoid infinite recursion
+        }
+
         let expression = this.printNode(node, 0);
         // wrap falsy/truty expressions if needed
         if (!this.supportsFalsyOrTruthyValues && node.kind !== ts.SyntaxKind.BinaryExpression) {
+
             const typeFlags = global.checker.getTypeAtLocation(node).flags;
             if (typeFlags !== ts.TypeFlags.BooleanLiteral && typeFlags  !== ts.TypeFlags.Boolean) {
+                expression = this.printNode(node, 0);
                 this.warn(node, node.getText(), "Falsy/Truthy expressions are not supported by this language, so adding the defined wrapper!");
                 expression = `${this.FALSY_WRAPPER_OPEN}${expression}${this.FALSY_WRAPPER_CLOSE}`;
             }
         }
-        return expression; // stub to override
+        return `${this.getIden(identation)}${expression}`; // stub to override
     }
 
 
     printIfStatement(node, identation) {
 
-        const expression = this.printCondition(node.expression, identation);
+        const expression = this.printCondition(node.expression, 0);
 
         const elseExists = node.elseStatement !== undefined;
         const isElseIf = node.parent.kind === ts.SyntaxKind.IfStatement;
