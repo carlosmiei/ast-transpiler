@@ -661,7 +661,7 @@ class BaseTranspiler {
         const funcBody = this.printFunctionBody(node, identation);
         functionDef += funcBody;
 
-        return functionDef;
+        return this.printNodeCommentsIfAny(node, identation, functionDef);
     }
     
     printMethodParameters(node) {
@@ -692,8 +692,7 @@ class BaseTranspiler {
             // + SupportedKindNames[returnType.kind]
             // +" {\n";
 
-        return methodDef;
-
+        return this.printNodeCommentsIfAny(node, identation, methodDef);
     }
 
     printMethodDeclaration(node, identation) {
