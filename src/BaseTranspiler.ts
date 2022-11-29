@@ -319,11 +319,20 @@ class BaseTranspiler {
             return this.printInstanceOfExpression(node, identation);
         }
 
-        const leftVar = this.printNode(left, 0); // check falsy/truthy values if needed
-
-        const rightVar = this.printNode(right, identation); // check falsy/truthy values if needed
-
         let operator = this.SupportedKindNames[operatorToken.kind];
+
+
+        let leftVar = undefined;
+        let rightVar = undefined;
+
+        // check if boolean operators || and && because of the falsy values
+        if (operatorToken.kind === ts.SyntaxKind.BarBarToken || operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) {
+            leftVar = this.printCondition(left, 0);
+            rightVar = this.printCondition(right, identation);
+        }  else {
+            leftVar = this.printNode(left, 0);
+            rightVar = this.printNode(right, identation);
+        }
 
         const customOperator = this.getCustomOperatorIfAny(left, right, operatorToken);
 
@@ -947,14 +956,19 @@ class BaseTranspiler {
 
     printCondition (node, identation) {
 
-        // can be called from ifs or conditional expressions so might contain the ! operator
+        if (this.supportsFalsyOrTruthyValues) {
+            // languages like php or python do not need this extra logic
+            return this.printNode(node, identation);
+        }
+
+        // can be called from ifs or conditional expressions or binary expressions so might contain the ! operator
         if (node.kind  === ts.SyntaxKind.PrefixUnaryExpression && node.operator === ts.SyntaxKind.ExclamationToken) {
             return this.printPrefixUnaryExpression(node, identation); // avoid infinite recursion
         }
 
         let expression = this.printNode(node, 0);
         // wrap falsy/truty expressions if needed
-        if (!this.supportsFalsyOrTruthyValues && node.kind !== ts.SyntaxKind.BinaryExpression) {
+        if (node.kind !== ts.SyntaxKind.BinaryExpression && node.kind !== ts.SyntaxKind.ParenthesizedExpression) {
 
             const typeFlags = global.checker.getTypeAtLocation(node).flags;
             if (typeFlags !== ts.TypeFlags.BooleanLiteral && typeFlags  !== ts.TypeFlags.Boolean) {
