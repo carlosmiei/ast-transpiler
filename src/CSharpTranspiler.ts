@@ -245,8 +245,8 @@ export class CSharpTranspiler extends BaseTranspiler {
         const initParams = [];
         if (funcParams.length > 0) {
             const body = node.body.statements;
-            const first = body[0];
-            const remaining = body.slice(1);
+            const first = body.length > 0 ? body[0] : [];
+            const remaining = body.lenght > 0 ? body.slice(1): [];
             let firstStatement = this.printNode(first, identation + 1);
 
             const remainingString = remaining.map((statement) => this.printNode(statement, identation + 1)).join("\n");
