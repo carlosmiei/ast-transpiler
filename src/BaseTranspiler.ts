@@ -1243,15 +1243,28 @@ class BaseTranspiler {
             const importClause = node.importClause;
             const namedImports = importClause.namedBindings;
             if (namedImports) {
-                namedImports.elements.forEach((elem) => {
-                    const name = elem.name.text;
+                if (namedImports.elements) {
+                    // named imports
+                    namedImports.elements.forEach((elem) => {
+                        const name = elem.name.text;
+                        const fileImport: IFileImport = {
+                            name,
+                            path: importPath,
+                            isDefault: false
+                        };
+                        result.push(fileImport);
+                    });
+                } else {
+                    // namespace import (import * as name from 'path')
+                    const name = namedImports.name.escapedText;
                     const fileImport: IFileImport = {
                         name,
                         path: importPath,
                         isDefault: false
                     };
                     result.push(fileImport);
-                });
+                }
+
             } else {
                 // default import
                 const name = importClause.name.text;

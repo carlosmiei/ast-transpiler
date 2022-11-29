@@ -49,9 +49,11 @@ describe('file imports tests', () => {
         const output = transpiler.getFileImports(ts);
         expect(output).toMatchObject(expected);
     });
-    test('default and named imports [esm]', () => {
+    test('default and named imports and namespace import [esm]', () => {
         const ts = "import {o,a} from 'otherfile.js'\n" + 
+        "import * as functions from 'functions.js'\n" +
         "import b from 'otherfile.js'"
+
         const expected: IFileImport[] = [
             {
                 "name": "o",
@@ -61,6 +63,11 @@ describe('file imports tests', () => {
             {
                 "name": "a",
                 "path": "otherfile.js",
+                "isDefault": false,
+            },
+            {
+                "name": "functions",
+                "path": "functions.js",
                 "isDefault": false,
             },
             {
