@@ -785,6 +785,34 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     })
+    test('should keep function comments', () => {
+        const ts =
+        "class t {\n" +
+        "    // this is a comment\n" +
+        "    parseToInt (number: string) {\n" +
+        "        // Solve Common parseInt misuse ex: parseInt ((since / 1000).toString ())\n" +
+        "        // using a number as parameter which is not valid in ts\n" +
+        "        const stringifiedNumber = number.toString ();\n" +
+        "        const convertedNumber = parseFloat (stringifiedNumber) as any;\n" +
+        "        return parseInt (convertedNumber);\n" +
+        "    }\n" +
+        "}"
+        const csharp =
+        "class t\n" +
+        "{\n" +
+        "    // this is a comment\n" +
+        "    float parseToInt(string number)\n" +
+        "    {\n" +
+        "        // Solve Common parseInt misuse ex: parseInt ((since / 1000).toString ())\n" +
+        "        // using a number as parameter which is not valid in ts\n" +
+        "        var stringifiedNumber = number.ToString();\n" +
+        "        var convertedNumber = float.Parse(stringifiedNumber);\n" +
+        "        return Int32.Parse(convertedNumber);\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
     test('basic try-catch-block', () => {
         const ts =
         "try {\n" +
