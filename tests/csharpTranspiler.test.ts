@@ -13,7 +13,10 @@ beforeAll(() => {
         'verbose': false,
         'csharp': {
             'parser': {
-                'NUM_LINES_END_FILE': 0
+                'NUM_LINES_END_FILE': 0,
+                "ELEMENT_ACCESS_WRAPPER_OPEN": "getValue(",
+                "ELEMENT_ACCESS_WRAPPER_CLOSE": ")"
+
             }
         }
     }
@@ -437,6 +440,18 @@ describe('csharp transpiling tests', () => {
         const csharp =
         "var x = new Dictionary<string, object>() {};\n" +
         "x[\"teste\"] = 1;";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    })
+    test('should wrap right side of element access expression', () => {
+        const ts =
+        "const a = {};\n" +
+        "const b = a[\"teste\"]\n" +
+        "a[\"b\"] = a[\"teste\"];"
+        const csharp =
+        "var a = new Dictionary<string, object>() {};\n" +
+        "var b = getValue(a, \"teste\");\n" +
+        "a[\"b\"] = getValue(a, \"teste\");"
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     })

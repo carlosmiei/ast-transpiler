@@ -944,11 +944,29 @@ class BaseTranspiler {
         if (exception) {
             return exception;
         }
+
+        // when we want replace x['test'] with getValue(x, 'test') only when in the left side
+        // Examples:
+        // x["a"] = x["b"] : binary expression
+        // const a = x["b"] : variable declaration
+        const rightSideOfAssignment = node.parent?.right === node || node.parent?.initializer === node;
+        // to do; check nested accesses
+        // const newNode = node.parent;
+        // we need this loop because we might have x["t"]["test"]["key"]
+        // so the parent of the node might be another ElementAccessExpression and not the binary expression/variable declaration directly
+        // to do
+        // while (newNode !== undefined && newNode.kind !== ts.SyntaxKind.BinaryExpression) {
+        //     if (newNode.right === node) {
+        //         rightSideOfAssignment = true;
+        //         break;
+        //     }
+        //     newNode = newNode.parent;
+        // }
+
         const expressionAsString = this.printNode(expression, 0);
         const argumentAsString = this.printNode(argumentExpression, 0);
 
-        // when we want replace x['test'] with getValue(x, 'test')
-        if (this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
+        if (rightSideOfAssignment && this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
             return `${this.ELEMENT_ACCESS_WRAPPER_OPEN}${expressionAsString}, ${argumentAsString}${this.ELEMENT_ACCESS_WRAPPER_CLOSE}`;
         }
         return expressionAsString + "[" + argumentAsString + "]";
