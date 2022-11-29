@@ -71,7 +71,8 @@ export class CSharpTranspiler extends BaseTranspiler {
 
         this.ReservedKeywordsReplacements = {
             'params': 'parameters',
-            'base': 'bs'
+            'base': 'bs',
+            'internal': 'intern'
         };
     }
 

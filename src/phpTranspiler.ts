@@ -81,9 +81,12 @@ export class PhpTranspiler extends BaseTranspiler {
     transformIdentifier(identifier) {
 
         if (this.uncamelcaseIdentifiers) {
-            identifier = unCamelCase(identifier) ?? identifier;
+            identifier = this.unCamelCaseIfNeeded(identifier);
         }
-        return "$" + identifier;
+        if (!this.startsWithUpperCase(identifier)) {
+            return "$" + identifier; // avoid adding $ to constants, and classes
+        }
+        return identifier;
     }
 
     getCustomOperatorIfAny(left, right, operator) {
@@ -264,6 +267,12 @@ export class PhpTranspiler extends BaseTranspiler {
             if (typeOfExpression) {
                 return typeOfExpression;
             }
+        }
+
+        if (op === ts.SyntaxKind.InKeyword) {
+            const rightSide = this.printNode(node.right, 0);
+            const leftSide = this.printNode(node.left, 0);
+            return `${this.getIden(identation)}is_array(${rightSide}) && array_key_exists(${leftSide}, ${rightSide})`;
         }
 
         const prop = node?.left?.expression?.name?.text;

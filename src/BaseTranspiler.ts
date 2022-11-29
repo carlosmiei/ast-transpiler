@@ -97,6 +97,9 @@ class BaseTranspiler {
     FALSY_WRAPPER_OPEN = "";
     FALSY_WRAPPER_CLOSE = "";
 
+    ELEMENT_ACCESS_WRAPPER_OPEN = "";
+    ELEMENT_ACCESS_WRAPPER_CLOSE = "";
+
     SupportedKindNames = {};
     PostFixOperators = {};
     PrefixFixOperators = {};
@@ -595,7 +598,7 @@ class BaseTranspiler {
         const typeText = this.getType(node);
         if (typeText === undefined) {
             // throw new FunctionReturnTypeError("Parameter type is not supported or undefined");
-            Logger.warning("Parameter type not found, will default to: " + this.DEFAULT_PARAMETER_TYPE);
+            this.warn(node, node.getText(), "Parameter type not found, will default to: " + this.DEFAULT_PARAMETER_TYPE);
             return this.DEFAULT_PARAMETER_TYPE;
         }
         return typeText;
@@ -616,7 +619,7 @@ class BaseTranspiler {
             } else {
                 res = this.DEFAULT_RETURN_TYPE;
             }
-            Logger.warning("Function return type not found, will default to: " + res);
+            this.warn(node, node.name.getText(), "Function return type not found, will default to: " + res);
             return res;
         }
         return typeText;
@@ -930,6 +933,11 @@ class BaseTranspiler {
         }
         const expressionAsString = this.printNode(expression, 0);
         const argumentAsString = this.printNode(argumentExpression, 0);
+
+        // when we want replace x['test'] with getValue(x, 'test')
+        if (this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
+            return `${this.ELEMENT_ACCESS_WRAPPER_OPEN}${expressionAsString}, ${argumentAsString}${this.ELEMENT_ACCESS_WRAPPER_CLOSE}`;
+        }
         return expressionAsString + "[" + argumentAsString + "]";
     }
 
@@ -940,7 +948,7 @@ class BaseTranspiler {
         if (!this.supportsFalsyOrTruthyValues && node.kind !== ts.SyntaxKind.BinaryExpression) {
             const typeFlags = global.checker.getTypeAtLocation(node).flags;
             if (typeFlags !== ts.TypeFlags.BooleanLiteral && typeFlags  !== ts.TypeFlags.Boolean) {
-                this.warn(node,expression, "Falsy/Truthy expressions are not supported by this language, so adding the defined wrapper!");
+                this.warn(node, node.getText(), "Falsy/Truthy expressions are not supported by this language, so adding the defined wrapper!");
                 expression = `${this.FALSY_WRAPPER_OPEN}${expression}${this.FALSY_WRAPPER_CLOSE}`;
             }
         }

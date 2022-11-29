@@ -507,6 +507,7 @@ describe('php transpiling tests', () => {
     test('basic array manipulation', () => {
         const ts =
         "const myList = [1, 2, 3];\n" +
+        "const b = 1 in myList;\n" +
         "const y = myList.join (',')\n" +
         "const i = myList.indexOf(1);\n" +
         "const listLength = myList.length;\n" +
@@ -516,6 +517,7 @@ describe('php transpiling tests', () => {
         "myList.shift ();"
         const php =
         "$myList = [1, 2, 3];\n" +
+        "$b = is_array($myList) && array_key_exists(1, $myList);\n" +
         "$y = implode(',', $myList);\n" +
         "$i = array_search(1, $myList);\n" + 
         "$listLength = count($myList);\n" +
