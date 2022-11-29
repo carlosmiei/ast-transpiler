@@ -1129,8 +1129,11 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         modifiers = modifiers ? modifiers + " " : modifiers;
         const name = this.printNode(node.name, 0);
-        const initializer = this.printNode(node.initializer, 0);
-        return this.getIden(identation) + modifiers + name + " = " + initializer + this.LINE_TERMINATOR;
+        if (node.initializer) {
+            const initializer = this.printNode(node.initializer, 0);
+            return this.getIden(identation) + modifiers + name + " = " + initializer + this.LINE_TERMINATOR;
+        }
+        return this.getIden(identation) + modifiers + name + this.LINE_TERMINATOR;
     }
 
     printNode(node, identation = 0): string {
