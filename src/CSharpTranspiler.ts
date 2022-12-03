@@ -213,8 +213,26 @@ export class CSharpTranspiler extends BaseTranspiler {
             }
         }
 
-        // if (op === ts.SyntaxKind.EqualsToken && right?.escapedText === "undefined") {
-        // }
+        // handle: [x,d] = this.method()
+        if (op === ts.SyntaxKind.EqualsToken && left.kind === ts.SyntaxKind.ArrayLiteralExpression) {
+            const arrayBindingPatternElements = left.elements;
+            const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e, 0));
+            const syntheticName = parsedArrayBindingElements.join("") + "Variable";
+
+            let arrayBindingStatement = this.getIden(identation) + `var ${syntheticName} = ${this.printNode(right, 0)};\n`;
+
+            parsedArrayBindingElements.forEach((e, index) => {
+                const statement = this.getIden(identation) + `${e} = ${syntheticName}[${index}]`;
+                if (index < parsedArrayBindingElements.length - 1) {
+                    arrayBindingStatement += statement + ";\n";
+                } else {
+                    // printStatement adds the last ;
+                    arrayBindingStatement += statement;
+                }
+            });
+
+            return arrayBindingStatement;
+        }
 
         if (op === ts.SyntaxKind.InKeyword) {
             return `${this.getIden(identation)}((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey(${this.printNode(left, 0)})`;
