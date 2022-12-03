@@ -100,6 +100,9 @@ class BaseTranspiler {
     ELEMENT_ACCESS_WRAPPER_OPEN = "";
     ELEMENT_ACCESS_WRAPPER_CLOSE = "";
 
+    COMPARISON_WRAPPER_OPEN = "";
+    COMPARISON_WRAPPER_CLOSE = "";
+
     SupportedKindNames = {};
     PostFixOperators = {};
     PrefixFixOperators = {};
@@ -121,6 +124,7 @@ class BaseTranspiler {
     requiresReturnType;
     requiresParameterType;
     supportsFalsyOrTruthyValues;
+    requiresCallExpressionCast;
     id;
 
     constructor(config) {
@@ -130,6 +134,7 @@ class BaseTranspiler {
         this.requiresReturnType = false;
         this.requiresParameterType = false;
         this.supportsFalsyOrTruthyValues = true;
+        this.requiresCallExpressionCast = false;
         this.initOperators();
     }
 
@@ -325,6 +330,15 @@ class BaseTranspiler {
         let leftVar = undefined;
         let rightVar = undefined;
 
+        // c# wrapper
+        if (operatorToken.kind === ts.SyntaxKind.EqualsEqualsToken || operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken) {
+            if (this.COMPARISON_WRAPPER_OPEN) {
+                leftVar = this.printNode(left, 0);
+                rightVar = this.printNode(right, identation);
+                return this.getIden(identation) + `${this.COMPARISON_WRAPPER_OPEN}${leftVar}, ${rightVar}${this.COMPARISON_WRAPPER_CLOSE}`;
+            }
+        }
+
         // check if boolean operators || and && because of the falsy values
         if (operatorToken.kind === ts.SyntaxKind.BarBarToken || operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) {
             leftVar = this.printCondition(left, 0);
@@ -418,8 +432,14 @@ class BaseTranspiler {
         if (!this.asyncTranspiling) {
             modifiers = modifiers.filter(mod => mod.kind !== ts.SyntaxKind.AsyncKeyword);
         }
+        const res = modifiers.map(modifier => this.FuncModifiers[modifier.kind]).join(" ");
 
-        return modifiers.map(modifier => this.FuncModifiers[modifier.kind]).join(" ");
+        // // tmp hack
+        // if ("async" in res && res.length == 1) {
+        //     res.push("public");
+        // }
+
+        return res;
     }
 
     transformLeadingComment(comment) {
@@ -572,7 +592,7 @@ class BaseTranspiler {
         return undefined;
     }
 
-    getFunctionType(node){
+    getFunctionType(node, async = true){
         // use type checker to do it here
         const type = global.checker.getReturnTypeOfSignature(global.checker.getSignatureFromDeclaration(node));
 
@@ -588,7 +608,11 @@ class BaseTranspiler {
 
             const insideTypes = type.resolvedTypeArguments.map(type => this.getTypeFromRawType(type)).join(",");
             if (insideTypes.length > 0) {
-                return `${this.PROMISE_TYPE_KEYWORD}<${insideTypes}>`;
+                if (async) {
+                    return `${this.PROMISE_TYPE_KEYWORD}<${insideTypes}>`;
+                } else {
+                    return insideTypes;
+                }
             }
             return undefined;
         }
@@ -680,7 +704,7 @@ class BaseTranspiler {
         const parsedArgs = this.printMethodParameters(node);
 
         let modifiers = this.printModifiers(node);
-        modifiers = modifiers ? modifiers + " " : "";
+        modifiers = modifiers ? modifiers + " " : "public "; // tmp check this
 
         let returnType = this.printFunctionType(node);
         returnType = returnType ? returnType + " " : returnType;
@@ -761,16 +785,54 @@ class BaseTranspiler {
         return this.getIden(identation) + this.SUPER_CALL_TOKEN + "(" + parsedArgs + ")";
     }
 
+    isBuiltInFunctionCall(node) {
+        const symbol = global.checker.getSymbolAtLocation(node);
+        const isInLibFiles = symbol?.getDeclarations()
+                ?.some(s => s.getSourceFile().fileName.includes("/node_modules/typescript/lib/"))
+                ?? false;
+
+
+        return isInLibFiles;
+    }
+
+    getTypesFromCallExpressionParameters(node) {
+        const resolvedParams = global.checker.getResolvedSignature(node).parameters;
+        const parsedTypes = [];
+        resolvedParams.forEach((p) => {
+            const decl = p.declarations[0];
+            const type = global.checker.getTypeAtLocation(decl);
+            const parsedType = this.getTypeFromRawType(type);
+            parsedTypes.push(parsedType);
+        });
+        return parsedTypes;
+    }
+
     printCallExpression(node, identation) {
 
         const expression = node.expression;
 
         const args = node.arguments;
 
-        const parsedArgs = args.map((a) => {
-            return this.printNode(a, identation).trim();
-        }).join(", ");
-        
+        // const parsedArgs  = args.map((a) => {
+        //     return  this.printNode(a, identation).trim();
+        // }).join(", ");
+
+        let parsedArgs = "";
+        if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) {
+        const parsedTypes = this.getTypesFromCallExpressionParameters(node);
+        const tmpArgs = [];
+        args.forEach((arg, index) => {
+            const parsedType = parsedTypes[index];
+            const cast = parsedType ? `(${parsedType})` : '';
+            tmpArgs.push(cast + this.printNode(arg, identation).trim());
+        });
+            parsedArgs = tmpArgs.join(",");
+        } else {
+            parsedArgs = args.map((a) => {
+                return  this.printNode(a, identation).trim();
+            }).join(", ");
+        }
+
         const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
 
         const finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
@@ -948,7 +1010,9 @@ class BaseTranspiler {
         // Examples:
         // x["a"] = x["b"] : binary expression
         // const a = x["b"] : variable declaration
-        const rightSideOfAssignment = node.parent?.right === node || node.parent?.initializer === node;
+        const isLeftSideOfAssignment = node.parent?.kind === ts.SyntaxKind.BinaryExpression &&
+                            node.parent.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+                            node.parent?.left === node;
         // to do; check nested accesses
         // const newNode = node.parent;
         // we need this loop because we might have x["t"]["test"]["key"]
@@ -965,9 +1029,20 @@ class BaseTranspiler {
         const expressionAsString = this.printNode(expression, 0);
         const argumentAsString = this.printNode(argumentExpression, 0);
 
-        if (rightSideOfAssignment && this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
+        // c# only
+        if (!isLeftSideOfAssignment && this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
             return `${this.ELEMENT_ACCESS_WRAPPER_OPEN}${expressionAsString}, ${argumentAsString}${this.ELEMENT_ACCESS_WRAPPER_CLOSE}`;
         }
+        // cast order["test"] to ((Dictionariy<string, object>)order)["test"] or List<object>
+        if (isLeftSideOfAssignment && this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
+            const type = global.checker.getTypeAtLocation(argumentExpression);
+            const isString = this.isStringType(type.flags);
+            if (isString) {
+                return `((${this.OBJECT_KEYWORD})${expressionAsString})[${argumentAsString}]`;
+            }
+            return `((${this.ARRAY_KEYWORD})${expressionAsString})[${argumentAsString}]`;
+        }
+
         return expressionAsString + "[" + argumentAsString + "]";
     }
 
@@ -1086,6 +1161,19 @@ class BaseTranspiler {
         return this.printNode(node.expression, identation);
     }
 
+    getFunctionNodeFromReturn(node) {
+        let parent = node.parent;
+        while (parent) {
+            if (parent.kind === ts.SyntaxKind.FunctionDeclaration || parent.kind === ts.SyntaxKind.MethodDeclaration) {
+                return parent;
+            }
+            parent = parent.parent;
+        }
+        return undefined;
+    }
+
+
+
     printReturnStatement(node, identation) {
         const leadingComment = this.printLeadingComments(node, identation);
         let trailingComment = this.printTraillingComment(node, identation);
@@ -1093,6 +1181,16 @@ class BaseTranspiler {
         const exp =  node.expression;
         let rightPart = exp ? (' ' + this.printNode(exp, identation)) : '';
         rightPart = rightPart.trim();
+
+        // cast return type if needed
+        if (this.requiresCallExpressionCast) {
+            const functionNode = this.getFunctionNodeFromReturn(node);
+            const functionType = this.getFunctionType(functionNode, false);
+            if (functionType && exp?.kind !== ts.SyntaxKind.UndefinedKeyword) {
+                rightPart = rightPart ? ' ' + `((${functionType}) ${rightPart})` + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
+                return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
+            }
+        }
         rightPart = rightPart ? ' ' + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
         return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
     }
