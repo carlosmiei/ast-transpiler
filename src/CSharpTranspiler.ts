@@ -17,6 +17,8 @@ const parserConfig = {
     'FALSY_WRAPPER_CLOSE': ')',
     'COMPARISON_WRAPPER_OPEN' : "isEqual(",
     'COMPARISON_WRAPPER_CLOSE' : ")",
+    'UKNOWN_PROP_WRAPPER_OPEN': 'this.call(',
+    'UNKOWN_PROP_WRAPPER_CLOSE': ')'
 
 };
 
@@ -126,6 +128,19 @@ export class CSharpTranspiler extends BaseTranspiler {
                 constructorBody;
     }
 
+    printWrappedUnknownThisProperty(node) {
+        const type = global.checker.getTypeAtLocation(node);
+        if (type?.flags === ts.TypeFlags.Any || type?.intrinsicName === "error") {
+            const args = node.arguments;
+            const parsedArg = args.lenght > 0 ? ", " + this.printNode(args[0], 0) : "";
+            const propName = node.expression?.name.escapedText;
+            const open = this.UKNOWN_PROP_WRAPPER_OPEN;
+            const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
+            return `${open}"${propName}"${parsedArg}${close}`;
+        }
+        return undefined;
+    }
+
     printOutOfOrderCallExpressionIfAny(node, identation) {
         if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
             const expressionText = node.expression.getText().trim();
@@ -147,6 +162,14 @@ export class CSharpTranspiler extends BaseTranspiler {
                         return `Math.Ceiling((double)${parsedArg})`;
                 }
             }
+
+            // wrap unknown property this.X calls
+            // if (node.expression?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
+            //     const res = this.printWrappedUnknownThisProperty(node);
+            //     if (res) {
+            //         return res;
+            //     }
+            // }
             // const transformedProp = this.transformPropertyInsideCallExpressionIfNeeded(node.expression);
 
             // if (transformedProp) {
@@ -169,6 +192,13 @@ export class CSharpTranspiler extends BaseTranspiler {
                         return `String.Join(${argText}, ${leftSideText})`;
                     case 'split': // "ol".split("o") "ol".Split(' ').ToList();
                         return `${leftSideText}.Split(${argText}).ToList<string>()`;
+                }
+            } else {
+                switch(rightSide) {
+                    case 'toUpperCase':
+                        return `((string)${this.printNode(leftSide, 0)}).ToUpper()`;
+                    case 'toLowerCase':
+                        return `((string)${this.printNode(leftSide, 0)}).ToLower()`;
                 }
             }
         }
@@ -235,7 +265,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         }
 
         if (op === ts.SyntaxKind.InKeyword) {
-            return `${this.getIden(identation)}((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey(${this.printNode(left, 0)})`;
+            return `${this.getIden(identation)}((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey((string)${this.printNode(left, 0)})`;
         }
 
         return undefined;
@@ -290,7 +320,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
                 this.warnIfAnyType(node, type.flags, leftSide, "length");
                 // rawExpression = this.isStringType(type.flags) ? `(string${leftSide}).Length` : `(${leftSide}.Cast<object>().ToList()).Count`;
-                rawExpression = this.isStringType(type.flags) ? `(string${leftSide}).Length` : `((List<object>)${leftSide}).Count`;
+                rawExpression = this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `((List<object>)${leftSide}).Count`;
                 break;
             case 'push':
                 rawExpression = `((List<object>)${leftSide}).Add`;

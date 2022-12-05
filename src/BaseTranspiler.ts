@@ -103,6 +103,9 @@ class BaseTranspiler {
     COMPARISON_WRAPPER_OPEN = "";
     COMPARISON_WRAPPER_CLOSE = "";
 
+    UKNOWN_PROP_WRAPPER_OPEN = "";
+    UNKOWN_PROP_WRAPPER_CLOSE = "";
+
     SupportedKindNames = {};
     PostFixOperators = {};
     PrefixFixOperators = {};
@@ -818,7 +821,7 @@ class BaseTranspiler {
         // }).join(", ");
 
         let parsedArgs = "";
-        if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) {
+        if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) { //eslint-disable-line
         const parsedTypes = this.getTypesFromCallExpressionParameters(node);
         const tmpArgs = [];
         args.forEach((arg, index) => {
@@ -974,10 +977,18 @@ class BaseTranspiler {
         return  this.OBJECT_OPENING + formattedObjectBody + this.OBJECT_CLOSING;
     }
 
+    printCustomRightSidePropertyAssignment(node, identation): string {
+        return undefined; // stub to override
+    }   
+
     printPropertyAssignment(node, identation) {
         const {name, initializer} = node;
         const nameAsString = this.printNode(name, 0);
-        const valueAsString = this.printNode(initializer, identation);
+
+        const customRightSide = this.printCustomRightSidePropertyAssignment(initializer, identation);
+        
+        const valueAsString = customRightSide ? customRightSide : this.printNode(initializer, identation);
+
         let trailingComment = this.printTraillingComment(node, identation);
         trailingComment = trailingComment ? " " + trailingComment : trailingComment;
         
@@ -1107,6 +1118,10 @@ class BaseTranspiler {
     }
 
     printParenthesizedExpression(node, identation) {
+        if (node.expression.kind === ts.SyntaxKind.AsExpression) {
+            // transform (this as any) into this, () and as any are not necessary
+            return this.getIden(identation) + this.printNode(node.expression, 0);
+        }
         return this.getIden(identation) + this.LEFT_PARENTHESIS + this.printNode(node.expression, 0) + this.RIGHT_PARENTHESIS;
     }
 
