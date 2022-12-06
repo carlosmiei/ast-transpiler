@@ -106,6 +106,9 @@ class BaseTranspiler {
     UKNOWN_PROP_WRAPPER_OPEN = "";
     UNKOWN_PROP_WRAPPER_CLOSE = "";
 
+    UKNOWN_PROP_ASYNC_WRAPPER_OPEN = "";
+    UNKOWN_PROP_ASYNC_WRAPPER_CLOSE = "";
+
     SupportedKindNames = {};
     PostFixOperators = {};
     PrefixFixOperators = {};

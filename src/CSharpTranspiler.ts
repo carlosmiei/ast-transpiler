@@ -18,7 +18,9 @@ const parserConfig = {
     'COMPARISON_WRAPPER_OPEN' : "isEqual(",
     'COMPARISON_WRAPPER_CLOSE' : ")",
     'UKNOWN_PROP_WRAPPER_OPEN': 'this.call(',
-    'UNKOWN_PROP_WRAPPER_CLOSE': ')'
+    'UNKOWN_PROP_WRAPPER_CLOSE': ')',
+    'UKNOWN_PROP_ASYNC_WRAPPER_OPEN': 'this.callAsync(',
+    'UNKOWN_PROP_ASYNC_WRAPPER_CLOSE': ')'
 
 };
 
@@ -128,15 +130,41 @@ export class CSharpTranspiler extends BaseTranspiler {
                 constructorBody;
     }
 
+    printThisElementAccesssIfNeeded(node, identation) {
+        // convert this[method] into this.call(method) or this.callAsync(method)
+        const isAsync = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+            const elementAccess = node.expression;
+            if (elementAccess?.kind === ts.SyntaxKind.ElementAccessExpression) {
+                if (elementAccess?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
+                    const parsedArg = this.printNode(node.arguments[0], identation).trimStart();
+                    const propName = this.printNode(elementAccess.argumentExpression, 0);
+                    const wrapperOpen = isAsync ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
+                    const wrapperClose = isAsync ? this.UNKOWN_PROP_ASYNC_WRAPPER_CLOSE : this.UNKOWN_PROP_WRAPPER_CLOSE;
+                    return wrapperOpen + propName + ", " + parsedArg + wrapperClose;
+                }
+            }
+        return; 
+    }
+
+    printElementAccessExpressionExceptionIfAny(node) {
+        // convert this[method] into this.call(method) or this.callAsync(method)
+    //    if (node?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
+    //         const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+    //         const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
+    //         return open.replace('(', '');
+    //    }
+    }
+
     printWrappedUnknownThisProperty(node) {
-        const type = global.checker.getTypeAtLocation(node);
-        if (type?.flags === ts.TypeFlags.Any || type?.intrinsicName === "error") {
-            const args = node.arguments;
-            const parsedArg = args.lenght > 0 ? ", " + this.printNode(args[0], 0) : "";
+        const type = global.checker.getResolvedSignature(node);
+        if (type?.declaration === undefined) {
+            let parsedArguments = node.arguments?.map((a) => this.printNode(a, 0)).join(", ");
+            parsedArguments = parsedArguments ? ", " + parsedArguments : "";
             const propName = node.expression?.name.escapedText;
-            const open = this.UKNOWN_PROP_WRAPPER_OPEN;
+            const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+            const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
             const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
-            return `${open}"${propName}"${parsedArg}${close}`;
+            return `${open}"${propName}"${parsedArguments}${close}`;
         }
         return undefined;
     }
@@ -163,27 +191,23 @@ export class CSharpTranspiler extends BaseTranspiler {
                 }
             }
 
-            // wrap unknown property this.X calls
-            // if (node.expression?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
-            //     const res = this.printWrappedUnknownThisProperty(node);
-            //     if (res) {
-            //         return res;
-            //     }
-            // }
-            // const transformedProp = this.transformPropertyInsideCallExpressionIfNeeded(node.expression);
-
-            // if (transformedProp) {
-            //     return transformedProp;
-            // }
-    
             const leftSide = node.expression?.expression;
-            const rightSide = node.expression.name?.escapedText;
+            const leftSideText = leftSide ? this.printNode(leftSide, 0) : undefined;
+
+            // wrap unknown property this.X calls
+            if (leftSideText === this.THIS_TOKEN) {
+                const res = this.printWrappedUnknownThisProperty(node);
+                if (res) {
+                    return res;
+                }
+            }
     
+            const rightSide = node.expression.name?.escapedText;
+            
             const arg = args && args.length > 0 ? args[0] : undefined;
             
             if (arg) {
                 const argText = this.printNode(arg, identation).trimStart();
-                const leftSideText = this.printNode(leftSide, 0);
                 const type = global.checker.getTypeAtLocation(leftSide); // eslint-disable-line
                 switch (rightSide) {
                     case 'includes':
@@ -201,6 +225,12 @@ export class CSharpTranspiler extends BaseTranspiler {
                         return `((string)${this.printNode(leftSide, 0)}).ToLower()`;
                 }
             }
+        }
+
+        // replace this[method]() calls
+        const thisElementAccess = this.printThisElementAccesssIfNeeded(node, identation);
+        if (thisElementAccess) {
+            return thisElementAccess;
         }
         return undefined;
     }
