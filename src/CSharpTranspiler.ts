@@ -82,6 +82,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         };
 
         this.FullPropertyAccessReplacements = {
+            'JSON.parse': 'parseJson', // custom helper method
             'console.log': 'Console.WriteLine',
             'Number.MAX_SAFE_INTEGER': 'Int32.MaxValue',
             'Math.min': 'Math.Min',
