@@ -251,7 +251,7 @@ describe('php transpiling tests', () => {
         "}\n" 
         const php =
         "class Test {\n" +
-        "    function describe() {\n" +
+        "    public function describe() {\n" +
         "        return 'foo';\n" +
         "    }\n" +
         "}"
@@ -272,7 +272,7 @@ describe('php transpiling tests', () => {
         "    public static $x = 10;\n" +
         "    public static $y = 'test';\n" +
         "\n" +
-        "    function mainFeature($message) {\n" +
+        "    public function mainFeature($message) {\n" +
         "        var_dump('Hello! I\\'m inside main class:' . $message);\n" +
         "    }\n" +
         "}"
@@ -288,7 +288,7 @@ describe('php transpiling tests', () => {
         "}";
         const php =
         "class teste extends extended {\n" +
-        "    function method() {\n" +
+        "    public function method() {\n" +
         "        return 1;\n" +
         "    }\n" +
         "}"

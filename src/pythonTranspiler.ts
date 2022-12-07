@@ -36,7 +36,8 @@ const parserConfig = {
     'LINE_TERMINATOR': '',
     'METHOD_TOKEN': 'def',
     'CATCH_TOKEN': 'except',
-    'CATCH_DECLARATION': 'Exception as'
+    'CATCH_DECLARATION': 'Exception as',
+    'METHOD_DEFAULT_ACCESS': ''
 };
 export class PythonTranspiler extends BaseTranspiler {
     constructor(config = {}) {

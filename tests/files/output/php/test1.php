@@ -1,9 +1,9 @@
 class myClass {
-    function create_string() {
+    public function create_string() {
         return 'hello';
     }
 
-    function create_list() {
+    public function create_list() {
         return [1, 2, 3];
     }
 }

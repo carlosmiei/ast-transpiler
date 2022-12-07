@@ -66,6 +66,8 @@ class BaseTranspiler {
     FOR_TOKEN = "for";
     VAR_TOKEN = "";
 
+    METHOD_DEFAULT_ACCESS = "public";
+
     PROPERTY_ASSIGNMENT_TOKEN = ":";
     PROPERTY_ASSIGNMENT_OPEN = "";
     PROPERTY_ASSIGNMENT_CLOSE = "";
@@ -754,7 +756,8 @@ class BaseTranspiler {
         const parsedArgs = this.printMethodParameters(node);
 
         let modifiers = this.printModifiers(node);
-        modifiers = modifiers ? modifiers + " " : "public "; // tmp check this
+        const defaultAccess = this.METHOD_DEFAULT_ACCESS ? this.METHOD_DEFAULT_ACCESS + " ": "";
+        modifiers = modifiers ? modifiers + " " : defaultAccess; // tmp check this
 
         let returnType = this.printFunctionType(node);
         returnType = returnType ? returnType + " " : returnType;
