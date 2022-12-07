@@ -93,6 +93,7 @@ class BaseTranspiler {
     INTEGER_KEYWORD = "int";
     DEFAULT_RETURN_TYPE = "object";
     DEFAULT_PARAMETER_TYPE = "object";
+    DEFAULT_TYPE = "object";
 
     FALSY_WRAPPER_OPEN = "";
     FALSY_WRAPPER_CLOSE = "";
@@ -108,6 +109,45 @@ class BaseTranspiler {
 
     UKNOWN_PROP_ASYNC_WRAPPER_OPEN = "";
     UNKOWN_PROP_ASYNC_WRAPPER_CLOSE = "";
+
+    EQUALS_WRAPPER_OPEN = "";
+    EQUALS_WRAPPER_CLOSE = "";
+
+    DIFFERENT_WRAPPER_OPEN = "";
+    DIFFERENT_WRAPPER_CLOSE = "";
+
+    GREATER_THAN_WRAPPER_OPEN = "";
+    GREATER_THAN_WRAPPER_CLOSE = "";
+
+    LESS_THAN_WRAPPER_OPEN = "";
+    LESS_THAN_WRAPPER_CLOSE = "";
+
+    GREATER_THAN_EQUALS_WRAPPER_OPEN = "";
+    GREATER_THAN_EQUALS_WRAPPER_CLOSE = "";
+
+    LESS_THAN_EQUALS_WRAPPER_OPEN = "";
+    LESS_THAN_EQUALS_WRAPPER_CLOSE = "";
+
+    DIVIDE_WRAPPER_OPEN = "";
+    DIVIDE_WRAPPER_CLOSE = "";
+
+    PLUS_WRAPPER_OPEN = "";
+    PLUS_WRAPPER_CLOSE = "";
+
+    MINUS_WRAPPER_OPEN = "";
+    MINUS_WRAPPER_CLOSE = "";
+
+    ARRAY_LENGTH_WRAPPER_OPEN = "";
+    ARRAY_LENGTH_WRAPPER_CLOSE = "";
+
+    MULTIPLY_WRAPPER_OPEN = "";
+    MULTIPLY_WRAPPER_CLOSE = "";
+
+    INDEXOF_WRAPPER_OPEN = "";
+    INDEXOF_WRAPPER_CLOSE = "";
+
+    PARSEINT_WRAPPER_OPEN = "";
+    PARSEINT_WRAPPER_CLOSE = "";
 
     SupportedKindNames = {};
     PostFixOperators = {};
@@ -148,7 +188,8 @@ class BaseTranspiler {
         this.SupportedKindNames = {
             [ts.SyntaxKind.StringLiteral]: this.STRING_LITERAL_KEYWORD,
             [ts.SyntaxKind.StringKeyword]: this.STRING_KEYWORD,
-            [ts.SyntaxKind.NumberKeyword]: this.NUMBER_KEYWORD,
+            // [ts.SyntaxKind.NumberKeyword]: this.NUMBER_KEYWORD,
+            [ts.SyntaxKind.NumberKeyword]: this.DEFAULT_TYPE,
             [ts.SyntaxKind.MinusMinusToken]: this.MINUS_MINUS_TOKEN,
             [ts.SyntaxKind.MinusToken]: this.MINUS_TOKEN,
             [ts.SyntaxKind.SlashToken]: this.SLASH_TOKEN,
@@ -537,12 +578,13 @@ class BaseTranspiler {
             }
             if (ts.isNumericLiteral(initializer)) {
                 // return this.NUMBER_TYPE_TOKEN;
-                const value = initializer.text;
-                const num = Number(value);
-                if (Number.isInteger(num)) {
-                    return this.INTEGER_KEYWORD;
-                } 
-                return this.NUMBER_KEYWORD;
+                // const value = initializer.text;
+                // const num = Number(value);
+                // if (Number.isInteger(num)) {
+                //     return this.INTEGER_KEYWORD;
+                // } 
+                // return this.NUMBER_KEYWORD;
+                return this.DEFAULT_TYPE; // int and number to object
             }
             if (ts.isStringLiteralLike(initializer)) {
                 return this.STRING_KEYWORD;
@@ -563,8 +605,10 @@ class BaseTranspiler {
             return this.VOID_KEYWORD;
         }
         if (type.flags === ts.TypeFlags.Number) {
-            return this.NUMBER_KEYWORD;
+            // return this.NUMBER_KEYWORD;
+            return this.DEFAULT_TYPE;
         }
+        
         if (type.flags === ts.TypeFlags.String) {
             return this.STRING_KEYWORD;
         }
@@ -829,7 +873,10 @@ class BaseTranspiler {
         const tmpArgs = [];
         args.forEach((arg, index) => {
             const parsedType = parsedTypes[index];
-            const cast = parsedType ? `(${parsedType})` : '';
+            let cast = "";
+            if (parsedType !== "object" && parsedType !== "float" && parsedType !== "int") {
+                cast = parsedType ? `(${parsedType})` : '';
+            }
             tmpArgs.push(cast + this.printNode(arg, identation).trim());
         });
             parsedArgs = tmpArgs.join(",");
@@ -1052,9 +1099,10 @@ class BaseTranspiler {
             const type = global.checker.getTypeAtLocation(argumentExpression);
             const isString = this.isStringType(type.flags);
             if (isString) {
-                return `((${this.OBJECT_KEYWORD})${expressionAsString})[${argumentAsString}]`;
+                const cast = ts.isStringLiteralLike(argumentExpression) ? "" : '(string)';
+                return `((${this.OBJECT_KEYWORD})${expressionAsString})[${cast}${argumentAsString}]`;
             }
-            return `((${this.ARRAY_KEYWORD})${expressionAsString})[${argumentAsString}]`;
+            return `((${this.ARRAY_KEYWORD})${expressionAsString})[(int)${argumentAsString}]`;
         }
 
         return expressionAsString + "[" + argumentAsString + "]";
@@ -1205,7 +1253,7 @@ class BaseTranspiler {
             const functionNode = this.getFunctionNodeFromReturn(node);
             const functionType = this.getFunctionType(functionNode, false);
             if (functionType && exp?.kind !== ts.SyntaxKind.UndefinedKeyword) {
-                rightPart = rightPart ? ' ' + `((${functionType}) ${rightPart})` + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
+                rightPart = rightPart ? ' ' + `((${functionType}) (${rightPart}))` + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
                 return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
             }
         }

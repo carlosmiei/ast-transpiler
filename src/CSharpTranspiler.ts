@@ -20,8 +20,31 @@ const parserConfig = {
     'UKNOWN_PROP_WRAPPER_OPEN': 'this.call(',
     'UNKOWN_PROP_WRAPPER_CLOSE': ')',
     'UKNOWN_PROP_ASYNC_WRAPPER_OPEN': 'this.callAsync(',
-    'UNKOWN_PROP_ASYNC_WRAPPER_CLOSE': ')'
-
+    'UNKOWN_PROP_ASYNC_WRAPPER_CLOSE': ')',
+    'EQUALS_WRAPPER_OPEN': 'isEqual(',
+    'EQUALS_WRAPPER_CLOSE': ')',
+    'DIFFERENT_WRAPPER_OPEN': '!isEqual(',
+    'DIFFERENT_WRAPPER_CLOSE': ')',
+    'GREATER_THAN_WRAPPER_OPEN': 'isGreaterThan(',
+    'GREATER_THAN_WRAPPER_CLOSE': ')',
+    'GREATER_THAN_EQUALS_WRAPPER_OPEN': 'isGreaterThanOrEqual(',
+    'GREATER_THAN_EQUALS_WRAPPER_CLOSE': ')',
+    'LESS_THAN_WRAPPER_OPEN': 'isLessThan(',
+    'LESS_THAN_WRAPPER_CLOSE': ')',
+    'LESS_THAN_EQUALS_WRAPPER_OPEN': 'isLessThanOrEqual(',
+    'LESS_THAN_EQUALS_WRAPPER_CLOSE': ')',
+    'PLUS_WRAPPER_OPEN':'add(',
+    'PLUS_WRAPPER_CLOSE':')',
+    'MINUS_WRAPPER_OPEN':'subtract(',
+    'MINUS_WRAPPER_CLOSE':')',
+    'ARRAY_LENGTH_WRAPPER_OPEN': 'getArrayLength(',
+    'ARRAY_LENGTH_WRAPPER_CLOSE': ')',
+    'DIVIDE_WRAPPER_OPEN': 'divide(',
+    'DIVIDE_WRAPPER_CLOSE': ')',
+    'MULTIPLY_WRAPPER_OPEN': 'multiply(',
+    'MULTIPLY_WRAPPER_CLOSE': ')',
+    'INDEXOF_WRAPPER_OPEN': 'getIndexOf(',
+    'INDEXOF_WRAPPER_CLOSE': ')',
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
@@ -73,8 +96,8 @@ export class CSharpTranspiler extends BaseTranspiler {
         };
 
         this.CallExpressionReplacements = {
-            "parseInt": "Int32.Parse",
-            "parseFloat": "float.Parse",
+            // "parseInt": "parseINt",
+            // "parseFloat": "float.Parse",
         };
 
         this.ReservedKeywordsReplacements = {
@@ -189,8 +212,17 @@ export class CSharpTranspiler extends BaseTranspiler {
                     case "Math.ceil":
                         return `Math.Ceiling((double)${parsedArg})`;
                 }
+            } else if (args.length === 2) 
+            {
+                const parsedArg1 = this.printNode(args[0], 0);
+                const parsedArg2 = this.printNode(args[1], 0);
+                switch (expressionText) {
+                    case "Math.min":
+                        return `mathMin(${parsedArg1}, ${parsedArg2})`;
+                    case "Math.max":
+                        return `mathMax(${parsedArg1}, ${parsedArg2})`;
+                }
             }
-
             const leftSide = node.expression?.expression;
             const leftSideText = leftSide ? this.printNode(leftSide, 0) : undefined;
 
@@ -215,7 +247,9 @@ export class CSharpTranspiler extends BaseTranspiler {
                     case 'join': // names.join(',') => String.Join(", ", names);
                         return `String.Join(${argText}, ${leftSideText})`;
                     case 'split': // "ol".split("o") "ol".Split(' ').ToList();
-                        return `${leftSideText}.Split(${argText}).ToList<string>()`;
+                        return `((string)${leftSideText}).Split(${argText}).ToList<string>()`;
+                    case 'indexOf':
+                        return `${this.INDEXOF_WRAPPER_OPEN}${leftSideText}, ${argText}${this.INDEXOF_WRAPPER_CLOSE}`;
                 }
             } else {
                 switch(rightSide) {
@@ -297,6 +331,70 @@ export class CSharpTranspiler extends BaseTranspiler {
         if (op === ts.SyntaxKind.InKeyword) {
             return `${this.getIden(identation)}((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey((string)${this.printNode(left, 0)})`;
         }
+        const leftText = this.printNode(left, 0);
+        const rightText = this.printNode(right, 0);
+
+        if (op === ts.SyntaxKind.EqualsEqualsToken || op === ts.SyntaxKind.EqualsEqualsEqualsToken) {
+            const open = this.EQUALS_WRAPPER_OPEN;
+            const close = this.EQUALS_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.ExclamationEqualsEqualsToken || op === ts.SyntaxKind.ExclamationEqualsToken) {
+            const open = this.DIFFERENT_WRAPPER_OPEN;
+            const close = this.DIFFERENT_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.GreaterThanToken) {
+            const open = this.GREATER_THAN_WRAPPER_OPEN;
+            const close = this.GREATER_THAN_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.GreaterThanEqualsToken) {
+            const open = this.GREATER_THAN_EQUALS_WRAPPER_OPEN;
+            const close = this.GREATER_THAN_EQUALS_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.LessThanToken) {
+            const open = this.LESS_THAN_WRAPPER_OPEN;
+            const close = this.LESS_THAN_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.LessThanEqualsToken) {
+            const open = this.LESS_THAN_EQUALS_WRAPPER_OPEN;
+            const close = this.LESS_THAN_EQUALS_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.PlusToken) {
+            const leftText = this.printNode(left, 0);
+            const rightText = this.printNode(right, 0);
+            const open = this.PLUS_WRAPPER_OPEN;
+            const close = this.PLUS_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.MinusToken) {
+            const open = this.MINUS_WRAPPER_OPEN;
+            const close = this.MINUS_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.SlashToken) {
+            const open = this.DIVIDE_WRAPPER_OPEN;
+            const close = this.DIVIDE_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
+        if (op === ts.SyntaxKind.AsteriskToken) {
+            const open = this.MULTIPLY_WRAPPER_OPEN;
+            const close = this.MULTIPLY_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
 
         return undefined;
     }
@@ -350,7 +448,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
                 this.warnIfAnyType(node, type.flags, leftSide, "length");
                 // rawExpression = this.isStringType(type.flags) ? `(string${leftSide}).Length` : `(${leftSide}.Cast<object>().ToList()).Count`;
-                rawExpression = this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `((List<object>)${leftSide}).Count`;
+                rawExpression = this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`; // `(${leftSide}.Cast<object>()).ToList().Count`
                 break;
             case 'push':
                 rawExpression = `((List<object>)${leftSide}).Add`;
@@ -369,7 +467,8 @@ export class CSharpTranspiler extends BaseTranspiler {
 
         // convert x: number = undefined (invalid) into x = -1 (valid)
         if (node?.escapedText === "undefined" && global.checker.getTypeAtLocation(node?.parent)?.flags === ts.TypeFlags.Number) {
-            return "-1";
+            // return "-1";
+            return this.UNDEFINED_TOKEN;
         }
 
         return undefined;
@@ -419,6 +518,12 @@ export class CSharpTranspiler extends BaseTranspiler {
         }
 
         return super.printFunctionBody(node, identation);
+    }
+
+    printInstanceOfExpression(node, identation) {
+        const left = node.left.escapedText;
+        const right = node.right.escapedText;
+        return this.getIden(identation) + `${left} is ${right}`;
     }
 }
 
