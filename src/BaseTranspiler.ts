@@ -1101,7 +1101,7 @@ class BaseTranspiler {
         if (isLeftSideOfAssignment && this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
             const type = global.checker.getTypeAtLocation(argumentExpression);
             const isString = this.isStringType(type.flags);
-            if (isString) {
+            if (isString || type.flags === ts.TypeFlags.Any) { // default to string when unknown
                 const cast = ts.isStringLiteralLike(argumentExpression) ? "" : '(string)';
                 return `((${this.OBJECT_KEYWORD})${expressionAsString})[${cast}${argumentAsString}]`;
             }

@@ -207,7 +207,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                     case "Object.keys":
                         return `new List<string>(((Dictionary<string,object>)${parsedArg}).Keys)`;
                     case "Object.values":
-                        return `new List<object>(${parsedArg}.Values)`;
+                        return `new List<object>(((Dictionary<string,object>)${parsedArg}).Values)`;
                     case "Math.round":
                         return `Math.Round((double)${parsedArg})`;
                     case "Math.ceil":
@@ -249,6 +249,8 @@ export class CSharpTranspiler extends BaseTranspiler {
                         return `String.Join(${argText}, ${leftSideText})`;
                     case 'split': // "ol".split("o") "ol".Split(' ').ToList();
                         return `((string)${leftSideText}).Split(${argText}).ToList<string>()`;
+                    case 'slice':
+                        return `((string)${leftSideText}).Substring(${argText})`;
                     case 'indexOf':
                         return `${this.INDEXOF_WRAPPER_OPEN}${leftSideText}, ${argText}${this.INDEXOF_WRAPPER_CLOSE}`;
                 }
@@ -317,6 +319,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             let arrayBindingStatement = this.getIden(identation) + `var ${syntheticName} = ${this.printNode(right, 0)};\n`;
 
             parsedArrayBindingElements.forEach((e, index) => {
+                // const type = this.getType(node);
+                // const parsedType = this.getTypeFromRawType(type);
                 const statement = this.getIden(identation) + `${e} = ${syntheticName}[${index}]`;
                 if (index < parsedArrayBindingElements.length - 1) {
                     arrayBindingStatement += statement + ";\n";
@@ -415,6 +419,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             let arrayBindingStatement = this.getIden(identation) + `var ${syntheticName} = ${this.printNode(declaration.initializer, 0)};\n`;
 
             parsedArrayBindingElements.forEach((e, index) => {
+                // const type = this.getType(node);
+                // const parsedType = this.getTypeFromRawType(type);
                 const statement = this.getIden(identation) + `var ${e} = ${syntheticName}[${index}]`;
                 if (index < parsedArrayBindingElements.length - 1) {
                     arrayBindingStatement += statement + ";\n";
@@ -429,7 +435,7 @@ export class CSharpTranspiler extends BaseTranspiler {
 
 
         // handle default undefined initialization
-        const parsedValue = this.printNode(declaration.initializer, 0);
+        const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
         const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
         if (parsedValue === this.UNDEFINED_TOKEN) {
             return this.getIden(identation) + "object " + this.printNode(declaration.name) + " = " + parsedValue;
@@ -466,6 +472,10 @@ export class CSharpTranspiler extends BaseTranspiler {
             return this.UNDEFINED_TOKEN;
         }
 
+        if (ts.isNumericLiteral(node)) {
+            return this.UNDEFINED_TOKEN;
+        }
+
         // convert x: number = undefined (invalid) into x = -1 (valid)
         if (node?.escapedText === "undefined" && global.checker.getTypeAtLocation(node?.parent)?.flags === ts.TypeFlags.Number) {
             // return "-1";
@@ -495,6 +505,9 @@ export class CSharpTranspiler extends BaseTranspiler {
                     }
                     if (ts.isObjectLiteralExpression(initializer)) {
                         initParams.push(`${this.printNode(param.name, 0)} ??= new Dictionary<string, object>();`);
+                    }
+                    if (ts.isNumericLiteral(initializer)) {
+                        initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
                     }
                 }
             });
