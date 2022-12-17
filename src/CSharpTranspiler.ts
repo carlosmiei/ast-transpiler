@@ -321,7 +321,13 @@ export class CSharpTranspiler extends BaseTranspiler {
             parsedArrayBindingElements.forEach((e, index) => {
                 // const type = this.getType(node);
                 // const parsedType = this.getTypeFromRawType(type);
-                const statement = this.getIden(identation) + `${e} = ${syntheticName}[${index}]`;
+                const leftElement = arrayBindingPatternElements[index];
+                const leftType = global.checker.getTypeAtLocation(leftElement);
+                const parsedType = this.getTypeFromRawType(leftType);
+                
+                const castExp = parsedType ? `(${parsedType})` : "";
+
+                const statement = this.getIden(identation) + `${e} = ${castExp}${syntheticName}[${index}]`;
                 if (index < parsedArrayBindingElements.length - 1) {
                     arrayBindingStatement += statement + ";\n";
                 } else {
@@ -401,8 +407,34 @@ export class CSharpTranspiler extends BaseTranspiler {
             return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
         }
 
+        // x = y
+        // cast y to x type when y is unknown
+        if (op === ts.SyntaxKind.EqualsToken) {
+            const leftType = global.checker.getTypeAtLocation(left);
+            const rightType = global.checker.getTypeAtLocation(right);
+
+            if (this.isAnyType(rightType.flags) && !this.isAnyType(leftType.flags)) {
+                const parsedType = this.getTypeFromRawType(leftType);
+                return `${this.getIden(identation)}${leftText} = (${parsedType})${rightText}`;
+            }
+        }
+
         return undefined;
     }
+
+    // castVariableAssignmentIfNeeded(left, right, identation) {
+    //     const leftType = global.checker.getTypeAtLocation(left);
+    //     const rightType = global.checker.getTypeAtLocation(right);
+
+    //     const leftText = this.printNode(left, 0);
+    //     const rightText = this.printNode(right, 0);
+
+    //     if (this.isAnyType(rightType.flags) && !this.isAnyType(leftType.flags)) {
+    //         const parsedType = this.getTypeFromRawType(leftType);
+    //         return `${this.getIden(identation)}${leftText} = (${parsedType})${rightText}`;
+    //     }
+    //     return undefined;
+    // }
 
     printVariableDeclarationList(node,identation) {
         const declaration = node.declarations[0];
