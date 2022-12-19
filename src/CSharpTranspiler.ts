@@ -415,7 +415,7 @@ export class CSharpTranspiler extends BaseTranspiler {
 
             if (this.isAnyType(rightType.flags) && !this.isAnyType(leftType.flags)) {
                 const parsedType = this.getTypeFromRawType(leftType);
-                return `${this.getIden(identation)}${leftText} = (${parsedType})${rightText}`;
+                return `${this.getIden(identation)}${leftText} = (${parsedType})(${rightText})`;
             }
         }
 
@@ -570,6 +570,29 @@ export class CSharpTranspiler extends BaseTranspiler {
         const left = node.left.escapedText;
         const right = node.right.escapedText;
         return this.getIden(identation) + `${left} is ${right}`;
+    }
+
+    printAsExpression(node, identation) {
+        const type = node.type;
+        
+        if (type.kind === ts.SyntaxKind.AnyKeyword) {
+            return `(object)(${this.printNode(node.expression, identation)})`;
+        }
+
+        if (type.kind === ts.SyntaxKind.StringKeyword) {
+            return `(string)(${this.printNode(node.expression, identation)})`;
+        }
+
+        if (type.kind === ts.SyntaxKind.ArrayType) {
+            if (type.elementType.kind === ts.SyntaxKind.AnyKeyword) {
+                return `(List<object>)(${this.printNode(node.expression, identation)})`;
+            }
+            if (type.elementType.kind === ts.SyntaxKind.StringKeyword) {
+                return `(List<string>)(${this.printNode(node.expression, identation)})`;
+            }
+        }
+
+        return this.printNode(node.expression, identation);
     }
 }
 

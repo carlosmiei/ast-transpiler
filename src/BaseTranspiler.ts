@@ -1201,7 +1201,8 @@ class BaseTranspiler {
     }
 
     printNewExpression(node, identation) {
-        const expression = node.expression.escapedText;
+        let expression = node.expression?.escapedText;
+        expression = expression ? expression : this.printNode(node.expression, 0); // new Exception or new exact[string] check this out
         const args = node.arguments.map(n => this.printNode(n, 0)).join(",");
         const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
         return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
