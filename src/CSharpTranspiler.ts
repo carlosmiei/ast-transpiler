@@ -228,7 +228,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             const leftSideText = leftSide ? this.printNode(leftSide, 0) : undefined;
 
             // wrap unknown property this.X calls
-            if (leftSideText === this.THIS_TOKEN) {
+            if (leftSideText === this.THIS_TOKEN || leftSide.getFullText().indexOf("(this as any)") > -1) { // double check this
                 const res = this.printWrappedUnknownThisProperty(node);
                 if (res) {
                     return res;
