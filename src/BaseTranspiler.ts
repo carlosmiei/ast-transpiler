@@ -776,7 +776,10 @@ class BaseTranspiler {
     }
 
     printMethodDefinition(node, identation) {
-
+        /////
+        //// Warning: Only takes into consideration 1 level of heritage
+        //// might be costly, try to improve its performance later
+        //// 
         let name = node.name.escapedText;
         name = this.transformMethodNameIfNeeded(name);
 
