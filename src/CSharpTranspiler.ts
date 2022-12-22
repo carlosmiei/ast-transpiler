@@ -156,7 +156,10 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printThisElementAccesssIfNeeded(node, identation) {
         // convert this[method] into this.call(method) or this.callAsync(method)
-        const isAsync = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+        // const isAsync = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+        const isAsync = true; // setting to true for now, because there are some scenarios where we don't know
+        // if the call is async or not, so we need to assume it is async
+        // example Promise.all([this.unknownPropAsync()])
             const elementAccess = node.expression;
             if (elementAccess?.kind === ts.SyntaxKind.ElementAccessExpression) {
                 if (elementAccess?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
@@ -185,7 +188,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             let parsedArguments = node.arguments?.map((a) => this.printNode(a, 0)).join(", ");
             parsedArguments = parsedArguments ? ", " + parsedArguments : "";
             const propName = node.expression?.name.escapedText;
-            const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+            const isAsyncDecl = true;
+            // const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
             const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
             const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
             return `${open}"${propName}"${parsedArguments}${close}`;
@@ -594,6 +598,33 @@ export class CSharpTranspiler extends BaseTranspiler {
 
         return this.printNode(node.expression, identation);
     }
+
+    printArrayLiteralExpression(node) {
+
+        let arrayOpen = this.ARRAY_OPENING_TOKEN;        
+        const elems = node.elements;
+
+        const elements = node.elements.map((e) => {
+            return this.printNode(e);
+        }).join(", ");
+
+        // take into consideration list of promises
+        if (elems.length > 0) {
+            const first = elems[0];
+            if (first.kind === ts.SyntaxKind.CallExpression) {
+                const type = global.checker.getTypeAtLocation(first);
+                const parsedType = this.getTypeFromRawType(type);
+                if (parsedType === "Task" || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
+                    arrayOpen = "new List<Task<object>> {";
+                }
+            }
+        }
+
+        return arrayOpen + elements + this.ARRAY_CLOSING_TOKEN;
+    }
+    
+    // check this out later
+
 }
 
 
@@ -624,3 +655,19 @@ export class CSharpTranspiler extends BaseTranspiler {
 
 //     return parsedTypes;
 // }
+
+
+// get class decl node
+// Use the ts.getAllSuperTypeNodes function to get the base classes for the MyClass
+// const baseClasses = ts.getAllSuperTypeNodes(classDeclaration);
+
+// // Create a type checker
+// const typeChecker = ts.createTypeChecker(sourceFile.context.program, sourceFile.context.checker);
+
+// // Get the type of the base class
+// const baseClassType = typeChecker.getTypeAtLocation(baseClasses[0]);
+
+// // Get the class declaration for the base class
+// const baseClassDeclaration = baseClassType.symbol.valueDeclaration;
+
+// console.log(baseClassDeclaration);

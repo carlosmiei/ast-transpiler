@@ -290,6 +290,38 @@ class BaseTranspiler {
 
         return modifiers.length > 0;
     }
+    
+    isMethodOverride(node: ts.Node): boolean {
+        // Check if the method is a member of a class
+        if (!ts.isClassDeclaration(node.parent)) {
+          return false;
+        }
+      
+        // Get the class declaration
+        const classDeclaration = node.parent as ts.ClassDeclaration;
+      
+        // Check if the class has a base class
+        if (!classDeclaration.heritageClauses) {
+          return false;
+        }
+      
+        const parentClass = (ts as any).getAllSuperTypeNodes(node.parent)[0];
+        const parentClassType = global.checker.getTypeAtLocation(parentClass);
+        const parentClassDecl = parentClassType.symbol.valueDeclaration;
+        const parentClassMembers = parentClassDecl.members ?? [];
+
+        let isOverride = false;
+
+        parentClassMembers.forEach(elem=> {
+            const name = elem.name.escapedText;
+            if ((node as any).name.escapedText === name) {
+                isOverride = true;
+            }
+        });
+
+        // TODO: Check if the method has the same signature as a method in the base class
+        return isOverride;
+      }
 
     getIden (num) {
         return this.DEFAULT_IDENTATION.repeat(num);
@@ -482,11 +514,6 @@ class BaseTranspiler {
             modifiers = modifiers.filter(mod => mod.kind !== ts.SyntaxKind.AsyncKeyword);
         }
         const res = modifiers.map(modifier => this.FuncModifiers[modifier.kind]).join(" ");
-
-        // // tmp hack
-        // if ("async" in res && res.length == 1) {
-        //     res.push("public");
-        // }
 
         return res;
     }
@@ -758,16 +785,21 @@ class BaseTranspiler {
         let modifiers = this.printModifiers(node);
         const defaultAccess = this.METHOD_DEFAULT_ACCESS ? this.METHOD_DEFAULT_ACCESS + " ": "";
         modifiers = modifiers ? modifiers + " " : defaultAccess; // tmp check this
+        
+        modifiers = modifiers.indexOf("public") === -1 && modifiers.indexOf("private") === -1 && modifiers.indexOf("protected") === -1 ? defaultAccess + modifiers : modifiers;
 
+        // c# only move this elsewhere
+        if (this.id === "C#") {
+            const isOverride = this.isMethodOverride(node);
+            modifiers = isOverride ? modifiers + "override " : modifiers + "virtual ";
+        }
+        
         let returnType = this.printFunctionType(node);
         returnType = returnType ? returnType + " " : returnType;
 
         const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
         const methodDef = this.getIden(identation) + modifiers + returnType + methodToken + name
             + "(" + parsedArgs + ")";
-            // // NOTE - must have RETURN TYPE in TS
-            // + SupportedKindNames[returnType.kind]
-            // +" {\n";
 
         return this.printNodeCommentsIfAny(node, identation, methodDef);
     }
@@ -1101,7 +1133,13 @@ class BaseTranspiler {
         if (isLeftSideOfAssignment && this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
             const type = global.checker.getTypeAtLocation(argumentExpression);
             const isString = this.isStringType(type.flags);
-            if (isString || type.flags === ts.TypeFlags.Any) { // default to string when unknown
+            
+            let isUnionString = false; // handle unions later
+            if (type.flags === ts.TypeFlags.Union) {
+                isUnionString = this.isStringType(type.types[0].flags);
+            }
+
+            if (isString || isUnionString || type.flags === ts.TypeFlags.Any) { // default to string when unknown
                 const cast = ts.isStringLiteralLike(argumentExpression) ? "" : '(string)';
                 return `((${this.OBJECT_KEYWORD})${expressionAsString})[${cast}${argumentAsString}]`;
             }
