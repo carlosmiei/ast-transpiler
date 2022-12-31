@@ -291,18 +291,22 @@ class BaseTranspiler {
         return modifiers.length > 0;
     }
     
-    isMethodOverride(node: ts.Node): boolean {
+    getMethodOverride(node: ts.Node): ts.Node {
+        /////
+        //// Warning: Only takes into consideration 1 level of heritage
+        //// might be costly, try to improve its performance later
+        //// 
         // Check if the method is a member of a class
         if (!ts.isClassDeclaration(node.parent)) {
-          return false;
+          return undefined;
         }
       
         // Get the class declaration
         const classDeclaration = node.parent as ts.ClassDeclaration;
-      
+       
         // Check if the class has a base class
         if (!classDeclaration.heritageClauses) {
-          return false;
+          return undefined;
         }
       
         const parentClass = (ts as any).getAllSuperTypeNodes(node.parent)[0];
@@ -310,17 +314,19 @@ class BaseTranspiler {
         const parentClassDecl = parentClassType.symbol.valueDeclaration;
         const parentClassMembers = parentClassDecl.members ?? [];
 
-        let isOverride = false;
-
+        let method = undefined;
         parentClassMembers.forEach(elem=> {
-            const name = elem.name.escapedText;
-            if ((node as any).name.escapedText === name) {
-                isOverride = true;
+            if (ts.isMethodDeclaration(elem)) {
+
+                const name = elem.name.getText().trim();
+                if ((node as any).name.escapedText === name) {
+                    method = elem;
+                }
             }
         });
 
         // TODO: Check if the method has the same signature as a method in the base class
-        return isOverride;
+        return method;
       }
 
     getIden (num) {
@@ -483,6 +489,24 @@ class BaseTranspiler {
 
     printCustomDefaultValueIfNeeded(node) {
         return undefined;
+    }
+
+    printParameteCustomName(node, name, defaultValue = true) {
+        // useful for when we have to get the parent's method argument type
+        const initializer = node.initializer;
+
+        let type = this.printParameterType(node);
+        type = type ? type + " " : "";
+        
+        if (defaultValue) {
+            if (initializer) {
+                const customDefaultValue = this.printCustomDefaultValueIfNeeded(initializer);
+                const defaultValue = customDefaultValue ? customDefaultValue : this.printNode(initializer, 0);
+                return type + name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + defaultValue;
+            }
+            return type + name;
+        }
+        return name;
     }
 
     printParameter(node, defaultValue = true) {
@@ -654,6 +678,12 @@ class BaseTranspiler {
             return this.OBJECT_KEYWORD;
         }
 
+        // check this out, trying to resolve Promise<{}>
+        if (type?.symbol?.escapedName === '__type') {
+            return this.OBJECT_KEYWORD;
+            // return this.DEFAULT_TYPE;
+        }
+
         // check for promise type
 
         if (type?.symbol?.escapedName === 'Promise') {
@@ -776,14 +806,10 @@ class BaseTranspiler {
     }
 
     printMethodDefinition(node, identation) {
-        /////
-        //// Warning: Only takes into consideration 1 level of heritage
-        //// might be costly, try to improve its performance later
-        //// 
         let name = node.name.escapedText;
         name = this.transformMethodNameIfNeeded(name);
 
-        const parsedArgs = this.printMethodParameters(node);
+        let returnType = this.printFunctionType(node);
 
         let modifiers = this.printModifiers(node);
         const defaultAccess = this.METHOD_DEFAULT_ACCESS ? this.METHOD_DEFAULT_ACCESS + " ": "";
@@ -791,13 +817,51 @@ class BaseTranspiler {
         
         modifiers = modifiers.indexOf("public") === -1 && modifiers.indexOf("private") === -1 && modifiers.indexOf("protected") === -1 ? defaultAccess + modifiers : modifiers;
 
-        // c# only move this elsewhere
+        let parsedArgs = undefined;
+        // c# only move this elsewhere (csharp transpiler)
         if (this.id === "C#") {
-            const isOverride = this.isMethodOverride(node);
+            const methodOverride = this.getMethodOverride(node) as any;
+            const isOverride = methodOverride !== undefined;
             modifiers = isOverride ? modifiers + "override " : modifiers + "virtual ";
+
+            // infer parent return type
+            if (isOverride && (returnType === "object" || returnType === "Task<object>")) {
+                returnType = this.printFunctionType(methodOverride);
+            }
+
+            // ts does not infer parameters types of overriden methods :x , so we need some
+            // heuristic here to infer the types
+            if (isOverride && node.parameters.length > 0) {
+                const first = node.parameters[0];
+                const firstType = this.getType(first);
+
+                if (firstType === undefined) {
+                    // use the override version, check this out later
+                    // parsedArgs = this.printMethodParameters(methodOverride);
+                    const currentArgs = node.parameters;
+                    const parentArgs = methodOverride.parameters;
+                    parsedArgs = "";
+                    parentArgs.forEach((param, index) => {
+                        const originalName = this.printNode(currentArgs[index].name, 0);
+                        const parsedArg = this.printParameteCustomName(param, originalName);
+                        parsedArgs+= parsedArg;
+                        if (index < parentArgs.length - 1) {
+                            parsedArgs+= ", ";
+                        }
+                    });
+
+                } else {
+                    parsedArgs = this.printMethodParameters(node);
+                }
+
+            } else {
+                parsedArgs = this.printMethodParameters(node);
+            }
+        } else {
+            parsedArgs = this.printMethodParameters(node);
         }
+
         
-        let returnType = this.printFunctionType(node);
         returnType = returnType ? returnType + " " : returnType;
 
         const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
@@ -1284,7 +1348,6 @@ class BaseTranspiler {
     }
 
 
-
     printReturnStatement(node, identation) {
         const leadingComment = this.printLeadingComments(node, identation);
         let trailingComment = this.printTraillingComment(node, identation);
@@ -1296,7 +1359,14 @@ class BaseTranspiler {
         // cast return type if needed
         if (this.requiresCallExpressionCast) {
             const functionNode = this.getFunctionNodeFromReturn(node);
-            const functionType = this.getFunctionType(functionNode, false);
+            let functionType = this.getFunctionType(functionNode, false);
+            if (functionType === undefined) {
+                // check the parent method type if any
+                const overrideMethod = this.getMethodOverride(functionNode);
+                if (overrideMethod !== undefined) {
+                    functionType = this.getFunctionType(overrideMethod, false);
+                }
+            }
             if (functionType && exp?.kind !== ts.SyntaxKind.UndefinedKeyword) {
                 rightPart = rightPart ? ' ' + `((${functionType}) (${rightPart}))` + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
                 return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
