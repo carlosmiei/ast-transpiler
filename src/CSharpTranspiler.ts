@@ -163,11 +163,12 @@ export class CSharpTranspiler extends BaseTranspiler {
             const elementAccess = node.expression;
             if (elementAccess?.kind === ts.SyntaxKind.ElementAccessExpression) {
                 if (elementAccess?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
-                    const parsedArg = this.printNode(node.arguments[0], identation).trimStart();
+                    let parsedArg = node.arguments?.length > 0 ? this.printNode(node.arguments[0], identation).trimStart() : "";
                     const propName = this.printNode(elementAccess.argumentExpression, 0);
                     const wrapperOpen = isAsync ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
                     const wrapperClose = isAsync ? this.UNKOWN_PROP_ASYNC_WRAPPER_CLOSE : this.UNKOWN_PROP_WRAPPER_CLOSE;
-                    return wrapperOpen + propName + ", " + parsedArg + wrapperClose;
+                    parsedArg = parsedArg ? ", " + parsedArg : "";
+                    return wrapperOpen + propName + parsedArg + wrapperClose;
                 }
             }
         return; 
