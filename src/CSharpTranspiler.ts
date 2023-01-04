@@ -106,7 +106,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             'object': 'obj',
             'params': 'parameters',
             'base': 'bs',
-            'internal': 'intern'
+            'internal': 'intern',
+            'event': 'eventVar'
         };
     }
 
