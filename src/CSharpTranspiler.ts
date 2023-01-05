@@ -614,10 +614,14 @@ export class CSharpTranspiler extends BaseTranspiler {
         if (elems.length > 0) {
             const first = elems[0];
             if (first.kind === ts.SyntaxKind.CallExpression) {
-                const type = global.checker.getTypeAtLocation(first);
-                const parsedType = this.getTypeFromRawType(type);
-                if (parsedType === "Task" || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
+                // const type = global.checker.getTypeAtLocation(first);
+                const type = this.getFunctionType(first);
+                // const parsedType = this.getTypeFromRawType(type);
+                // parsedType === "Task" || 
+                if (type === undefined || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
                     arrayOpen = "new List<Task<object>> {";
+                } else {
+                   arrayOpen = `new List<${type}> {`; 
                 }
             }
         }
