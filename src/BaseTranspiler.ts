@@ -890,6 +890,7 @@ class BaseTranspiler {
         }
         text = text.replaceAll("'", "\\" + "'");
         text = text.replaceAll("\"", "\\" + "\"");
+        text = text.replaceAll("\n", "\\n");
         return token + text + token;
     }
 
