@@ -5,6 +5,8 @@
 ![Lines](./badges/coverage-lines.svg)
 ![Statements](./badges/coverage-statements.svg)
 
+**WORK IN PROGRESS** 
+
 `ast-transpiler` is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker in an easy way abstracting most of the complexity behind the process.
 
 ### [Install](#-installation) · [Usage](#-usage) · [Languages](#-languages) · [Options](#-options) · [Overrides](#-overrides) · [Examples](https://github.com/carlosmiei/ast-transpiler/tree/master/examples) 
@@ -264,6 +266,9 @@ const config = {
 }
 // "sha256" will be converted to hashlib.sha256
 ```
+
+#### ReservedKeywordsReplacements
+Languages like C# have a lot of reserved words (string, object, params, base, internal, event, etc) so you can use this object to add your replacements.
 
 #### ScopeResolutionProps (PHP only)
 In PHP, there is the *Scope Resolution Operation* that allows access to *static/constant/overridden* properties, so in these cases, we must use a different property access token. Since this concept does not exist in typescript, we have to rely on a list of properties provided by the user where the `::` operator should be applied.
