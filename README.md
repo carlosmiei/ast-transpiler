@@ -43,6 +43,7 @@ This library works better with ESM because has dedicated `import/export` tokens 
 Currently the following languages are supported:
 - Python
 - PHP
+- C# (WIP)
 
 ## 🔌 Installation
 
@@ -76,7 +77,7 @@ console.log(transpileCode.content) // prints my_var = 1
 (preferred way if needs to resolve imports)
 
 ```Javascript
-const Transpiler = require(`ast-transpling`);
+const Transpiler = require(`ast-transpiler`);
 
 const transpiler = new Transpiler();
 const transpiledCode = transpiler.transpilePhpByPath("./my/path/file.ts");
@@ -85,6 +86,18 @@ console.log(transpiler.content) // prints transpiled php
 console.log(transpiler.imports) // prints unified imports statements if any
 console.log(transpiler.exports) // prints unified export statements if any
 ```
+
+## ⚡ C# Notes
+### Helpers
+C# is very different from languages like Typescript, Python or PHP since it's statically typed and much more restricted than the others mentioned. Things like falsy values, empty default objects, dynamic properties, different type comparison, untyped arguments/return type, etc do not exist so I had to create a set of wrappers that will emulate these features in C#. So in order to make your code run you need to make all the methods available [here](https://github.com/carlosmiei/ast-transpiler/blob/c%23/helpers/c%23/helpers.cs) accessible from your code.
+
+### Number ambiguity
+Unfortunately Typescript/Javascript has only one type, `Number` which represents both integers and floating-point numbers. This is problematic because C# offers a variety of types (uint, int, Int64, double, float) to represent numeric values so it's very hard if not impossible to correctly transpile `Number`. For now we're converting it to `object` .
+
+### Json Objects
+Unlike Ts, Py, PHP, we don't have a direct way to represent a JSON object, so I try to represent it using either a `Dictionary<string, object>` or `List<object>` 
+
+Warning: Under active development so can change at any time!
 
 ## ✅ Supported Features
 - Identation
