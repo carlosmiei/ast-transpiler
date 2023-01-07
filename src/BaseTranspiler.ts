@@ -139,6 +139,9 @@ class BaseTranspiler {
     MINUS_WRAPPER_OPEN = "";
     MINUS_WRAPPER_CLOSE = "";
 
+    MOD_WRAPPER_OPEN = "";
+    MOD_WRAPPER_CLOSE = "";
+
     ARRAY_LENGTH_WRAPPER_OPEN = "";
     ARRAY_LENGTH_WRAPPER_CLOSE = "";
 

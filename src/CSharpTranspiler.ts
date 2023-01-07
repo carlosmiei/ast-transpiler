@@ -45,6 +45,8 @@ const parserConfig = {
     'MULTIPLY_WRAPPER_CLOSE': ')',
     'INDEXOF_WRAPPER_OPEN': 'getIndexOf(',
     'INDEXOF_WRAPPER_CLOSE': ')',
+    'MOD_WRAPPER_OPEN': 'mod(',
+    'MOD_WRAPPER_CLOSE': ')',
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
@@ -218,6 +220,10 @@ export class CSharpTranspiler extends BaseTranspiler {
                         return `Math.Round((double)${parsedArg})`;
                     case "Math.ceil":
                         return `Math.Ceiling((double)${parsedArg})`;
+                    case "Math.floor":
+                        return `Math.Floor((double)${parsedArg})`;
+                    case "Math.abs":
+                        return `Math.Abs((double)${parsedArg})`;
                 }
             } else if (args.length === 2) 
             {
@@ -228,6 +234,8 @@ export class CSharpTranspiler extends BaseTranspiler {
                         return `mathMin(${parsedArg1}, ${parsedArg2})`;
                     case "Math.max":
                         return `mathMax(${parsedArg1}, ${parsedArg2})`;
+                    case "Math.pow":
+                        return `Math.Pow((double)${parsedArg1}, (double)${parsedArg2})`;
                 }
             }
             const leftSide = node.expression?.expression;
@@ -415,6 +423,12 @@ export class CSharpTranspiler extends BaseTranspiler {
             return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
         }
 
+        if (op === ts.SyntaxKind.PercentToken) {
+            const open = this.MOD_WRAPPER_OPEN;
+            const close = this.MOD_WRAPPER_CLOSE;
+            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+        }
+
         // x = y
         // cast y to x type when y is unknown
         if (op === ts.SyntaxKind.EqualsToken) {
@@ -584,11 +598,11 @@ export class CSharpTranspiler extends BaseTranspiler {
         const type = node.type;
         
         if (type.kind === ts.SyntaxKind.AnyKeyword) {
-            return `(object)(${this.printNode(node.expression, identation)})`;
+            return `((object)${this.printNode(node.expression, identation)})`;
         }
 
         if (type.kind === ts.SyntaxKind.StringKeyword) {
-            return `(string)(${this.printNode(node.expression, identation)})`;
+            return `((string)${this.printNode(node.expression, identation)})`;
         }
 
         if (type.kind === ts.SyntaxKind.ArrayType) {
