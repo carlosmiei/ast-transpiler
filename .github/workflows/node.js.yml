@@ -3,12 +3,12 @@ name: Build
 on:
   push:
     branches: [ master ]
-      paths-ignore:
-        - '**/README.md'
-        - '**.cs'
-        - 'examples/'
-        - '.npmignore'
-        - '.gitignore'
+    paths-ignore:
+      - '**/README.md'
+      - '**.cs'
+      - 'examples/'
+      - '.npmignore'
+      - '.gitignore'
   pull_request:
     branches: [ master ]
 
