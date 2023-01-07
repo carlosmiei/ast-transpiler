@@ -5,7 +5,7 @@
 ![Lines](./badges/coverage-lines.svg)
 ![Statements](./badges/coverage-statements.svg)
 
-**WORK IN PROGRESS** 
+**⚠️ WORK IN PROGRESS** 
 
 `ast-transpiler` is a library that allows transpiling typescript code to different languages using typescript's abstract syntax tree (AST) and type checker in an easy way abstracting most of the complexity behind the process.
 
@@ -26,6 +26,7 @@ function importantFunction(argument) { // type of argumment is unknown
 
 ⬆️ In this case, we have no means to infer the argument's type, so for instance in PHP we don't know if `.length` should be transpiled to `str_len` or `count`.
 
+
 **✅ Good Example**
 
 ```Javascript
@@ -34,6 +35,18 @@ function importantFunction(argument: string[]) {
 }
 ```
 ⬆️ argument's type is known so all good, no ambiguities here.
+
+
+**❌ Bad Example (C# only)**
+```Javascript
+class x {
+    myMethod () {
+        let i = 1;
+        i = "string";
+    }
+}
+```
+Unlike other languages, C# does not allow changing the type of a variable/rebinding the same name to a different type. So, if you intend to transpile to C# avoid this pattern.
 
 #### What about javascript?
 Obviously, all Javascript code is valid Typescript, so in theory, it should transpile Javascript seamlessly as well. This is in part true, but for the lacking of types, we might get some invalid results when the types are not clear (check bad example).
@@ -93,6 +106,10 @@ console.log(transpiler.exports) // prints unified export statements if any
 ### Helpers
 C# is very different from languages like Typescript, Python or PHP since it's statically typed and much more restricted than the others mentioned. Things like falsy values, empty default objects, dynamic properties, different type comparison, untyped arguments/return type, etc do not exist so I had to create a set of wrappers that will emulate these features in C#. So in order to make your code run you need to make all the methods available [here](https://github.com/carlosmiei/ast-transpiler/blob/c%23/helpers/c%23/helpers.cs) accessible from your code.
 
+
+### Mandatory return type/parameter type
+As you probably know c# requires you to define the type for every parameter and method declaration whereas Typescript/Javascript does not, so this package will try to infer the type if not available or default to `object`, so it's preferable to declare them to avoid errors.
+
 ### Number ambiguity
 Unfortunately Typescript/Javascript has only one type, `Number` which represents both integers and floating-point numbers. This is problematic because C# offers a variety of types (uint, int, Int64, double, float) to represent numeric values so it's very hard if not impossible to correctly transpile `Number`. For now we're converting it to `object` .
 
@@ -143,11 +160,14 @@ As mentioned above, this library allows for some customization through the offer
 
 Currently there are two generic boolean transpiling options, `uncamelcaseIdentifiers` and `asyncTranspiling`. As the name suggests the former defines if all identifiers (variables, methods, functions, expression calls) should uncamelcased and the latter if we want our transpiled code to be async. 
 
+You can also turn warn the warnings by setting the `verbose` option.
+
 They can be set upon instantiating our transpiler, or using setter methods
 
 ```Javascript
 const transpiler = new Transpiler({
     python: {
+        verbose: true
         uncamelcaseIdentifiers: false, // default value
         asyncTranspiling: true // default value
     },
