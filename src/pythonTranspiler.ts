@@ -1,4 +1,4 @@
-import { BaseTranspiler } from "./BaseTranspiler.js";
+import { BaseTranspiler } from "./baseTranspiler.js";
 import { regexAll } from "./utils.js";
 import ts from 'typescript';
 

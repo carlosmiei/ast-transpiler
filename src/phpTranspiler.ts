@@ -1,4 +1,4 @@
-import { BaseTranspiler } from "./BaseTranspiler.js";
+import { BaseTranspiler } from "./baseTranspiler.js";
 import ts, { TypeChecker } from 'typescript';
 import { unCamelCase, regexAll } from "./utils.js";
 import { Logger } from "./logger.js";
