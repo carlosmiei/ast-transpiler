@@ -258,7 +258,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                     case 'slice':
                         return `((string)${leftSideText}).Substring(${argText})`;
                     case 'replace':
-                        return `((string)${leftSideText}).Replace(${argText})`;
+                        return `((string)${leftSideText}).Replace(${argText}, ${this.printNode(args[1], identation)})`;
                     case 'indexOf':
                         return `${this.INDEXOF_WRAPPER_OPEN}${leftSideText}, ${argText}${this.INDEXOF_WRAPPER_CLOSE}`;
                 }
