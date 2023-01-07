@@ -7,6 +7,7 @@ RELEASE="patch" && [ -n "$1" ] && RELEASE=$1
 
 # cut the release
 VERSION=$(npm --no-git-tag-version version $RELEASE | sed 's/v//')
+
 git add package.json
 git commit -m "release: cut the $VERSION release"
 

@@ -3,3 +3,5 @@ badges/
 examples/
 node_modules/
 tests/
+manual.ts
+out/

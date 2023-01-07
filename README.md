@@ -13,7 +13,7 @@
 
 As expected, it's not possible to transpile Typescript to Python or PHP in a 1:1 parity because they are different languages a lot of features are not interchangeable. Nonetheless, this library supports as many features as possible, doing some adaptions (more to come).
 
-Although we transpile TS code directly to the other languages, this library does touch import or exports statements because each language has its own module/namespace model. Instead, we return a unified list of imports and exports separately, allowing the user to adapt it to the target language easily and append it to the generated code (check `IFileImport` and `IFileExport`).
+Although we transpile TS code directly to the other languages, this library does not touch import or exports statements because each language has its own module/namespace model. Instead, we return a unified list of imports and exports separately, allowing the user to adapt it to the target language easily and append it to the generated code (check `IFileImport` and `IFileExport`).
 
 In order to facilitate the transpilation process, we should try to add as many types as possible otherwise, we might get invalid results.
 
@@ -104,7 +104,7 @@ console.log(transpiler.exports) // prints unified export statements if any
 
 ## ⚡ C# Notes
 ### Helpers
-C# is very different from languages like Typescript, Python or PHP since it's statically typed and much more restricted than the others mentioned. Things like falsy values, empty default objects, dynamic properties, different type comparison, untyped arguments/return type, etc do not exist so I had to create a set of wrappers that will emulate these features in C#. So in order to make your code run you need to make all the methods available [here](https://github.com/carlosmiei/ast-transpiler/blob/c%23/helpers/c%23/helpers.cs) accessible from your code.
+C# is very different from languages like Typescript, Python or PHP since it's statically typed and much more restricted than the others mentioned. Things like falsy values, empty default objects, dynamic properties, different type comparison, untyped arguments/return type, etc do not exist so I had to create a set of wrappers that will emulate these features in C#. So in order to make your code run you need to make all the **helper** methods available [here](https://github.com/carlosmiei/ast-transpiler/blob/c%23/helpers/c%23/helpers.cs) accessible from your code (wip).
 
 
 ### Mandatory return type/parameter type
@@ -166,7 +166,7 @@ They can be set upon instantiating our transpiler, or using setter methods
 
 ```Javascript
 const transpiler = new Transpiler({
-    verbose: true,
+        verbose: true
     python: {
         uncamelcaseIdentifiers: false, // default value
         asyncTranspiling: true // default value
