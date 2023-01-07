@@ -166,8 +166,8 @@ They can be set upon instantiating our transpiler, or using setter methods
 
 ```Javascript
 const transpiler = new Transpiler({
+    verbose: true,
     python: {
-        verbose: true
         uncamelcaseIdentifiers: false, // default value
         asyncTranspiling: true // default value
     },
