@@ -2,7 +2,7 @@ import { Transpiler } from '../src/transpiler';
 import { readFileSync } from 'fs';
 
 jest.mock('module',()=>({
-    __esModule: true,                    // this makes it work
+    __esModule: true,                 // this makes it work
     default: jest.fn()
   }));
 
