@@ -2,7 +2,7 @@ import ts from 'typescript';
 import currentPath from "./dirname.cjs";
 import { PythonTranspiler } from './pythonTranspiler.js';
 import { PhpTranspiler } from './phpTranspiler.js';
-import { CSharpTranspiler } from './CSharpTranspiler.js';
+import { CSharpTranspiler } from './csharpTranspiler.js';
 import * as path from "path";
 import { Logger } from './logger.js';
 import { IFileExport, IFileImport, ITranspiledFile } from './types.js';

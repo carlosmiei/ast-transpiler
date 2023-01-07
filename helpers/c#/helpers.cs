@@ -23,6 +23,10 @@ public partial class Helper
             return false;
         }
 
+        var i = 1;
+        double d = 1.0;
+        var s = i == d;
+
         // return value != null && value != false && value != 0 && value != "" && value != "0" && value != "false" && value != "False" && value != "FALSE";
         if (value.GetType() == typeof(bool))
         {
@@ -146,6 +150,23 @@ public partial class Helper
     public bool isLessThanOrEqual(object a, object b)
     {
         return isLessThan(a, b) || isEqual(a, b);
+    }
+
+    public object mod(object a, object b)
+    {
+        if (a == null || b == null)
+        {
+            return null;
+        }
+        if (a.GetType() != b.GetType())
+            return null;
+
+        if (a.GetType() == typeof(string) || a.GetType() == typeof(Int64) || a.GetType() == typeof(int))
+            return ((int)a) % ((int)b);
+
+        return null;
+
+        // return add(a, b);
     }
 
     public object add(object a, object b)
