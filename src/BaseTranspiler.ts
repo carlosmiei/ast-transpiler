@@ -311,7 +311,13 @@ class BaseTranspiler {
       
         const parentClass = (ts as any).getAllSuperTypeNodes(node.parent)[0];
         const parentClassType = global.checker.getTypeAtLocation(parentClass);
-        const parentClassDecl = parentClassType.symbol.valueDeclaration;
+        const parentClassDecl = parentClassType?.symbol?.valueDeclaration;
+
+        if (parentClassDecl === undefined) {
+            this.warn(node, "Parent class", "Parent class not found");
+            return undefined;
+        }
+
         const parentClassMembers = parentClassDecl.members ?? [];
 
         let method = undefined;
