@@ -76,20 +76,68 @@ declare class BaseTranspiler {
     SUPER_CALL_TOKEN: string;
     WHILE_TOKEN: string;
     FOR_TOKEN: string;
-    FOR_COND_OPEN: string;
-    FOR_COND_CLOSE: string;
-    FOR_OPEN: string;
-    FOR_CLOSE: string;
+    VAR_TOKEN: string;
+    METHOD_DEFAULT_ACCESS: string;
     PROPERTY_ASSIGNMENT_TOKEN: string;
+    PROPERTY_ASSIGNMENT_OPEN: string;
+    PROPERTY_ASSIGNMENT_CLOSE: string;
     LINE_TERMINATOR: string;
     FUNCTION_TOKEN: string;
+    METHOD_TOKEN: string;
     ASYNC_TOKEN: string;
+    PROMISE_TYPE_KEYWORD: string;
     NEW_TOKEN: string;
     STRING_LITERAL_KEYWORD: string;
     STRING_KEYWORD: string;
     NUMBER_KEYWORD: string;
     PUBLIC_KEYWORD: string;
     PRIVATE_KEYWORD: string;
+    VOID_KEYWORD: string;
+    BOOLEAN_KEYWORD: string;
+    ARRAY_KEYWORD: string;
+    OBJECT_KEYWORD: string;
+    INTEGER_KEYWORD: string;
+    DEFAULT_RETURN_TYPE: string;
+    DEFAULT_PARAMETER_TYPE: string;
+    DEFAULT_TYPE: string;
+    FALSY_WRAPPER_OPEN: string;
+    FALSY_WRAPPER_CLOSE: string;
+    ELEMENT_ACCESS_WRAPPER_OPEN: string;
+    ELEMENT_ACCESS_WRAPPER_CLOSE: string;
+    COMPARISON_WRAPPER_OPEN: string;
+    COMPARISON_WRAPPER_CLOSE: string;
+    UKNOWN_PROP_WRAPPER_OPEN: string;
+    UNKOWN_PROP_WRAPPER_CLOSE: string;
+    UKNOWN_PROP_ASYNC_WRAPPER_OPEN: string;
+    UNKOWN_PROP_ASYNC_WRAPPER_CLOSE: string;
+    EQUALS_WRAPPER_OPEN: string;
+    EQUALS_WRAPPER_CLOSE: string;
+    DIFFERENT_WRAPPER_OPEN: string;
+    DIFFERENT_WRAPPER_CLOSE: string;
+    GREATER_THAN_WRAPPER_OPEN: string;
+    GREATER_THAN_WRAPPER_CLOSE: string;
+    LESS_THAN_WRAPPER_OPEN: string;
+    LESS_THAN_WRAPPER_CLOSE: string;
+    GREATER_THAN_EQUALS_WRAPPER_OPEN: string;
+    GREATER_THAN_EQUALS_WRAPPER_CLOSE: string;
+    LESS_THAN_EQUALS_WRAPPER_OPEN: string;
+    LESS_THAN_EQUALS_WRAPPER_CLOSE: string;
+    DIVIDE_WRAPPER_OPEN: string;
+    DIVIDE_WRAPPER_CLOSE: string;
+    PLUS_WRAPPER_OPEN: string;
+    PLUS_WRAPPER_CLOSE: string;
+    MINUS_WRAPPER_OPEN: string;
+    MINUS_WRAPPER_CLOSE: string;
+    MOD_WRAPPER_OPEN: string;
+    MOD_WRAPPER_CLOSE: string;
+    ARRAY_LENGTH_WRAPPER_OPEN: string;
+    ARRAY_LENGTH_WRAPPER_CLOSE: string;
+    MULTIPLY_WRAPPER_OPEN: string;
+    MULTIPLY_WRAPPER_CLOSE: string;
+    INDEXOF_WRAPPER_OPEN: string;
+    INDEXOF_WRAPPER_CLOSE: string;
+    PARSEINT_WRAPPER_OPEN: string;
+    PARSEINT_WRAPPER_CLOSE: string;
     SupportedKindNames: {};
     PostFixOperators: {};
     PrefixFixOperators: {};
@@ -99,19 +147,29 @@ declare class BaseTranspiler {
     FullPropertyAccessReplacements: {};
     StringLiteralReplacements: {};
     CallExpressionReplacements: {};
+    ReservedKeywordsReplacements: {};
     PropertyAccessRequiresParenthesisRemoval: any[];
     FuncModifiers: {};
     uncamelcaseIdentifiers: any;
     asyncTranspiling: any;
+    requiresReturnType: any;
+    requiresParameterType: any;
+    supportsFalsyOrTruthyValues: any;
+    requiresCallExpressionCast: any;
+    id: any;
     constructor(config: any);
     initOperators(): void;
     applyUserOverrides(config: any): void;
+    getLineAndCharacterOfNode(node: any): [number, number];
+    isComment(line: string): boolean;
     isStringType(flags: ts.TypeFlags): boolean;
     isAnyType(flags: ts.TypeFlags): boolean;
-    warnIfAnyType(flags: any, variable: any, target: any): void;
+    warnIfAnyType(node: any, flags: any, variable: any, target: any): void;
+    warn(node: any, target: any, message: any): void;
     isAsyncFunction(node: any): boolean;
+    getMethodOverride(node: ts.Node): ts.Node;
     getIden(num: any): string;
-    getBlockOpen(): string;
+    getBlockOpen(identation: any): string;
     getBlockClose(identation: any, chainBlock?: boolean): string;
     startsWithUpperCase(str: any): boolean;
     unCamelCaseIfNeeded(name: string): string;
@@ -126,6 +184,8 @@ declare class BaseTranspiler {
     transformPropertyAcessRightIdentifierIfNeeded(name: string): string;
     getExceptionalAccessTokenIfAny(node: any): any;
     printPropertyAccessExpression(node: any, identation: any): string;
+    printCustomDefaultValueIfNeeded(node: any): any;
+    printParameteCustomName(node: any, name: any, defaultValue?: boolean): any;
     printParameter(node: any, defaultValue?: boolean): string;
     printModifiers(node: any): any;
     transformLeadingComment(comment: any): any;
@@ -133,7 +193,12 @@ declare class BaseTranspiler {
     printLeadingComments(node: any, identation: any): string;
     printTraillingComment(node: any, identation: any): string;
     printNodeCommentsIfAny(node: any, identation: any, parsedNode: any): string;
+    getType(node: any): any;
+    getTypeFromRawType(type: any): string;
+    getFunctionType(node: any, async?: boolean): any;
     printFunctionBody(node: any, identation: any): string;
+    printParameterType(node: any): any;
+    printFunctionType(node: any): any;
     printFunctionDefinition(node: any, identation: any): string;
     transformFunctionNameIfNeeded(name: any): string;
     printFunctionDeclaration(node: any, identation: any): string;
@@ -148,6 +213,8 @@ declare class BaseTranspiler {
     printVariableStatement(node: any, identation: any): string;
     printOutOfOrderCallExpressionIfAny(node: any, identation: any): any;
     printSuperCallInsideConstructor(node: any, identation: any): string;
+    isBuiltInFunctionCall(node: any): any;
+    getTypesFromCallExpressionParameters(node: any): any[];
     printCallExpression(node: any, identation: any): string;
     printClassBody(node: any, identation: any): string;
     printClassDefinition(node: any, identation: any): string;
@@ -157,12 +224,14 @@ declare class BaseTranspiler {
     printForStatement(node: any, identation: any): string;
     printBreakStatement(node: any, identation: any): string;
     printPostFixUnaryExpression(node: any, identation: any): string;
-    printPrefixUnaryExpression(node: any, identation: any): string;
+    printPrefixUnaryExpression(node: any, identation: any): any;
     printObjectLiteralBody(node: any, identation: any): any;
     printObjectLiteralExpression(node: any, identation: any): string;
+    printCustomRightSidePropertyAssignment(node: any, identation: any): string;
     printPropertyAssignment(node: any, identation: any): string;
     printElementAccessExpressionExceptionIfAny(node: any): any;
     printElementAccessExpression(node: any, identation: any): any;
+    printCondition(node: any, identation: any): any;
     printIfStatement(node: any, identation: any): string;
     printParenthesizedExpression(node: any, identation: any): string;
     printBooleanLiteral(node: any): string;
@@ -172,6 +241,7 @@ declare class BaseTranspiler {
     printAwaitExpression(node: any, identation: any): string;
     printConditionalExpression(node: any, identation: any): string;
     printAsExpression(node: any, identation: any): string;
+    getFunctionNodeFromReturn(node: any): any;
     printReturnStatement(node: any, identation: any): string;
     printArrayBindingPattern(node: any, identation: any): string;
     printBlock(node: any, identation: any, chainBlock?: boolean): string;
@@ -203,6 +273,7 @@ declare class PythonTranspiler extends BaseTranspiler {
     printInstanceOfExpression(node: any, identation: any): string;
     handleTypeOfInsideBinaryExpression(node: any, identation: any): string;
     printCustomBinaryExpressionIfAny(node: any, identation: any): string;
+    printConditionalExpression(node: any, identation: any): string;
     getCustomOperatorIfAny(left: any, right: any, operator: any): "is" | "is not";
 }
 
@@ -214,24 +285,44 @@ declare class PhpTranspiler extends BaseTranspiler {
     ASYNC_FUNCTION_WRAPPER_OPEN: string;
     constructor(config?: {});
     printAwaitExpression(node: any, identation: any): string;
-    transformIdentifier(identifier: any): string;
+    transformIdentifier(identifier: any): any;
     getCustomOperatorIfAny(left: any, right: any, operator: any): "." | ".=";
     transformPropertyAcessExpressionIfNeeded(node: any): any;
     transformPropertyInsideCallExpressionIfNeeded(node: any): any;
     printOutOfOrderCallExpressionIfAny(node: any, identation: any): any;
     getExceptionalAccessTokenIfAny(node: any): string;
-    printConditionalExpression(node: any, identation: any): string;
     handleTypeOfInsideBinaryExpression(node: any, identation: any): string;
     printCustomBinaryExpressionIfAny(node: any, identation: any): string;
-    isComment(line: any): any;
     printFunctionBody(node: any, identation: any): string;
     transformLeadingComment(comment: any): string;
     initConfig(): void;
 }
 
+declare class CSharpTranspiler extends BaseTranspiler {
+    constructor(config?: {});
+    initConfig(): void;
+    getBlockOpen(identation: any): string;
+    printSuperCallInsideConstructor(node: any, identation: any): string;
+    printConstructorDeclaration(node: any, identation: any): string;
+    printThisElementAccesssIfNeeded(node: any, identation: any): string;
+    printElementAccessExpressionExceptionIfAny(node: any): void;
+    printWrappedUnknownThisProperty(node: any): string;
+    printOutOfOrderCallExpressionIfAny(node: any, identation: any): string;
+    handleTypeOfInsideBinaryExpression(node: any, identation: any): string;
+    printCustomBinaryExpressionIfAny(node: any, identation: any): string;
+    printVariableDeclarationList(node: any, identation: any): string;
+    transformPropertyAcessExpressionIfNeeded(node: any): any;
+    printCustomDefaultValueIfNeeded(node: any): string;
+    printFunctionBody(node: any, identation: any): string;
+    printInstanceOfExpression(node: any, identation: any): string;
+    printAsExpression(node: any, identation: any): string;
+    printArrayLiteralExpression(node: any): string;
+}
+
 declare enum Languages {
     Python = 0,
-    Php = 1
+    Php = 1,
+    CSharp = 2
 }
 declare enum TranspilationMode {
     ByPath = 0,
@@ -241,6 +332,7 @@ declare class Transpiler {
     config: any;
     pythonTranspiler: PythonTranspiler;
     phpTranspiler: PhpTranspiler;
+    csharpTranspiler: CSharpTranspiler;
     constructor(config?: {});
     setVerboseMode(verbose: boolean): void;
     createProgramInMemoryAndSetGlobals(content: any): void;
@@ -251,6 +343,8 @@ declare class Transpiler {
     transpilePythonByPath(path: any): ITranspiledFile;
     transpilePhp(content: any): ITranspiledFile;
     transpilePhpByPath(path: any): ITranspiledFile;
+    transpileCSharp(content: any): ITranspiledFile;
+    transpileCSharpByPath(path: any): ITranspiledFile;
     getFileImports(content: string): IFileImport[];
     getFileExports(content: string): IFileExport[];
     setPHPPropResolution(props: string[]): void;
