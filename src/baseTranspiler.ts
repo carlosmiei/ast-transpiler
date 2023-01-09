@@ -824,52 +824,7 @@ class BaseTranspiler {
         const defaultAccess = this.METHOD_DEFAULT_ACCESS ? this.METHOD_DEFAULT_ACCESS + " ": "";
         modifiers = modifiers ? modifiers + " " : defaultAccess; // tmp check this
         
-        modifiers = modifiers.indexOf("public") === -1 && modifiers.indexOf("private") === -1 && modifiers.indexOf("protected") === -1 ? defaultAccess + modifiers : modifiers;
-
-        let parsedArgs = undefined;
-        // c# only move this elsewhere (csharp transpiler)
-        if (this.id === "C#") {
-            const methodOverride = this.getMethodOverride(node) as any;
-            const isOverride = methodOverride !== undefined;
-            modifiers = isOverride ? modifiers + "override " : modifiers + "virtual ";
-
-            // infer parent return type
-            if (isOverride && (returnType === "object" || returnType === "Task<object>")) {
-                returnType = this.printFunctionType(methodOverride);
-            }
-
-            // ts does not infer parameters types of overriden methods :x , so we need some
-            // heuristic here to infer the types
-            if (isOverride && node.parameters.length > 0) {
-                const first = node.parameters[0];
-                const firstType = this.getType(first);
-
-                if (firstType === undefined) {
-                    // use the override version, check this out later
-                    // parsedArgs = this.printMethodParameters(methodOverride);
-                    const currentArgs = node.parameters;
-                    const parentArgs = methodOverride.parameters;
-                    parsedArgs = "";
-                    parentArgs.forEach((param, index) => {
-                        const originalName = this.printNode(currentArgs[index].name, 0);
-                        const parsedArg = this.printParameteCustomName(param, originalName);
-                        parsedArgs+= parsedArg;
-                        if (index < parentArgs.length - 1) {
-                            parsedArgs+= ", ";
-                        }
-                    });
-
-                } else {
-                    parsedArgs = this.printMethodParameters(node);
-                }
-
-            } else {
-                parsedArgs = this.printMethodParameters(node);
-            }
-        } else {
-            parsedArgs = this.printMethodParameters(node);
-        }
-
+        const parsedArgs = this.printMethodParameters(node);
         
         returnType = returnType ? returnType + " " : returnType;
 

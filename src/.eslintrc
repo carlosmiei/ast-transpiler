@@ -10,6 +10,7 @@
       "plugin:@typescript-eslint/recommended"
     ],
     "rules": { 
+      "indent": ["error", 4],
       "no-console": 1,
       "semi": "error"
     }

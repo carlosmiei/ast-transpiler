@@ -181,17 +181,17 @@ export class CSharpTranspiler extends BaseTranspiler {
         const isAsync = true; // setting to true for now, because there are some scenarios where we don't know
         // if the call is async or not, so we need to assume it is async
         // example Promise.all([this.unknownPropAsync()])
-            const elementAccess = node.expression;
-            if (elementAccess?.kind === ts.SyntaxKind.ElementAccessExpression) {
-                if (elementAccess?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
-                    let parsedArg = node.arguments?.length > 0 ? this.printNode(node.arguments[0], identation).trimStart() : "";
-                    const propName = this.printNode(elementAccess.argumentExpression, 0);
-                    const wrapperOpen = isAsync ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
-                    const wrapperClose = isAsync ? this.UNKOWN_PROP_ASYNC_WRAPPER_CLOSE : this.UNKOWN_PROP_WRAPPER_CLOSE;
-                    parsedArg = parsedArg ? ", " + parsedArg : "";
-                    return wrapperOpen + propName + parsedArg + wrapperClose;
-                }
+        const elementAccess = node.expression;
+        if (elementAccess?.kind === ts.SyntaxKind.ElementAccessExpression) {
+            if (elementAccess?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
+                let parsedArg = node.arguments?.length > 0 ? this.printNode(node.arguments[0], identation).trimStart() : "";
+                const propName = this.printNode(elementAccess.argumentExpression, 0);
+                const wrapperOpen = isAsync ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
+                const wrapperClose = isAsync ? this.UNKOWN_PROP_ASYNC_WRAPPER_CLOSE : this.UNKOWN_PROP_WRAPPER_CLOSE;
+                parsedArg = parsedArg ? ", " + parsedArg : "";
+                return wrapperOpen + propName + parsedArg + wrapperClose;
             }
+        }
         return; 
     }
 
@@ -226,34 +226,34 @@ export class CSharpTranspiler extends BaseTranspiler {
             if (args.length === 1) {
                 const parsedArg = this.printNode(args[0], 0);
                 switch (expressionText) {
-                    // case "JSON.parse":
-                    //     return `json_decode(${parsedArg}, $as_associative_array = true)`;
-                    case "Array.isArray":
-                        return `(${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))`;
-                    case "Object.keys":
-                        return `new List<string>(((Dictionary<string,object>)${parsedArg}).Keys)`;
-                    case "Object.values":
-                        return `new List<object>(((Dictionary<string,object>)${parsedArg}).Values)`;
-                    case "Math.round":
-                        return `Math.Round((double)${parsedArg})`;
-                    case "Math.ceil":
-                        return `Math.Ceiling((double)${parsedArg})`;
-                    case "Math.floor":
-                        return `Math.Floor((double)${parsedArg})`;
-                    case "Math.abs":
-                        return `Math.Abs((double)${parsedArg})`;
+                // case "JSON.parse":
+                //     return `json_decode(${parsedArg}, $as_associative_array = true)`;
+                case "Array.isArray":
+                    return `(${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))`;
+                case "Object.keys":
+                    return `new List<string>(((Dictionary<string,object>)${parsedArg}).Keys)`;
+                case "Object.values":
+                    return `new List<object>(((Dictionary<string,object>)${parsedArg}).Values)`;
+                case "Math.round":
+                    return `Math.Round((double)${parsedArg})`;
+                case "Math.ceil":
+                    return `Math.Ceiling((double)${parsedArg})`;
+                case "Math.floor":
+                    return `Math.Floor((double)${parsedArg})`;
+                case "Math.abs":
+                    return `Math.Abs((double)${parsedArg})`;
                 }
             } else if (args.length === 2) 
             {
                 const parsedArg1 = this.printNode(args[0], 0);
                 const parsedArg2 = this.printNode(args[1], 0);
                 switch (expressionText) {
-                    case "Math.min":
-                        return `mathMin(${parsedArg1}, ${parsedArg2})`;
-                    case "Math.max":
-                        return `mathMax(${parsedArg1}, ${parsedArg2})`;
-                    case "Math.pow":
-                        return `Math.Pow((double)${parsedArg1}, (double)${parsedArg2})`;
+                case "Math.min":
+                    return `mathMin(${parsedArg1}, ${parsedArg2})`;
+                case "Math.max":
+                    return `mathMax(${parsedArg1}, ${parsedArg2})`;
+                case "Math.pow":
+                    return `Math.Pow((double)${parsedArg1}, (double)${parsedArg2})`;
                 }
             }
             const leftSide = node.expression?.expression;
@@ -275,25 +275,25 @@ export class CSharpTranspiler extends BaseTranspiler {
                 const argText = this.printNode(arg, identation).trimStart();
                 const type = global.checker.getTypeAtLocation(leftSide); // eslint-disable-line
                 switch (rightSide) {
-                    case 'includes':
-                            return `${leftSideText}.Contains(${argText})`;
-                    case 'join': // names.join(',') => String.Join(", ", names);
-                        return `String.Join(${argText}, ${leftSideText})`;
-                    case 'split': // "ol".split("o") "ol".Split(' ').ToList();
-                        return `((string)${leftSideText}).Split(${argText}).ToList<string>()`;
-                    case 'slice':
-                        return `((string)${leftSideText}).Substring(${argText})`;
-                    case 'replace':
-                        return `((string)${leftSideText}).Replace(${argText}, ${this.printNode(args[1], identation)})`;
-                    case 'indexOf':
-                        return `${this.INDEXOF_WRAPPER_OPEN}${leftSideText}, ${argText}${this.INDEXOF_WRAPPER_CLOSE}`;
+                case 'includes':
+                    return `${leftSideText}.Contains(${argText})`;
+                case 'join': // names.join(',') => String.Join(", ", names);
+                    return `String.Join(${argText}, ${leftSideText})`;
+                case 'split': // "ol".split("o") "ol".Split(' ').ToList();
+                    return `((string)${leftSideText}).Split(${argText}).ToList<string>()`;
+                case 'slice':
+                    return `((string)${leftSideText}).Substring(${argText})`;
+                case 'replace':
+                    return `((string)${leftSideText}).Replace(${argText}, ${this.printNode(args[1], identation)})`;
+                case 'indexOf':
+                    return `${this.INDEXOF_WRAPPER_OPEN}${leftSideText}, ${argText}${this.INDEXOF_WRAPPER_CLOSE}`;
                 }
             } else {
                 switch(rightSide) {
-                    case 'toUpperCase':
-                        return `((string)${this.printNode(leftSide, 0)}).ToUpper()`;
-                    case 'toLowerCase':
-                        return `((string)${this.printNode(leftSide, 0)}).ToLower()`;
+                case 'toUpperCase':
+                    return `((string)${this.printNode(leftSide, 0)}).ToUpper()`;
+                case 'toLowerCase':
+                    return `((string)${this.printNode(leftSide, 0)}).ToLower()`;
                 }
             }
         }
@@ -317,14 +317,14 @@ export class CSharpTranspiler extends BaseTranspiler {
 
         const target = this.printNode(expression, 0);
         switch (right) {
-            case "string":
-                return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(string)`;
-            case "number":
-                return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double)`;
-            case "boolean":
-                return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(bool)`;
-            case "object":
-                return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(Dictionary<string, object>)`;
+        case "string":
+            return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(string)`;
+        case "number":
+            return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double)`;
+        case "boolean":
+            return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(bool)`;
+        case "object":
+            return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(Dictionary<string, object>)`;
         }
 
         return undefined;
@@ -462,15 +462,15 @@ export class CSharpTranspiler extends BaseTranspiler {
         let rawExpression = undefined;
 
         switch(rightSide) {
-            case 'length':
+        case 'length':
                 const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
-                this.warnIfAnyType(node, type.flags, leftSide, "length");
-                // rawExpression = this.isStringType(type.flags) ? `(string${leftSide}).Length` : `(${leftSide}.Cast<object>().ToList()).Count`;
-                rawExpression = this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`; // `(${leftSide}.Cast<object>()).ToList().Count`
-                break;
-            case 'push':
-                rawExpression = `((List<object>)${leftSide}).Add`;
-                break;
+            this.warnIfAnyType(node, type.flags, leftSide, "length");
+            // rawExpression = this.isStringType(type.flags) ? `(string${leftSide}).Length` : `(${leftSide}.Cast<object>().ToList()).Count`;
+            rawExpression = this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`; // `(${leftSide}.Cast<object>()).ToList().Count`
+            break;
+        case 'push':
+            rawExpression = `((List<object>)${leftSide}).Add`;
+            break;
             // case 'push':
             //     rawExpression = `(List<object>${leftSide}).Add`s
             //     break;
@@ -594,12 +594,69 @@ export class CSharpTranspiler extends BaseTranspiler {
                 if (type === undefined || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
                     arrayOpen = "new List<Task<object>> {";
                 } else {
-                   arrayOpen = `new List<${type}> {`; 
+                    arrayOpen = `new List<${type}> {`; 
                 }
             }
         }
 
         return arrayOpen + elements + this.ARRAY_CLOSING_TOKEN;
+    }
+
+    printMethodDefinition(node, identation) {
+        let name = node.name.escapedText;
+        name = this.transformMethodNameIfNeeded(name);
+
+        let returnType = this.printFunctionType(node);
+
+        let modifiers = this.printModifiers(node);
+        const defaultAccess = this.METHOD_DEFAULT_ACCESS ? this.METHOD_DEFAULT_ACCESS + " ": "";
+        modifiers = modifiers ? modifiers + " " : defaultAccess; // tmp check this
+        
+        modifiers = modifiers.indexOf("public") === -1 && modifiers.indexOf("private") === -1 && modifiers.indexOf("protected") === -1 ? defaultAccess + modifiers : modifiers;
+
+        let parsedArgs = undefined;
+        // c# only move this elsewhere (csharp transpiler)
+        const methodOverride = this.getMethodOverride(node) as any;
+        const isOverride = methodOverride !== undefined;
+        modifiers = isOverride ? modifiers + "override " : modifiers + "virtual ";
+
+        // infer parent return type
+        if (isOverride && (returnType === "object" || returnType === "Task<object>")) {
+            returnType = this.printFunctionType(methodOverride);
+        }
+
+        // ts does not infer parameters types of overriden methods :x , so we need some
+        // heuristic here to infer the types
+        if (isOverride && node.parameters.length > 0) {
+            const first = node.parameters[0];
+            const firstType = this.getType(first);
+
+            if (firstType === undefined) {
+                // use the override version, check this out later
+                // parsedArgs = this.printMethodParameters(methodOverride);
+                const currentArgs = node.parameters;
+                const parentArgs = methodOverride.parameters;
+                parsedArgs = "";
+                parentArgs.forEach((param, index) => {
+                    const originalName = this.printNode(currentArgs[index].name, 0);
+                    const parsedArg = this.printParameteCustomName(param, originalName);
+                    parsedArgs+= parsedArg;
+                    if (index < parentArgs.length - 1) {
+                        parsedArgs+= ", ";
+                    }
+                });
+            } 
+        } 
+
+        parsedArgs = parsedArgs ? parsedArgs : this.printMethodParameters(node);
+        
+        returnType = returnType ? returnType + " " : returnType;
+
+        const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
+        const methodDef = this.getIden(identation) + modifiers + returnType + methodToken + name
+            + "(" + parsedArgs + ")";
+
+        return this.printNodeCommentsIfAny(node, identation, methodDef);
     }
     
     // check this out later
