@@ -21,8 +21,8 @@ const parserConfig = {
     'UNKOWN_PROP_WRAPPER_CLOSE': ')',
     'UKNOWN_PROP_ASYNC_WRAPPER_OPEN': 'this.callAsync(',
     'UNKOWN_PROP_ASYNC_WRAPPER_CLOSE': ')',
-    'EQUALS_WRAPPER_OPEN': 'isEqual(',
-    'EQUALS_WRAPPER_CLOSE': ')',
+    'EQUALS_EQUALS_WRAPPER_OPEN': 'isEqual(',
+    'EQUALS_EQUALS_WRAPPER_CLOSE': ')',
     'DIFFERENT_WRAPPER_OPEN': '!isEqual(',
     'DIFFERENT_WRAPPER_CLOSE': ')',
     'GREATER_THAN_WRAPPER_OPEN': 'isGreaterThan(',
@@ -50,7 +50,9 @@ const parserConfig = {
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
-    
+
+    binaryExpressionsWrappers;
+
     constructor(config = {}) {
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
         
@@ -110,6 +112,22 @@ export class CSharpTranspiler extends BaseTranspiler {
             'base': 'bs',
             'internal': 'intern',
             'event': 'eventVar'
+        };
+
+        this.binaryExpressionsWrappers = {
+            [ts.SyntaxKind.EqualsEqualsToken]: [this.EQUALS_EQUALS_WRAPPER_OPEN, this.EQUALS_EQUALS_WRAPPER_CLOSE],
+            [ts.SyntaxKind.EqualsEqualsEqualsToken]: [this.EQUALS_EQUALS_WRAPPER_OPEN, this.EQUALS_EQUALS_WRAPPER_CLOSE],
+            [ts.SyntaxKind.ExclamationEqualsToken]: [this.DIFFERENT_WRAPPER_OPEN, this.DIFFERENT_WRAPPER_CLOSE],
+            [ts.SyntaxKind.ExclamationEqualsEqualsToken]: [this.DIFFERENT_WRAPPER_OPEN, this.DIFFERENT_WRAPPER_CLOSE],
+            [ts.SyntaxKind.GreaterThanToken]: [this.GREATER_THAN_WRAPPER_OPEN, this.GREATER_THAN_WRAPPER_CLOSE],
+            [ts.SyntaxKind.GreaterThanEqualsToken]: [this.GREATER_THAN_EQUALS_WRAPPER_OPEN, this.GREATER_THAN_EQUALS_WRAPPER_CLOSE],
+            [ts.SyntaxKind.LessThanToken]: [this.LESS_THAN_WRAPPER_OPEN, this.LESS_THAN_WRAPPER_CLOSE],
+            [ts.SyntaxKind.LessThanEqualsToken]: [this.LESS_THAN_EQUALS_WRAPPER_OPEN, this.LESS_THAN_EQUALS_WRAPPER_CLOSE],
+            [ts.SyntaxKind.PlusToken]: [this.PLUS_WRAPPER_OPEN, this.PLUS_WRAPPER_CLOSE],
+            [ts.SyntaxKind.MinusToken]: [this.MINUS_WRAPPER_OPEN, this.MINUS_WRAPPER_CLOSE],
+            [ts.SyntaxKind.AsteriskToken]: [this.MULTIPLY_WRAPPER_OPEN, this.MULTIPLY_WRAPPER_CLOSE],
+            [ts.SyntaxKind.PercentToken]: [this.MOD_WRAPPER_OPEN, this.MOD_WRAPPER_CLOSE],
+            [ts.SyntaxKind.SlashToken]: [this.DIVIDE_WRAPPER_OPEN, this.DIVIDE_WRAPPER_CLOSE],
         };
     }
 
@@ -361,71 +379,10 @@ export class CSharpTranspiler extends BaseTranspiler {
         const leftText = this.printNode(left, 0);
         const rightText = this.printNode(right, 0);
 
-        if (op === ts.SyntaxKind.EqualsEqualsToken || op === ts.SyntaxKind.EqualsEqualsEqualsToken) {
-            const open = this.EQUALS_WRAPPER_OPEN;
-            const close = this.EQUALS_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.ExclamationEqualsEqualsToken || op === ts.SyntaxKind.ExclamationEqualsToken) {
-            const open = this.DIFFERENT_WRAPPER_OPEN;
-            const close = this.DIFFERENT_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.GreaterThanToken) {
-            const open = this.GREATER_THAN_WRAPPER_OPEN;
-            const close = this.GREATER_THAN_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.GreaterThanEqualsToken) {
-            const open = this.GREATER_THAN_EQUALS_WRAPPER_OPEN;
-            const close = this.GREATER_THAN_EQUALS_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.LessThanToken) {
-            const open = this.LESS_THAN_WRAPPER_OPEN;
-            const close = this.LESS_THAN_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.LessThanEqualsToken) {
-            const open = this.LESS_THAN_EQUALS_WRAPPER_OPEN;
-            const close = this.LESS_THAN_EQUALS_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.PlusToken) {
-            const leftText = this.printNode(left, 0);
-            const rightText = this.printNode(right, 0);
-            const open = this.PLUS_WRAPPER_OPEN;
-            const close = this.PLUS_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.MinusToken) {
-            const open = this.MINUS_WRAPPER_OPEN;
-            const close = this.MINUS_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.SlashToken) {
-            const open = this.DIVIDE_WRAPPER_OPEN;
-            const close = this.DIVIDE_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.AsteriskToken) {
-            const open = this.MULTIPLY_WRAPPER_OPEN;
-            const close = this.MULTIPLY_WRAPPER_CLOSE;
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-        }
-
-        if (op === ts.SyntaxKind.PercentToken) {
-            const open = this.MOD_WRAPPER_OPEN;
-            const close = this.MOD_WRAPPER_CLOSE;
+        if (op in this.binaryExpressionsWrappers) {
+            const wrapper = this.binaryExpressionsWrappers[op];
+            const open = wrapper[0];
+            const close = wrapper[1];
             return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
         }
 
