@@ -301,7 +301,7 @@ class BaseTranspiler {
         //// 
         // Check if the method is a member of a class
         if (!ts.isClassDeclaration(node.parent)) {
-          return undefined;
+            return undefined;
         }
       
         // Get the class declaration
@@ -309,7 +309,7 @@ class BaseTranspiler {
        
         // Check if the class has a base class
         if (!classDeclaration.heritageClauses) {
-          return undefined;
+            return undefined;
         }
       
         const parentClass = (ts as any).getAllSuperTypeNodes(node.parent)[0];
@@ -336,7 +336,7 @@ class BaseTranspiler {
 
         // TODO: Check if the method has the same signature as a method in the base class
         return method;
-      }
+    }
 
     getIden (num) {
         return this.DEFAULT_IDENTATION.repeat(num);
@@ -485,8 +485,8 @@ class BaseTranspiler {
 
         // checking "toString" insde the object will return the builtin toString method :X
         rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? // eslint-disable-line
-                this.RightPropertyAccessReplacements[rightSide] : 
-                this.transformPropertyAcessRightIdentifierIfNeeded(rightSide) ?? rightSide; 
+            this.RightPropertyAccessReplacements[rightSide] : 
+            this.transformPropertyAcessRightIdentifierIfNeeded(rightSide) ?? rightSide; 
         
         // join together the left and right side again
         const accessToken = this.getExceptionalAccessTokenIfAny(node) ?? this.PROPERTY_ACCESS_TOKEN;
@@ -569,9 +569,9 @@ class BaseTranspiler {
                 const commentText = fullText.slice(commentRange.pos, commentRange.end);
                 if (commentText !== undefined) {
                     const formatted = commentText
-                    .split("\n")
-                    .map(line=>line.trim())
-                    .map(line => !(line.trim().startsWith("*")) ? this.getIden(identation) + line : this.getIden(identation) + " " + line) .join("\n");
+                        .split("\n")
+                        .map(line=>line.trim())
+                        .map(line => !(line.trim().startsWith("*")) ? this.getIden(identation) + line : this.getIden(identation) + " " + line) .join("\n");
                     res+= this.transformLeadingComment(formatted) + "\n";
                 }
             }
@@ -696,8 +696,8 @@ class BaseTranspiler {
         // check for promise type
 
         if (type?.symbol?.escapedName === 'Promise') {
-                return this.PROMISE_TYPE_KEYWORD;
-            }
+            return this.PROMISE_TYPE_KEYWORD;
+        }
 
         // check this out not sure about this
         if (type?.intrinsicName === 'object') {
@@ -905,8 +905,8 @@ class BaseTranspiler {
     isBuiltInFunctionCall(node) {
         const symbol = global.checker.getSymbolAtLocation(node);
         const isInLibFiles = symbol?.getDeclarations()
-                ?.some(s => s.getSourceFile().fileName.includes("/node_modules/typescript/lib/"))
-                ?? false;
+            ?.some(s => s.getSourceFile().fileName.includes("/node_modules/typescript/lib/"))
+            ?? false;
 
 
         return isInLibFiles;
@@ -924,39 +924,23 @@ class BaseTranspiler {
         return parsedTypes;
     }
 
-    printCallExpression(node, identation) {
-
-        const expression = node.expression;
-
+    printArgsForCallExpression(node, identation) {
         const args = node.arguments;
 
-        // const parsedArgs  = args.map((a) => {
-        //     return  this.printNode(a, identation).trim();
-        // }).join(", ");
+        const parsedArgs = args.map((a) => {
+            return  this.printNode(a, identation).trim();
+        }).join(", ");
+        return parsedArgs;
+    }
 
-        let parsedArgs = "";
-        if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) { //eslint-disable-line
-        const parsedTypes = this.getTypesFromCallExpressionParameters(node);
-        const tmpArgs = [];
-        args.forEach((arg, index) => {
-            const parsedType = parsedTypes[index];
-            let cast = "";
-            if (parsedType !== "object" && parsedType !== "float" && parsedType !== "int") {
-                cast = parsedType ? `(${parsedType})` : '';
-            }
-            tmpArgs.push(cast + this.printNode(arg, identation).trim());
-        });
-            parsedArgs = tmpArgs.join(",");
-        } else {
-            parsedArgs = args.map((a) => {
-                return  this.printNode(a, identation).trim();
-            }).join(", ");
-        }
+    printCallExpression(node, identation) {
+        const expression = node.expression;
+
+        const parsedArgs = this.printArgsForCallExpression(node, identation);
 
         const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
 
         const finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
-
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;
         }

@@ -658,6 +658,26 @@ export class CSharpTranspiler extends BaseTranspiler {
 
         return this.printNodeCommentsIfAny(node, identation, methodDef);
     }
+
+    printArgsForCallExpression(node, identation) {
+        const args = node.arguments;
+        let parsedArgs  = "";
+        if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) { //eslint-disable-line
+            const parsedTypes = this.getTypesFromCallExpressionParameters(node);
+            const tmpArgs = [];
+            args.forEach((arg, index) => {
+                const parsedType = parsedTypes[index];
+                let cast = "";
+                if (parsedType !== "object" && parsedType !== "float" && parsedType !== "int") {
+                    cast = parsedType ? `(${parsedType})` : '';
+                }
+                tmpArgs.push(cast + this.printNode(arg, identation).trim());
+            });
+            parsedArgs = tmpArgs.join(",");
+            return parsedArgs;
+        } 
+        return super.printArgsForCallExpression(node, identation);
+    }
     
     // check this out later
 
