@@ -46,7 +46,7 @@ class x {
     }
 }
 ```
-Unlike other languages, C# does not allow changing the type of a variable/rebinding the same name to a different type. So, if you intend to transpile to C# avoid this pattern.
+Unlike other languages, C# does not allow changing the type of a variable/rebinding the same name to a different type (we don't use `dynamic` values because of the performance impact). So, if you intend to transpile to C# avoid this pattern.
 
 #### What about javascript?
 Obviously, all Javascript code is valid Typescript, so in theory, it should transpile Javascript seamlessly as well. This is in part true, but for the lacking of types, we might get some invalid results when the types are not clear (check bad example).
