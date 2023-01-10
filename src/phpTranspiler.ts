@@ -121,11 +121,11 @@ export class PhpTranspiler extends BaseTranspiler {
         let rawExpression = undefined;
 
         switch(rightSide) {
-            case 'length':
+        case 'length':
                 const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
-                this.warnIfAnyType(node, type.flags, leftSide, "length");
-                rawExpression = this.isStringType(type.flags) ? "strlen(" + leftSide + ")" : "count(" + leftSide + ")";
-                break;
+            this.warnIfAnyType(node, type.flags, leftSide, "length");
+            rawExpression = this.isStringType(type.flags) ? "strlen(" + leftSide + ")" : "count(" + leftSide + ")";
+            break;
         }
         return rawExpression;
     }
@@ -138,21 +138,21 @@ export class PhpTranspiler extends BaseTranspiler {
         let rawExpression = undefined;
 
         switch(rightSide) {
-            case 'toString':
-                rawExpression = "(string) " + leftSide;
-                break;
-            case 'toUpperCase':
-                rawExpression = "strtoupper(" + leftSide + ")";
-                break;
-            case 'toLowerCase':
-                rawExpression = "strtolower(" + leftSide + ")";
-                break;
-            case 'shift':
-                rawExpression = "array_shift(" + leftSide + ")";
-                break;
-            case 'pop':
-                rawExpression = "array_pop(" + leftSide + ")";
-                break;
+        case 'toString':
+            rawExpression = "(string) " + leftSide;
+            break;
+        case 'toUpperCase':
+            rawExpression = "strtoupper(" + leftSide + ")";
+            break;
+        case 'toLowerCase':
+            rawExpression = "strtolower(" + leftSide + ")";
+            break;
+        case 'shift':
+            rawExpression = "array_shift(" + leftSide + ")";
+            break;
+        case 'pop':
+            rawExpression = "array_pop(" + leftSide + ")";
+            break;
         }
 
         return rawExpression;
@@ -165,14 +165,14 @@ export class PhpTranspiler extends BaseTranspiler {
             if (args.length === 1) {
                 const parsedArg = this.printNode(args[0], 0);
                 switch (expressionText) {
-                    case "JSON.parse":
-                        return `json_decode(${parsedArg}, $as_associative_array = true)`;
-                    case "Array.isArray":
-                        return `gettype(${parsedArg}) === 'array' && array_keys(${parsedArg}) === array_keys(array_keys(${parsedArg}))`;
-                    case "Object.keys":
-                        return `is_array(${parsedArg}) ? array_keys(${parsedArg}) : array()`;
-                    case "Object.values":
-                        return `is_array(${parsedArg}) ? array_values(${parsedArg}) : array()`;
+                case "JSON.parse":
+                    return `json_decode(${parsedArg}, $as_associative_array = true)`;
+                case "Array.isArray":
+                    return `gettype(${parsedArg}) === 'array' && array_keys(${parsedArg}) === array_keys(array_keys(${parsedArg}))`;
+                case "Object.keys":
+                    return `is_array(${parsedArg}) ? array_keys(${parsedArg}) : array()`;
+                case "Object.values":
+                    return `is_array(${parsedArg}) ? array_values(${parsedArg}) : array()`;
                 }
             }
             const transformedProp = this.transformPropertyInsideCallExpressionIfNeeded(node.expression);
@@ -191,26 +191,26 @@ export class PhpTranspiler extends BaseTranspiler {
                 const leftSideText = this.printNode(leftSide, 0);
                 const type = global.checker.getTypeAtLocation(leftSide); // eslint-disable-line
                 switch (rightSide) {
-                    case 'push':
-                        return leftSideText + "[] = " + argText;
-                    case 'includes': // "ol".includes("o") -> str_contains("ol", "o") or [12,3,4].includes(3) -> in_array(3, [12,3,4])
-                        this.warnIfAnyType(node, type.flags, leftSideText, "includes");
-                        if (this.isStringType(type.flags)) {
-                            return "str_contains(" + leftSideText + ", " + argText + ")";
-                        } else {
-                            return "in_array(" + argText + ", " + leftSideText + ")";
-                        }
-                    case 'indexOf':
-                        this.warnIfAnyType(node, type.flags, leftSideText, "indexOf");
-                        if (this.isStringType(type.flags)) {
-                            return "mb_strpos(" + leftSideText + ", " + argText + ")";
-                        } else {
-                            return "array_search(" + argText + ", " + leftSideText + ")";
-                        }
-                    case 'join': // [1,2,3].join(',') => implode(',', [1,2,3])
-                        return "implode(" + argText + ", " + leftSideText + ")";
-                    case 'split': // "ol".split("o") -> explode("o", "ol")
-                        return "explode(" + argText + ", " + leftSideText + ")"; 
+                case 'push':
+                    return leftSideText + "[] = " + argText;
+                case 'includes': // "ol".includes("o") -> str_contains("ol", "o") or [12,3,4].includes(3) -> in_array(3, [12,3,4])
+                    this.warnIfAnyType(node, type.flags, leftSideText, "includes");
+                    if (this.isStringType(type.flags)) {
+                        return "str_contains(" + leftSideText + ", " + argText + ")";
+                    } else {
+                        return "in_array(" + argText + ", " + leftSideText + ")";
+                    }
+                case 'indexOf':
+                    this.warnIfAnyType(node, type.flags, leftSideText, "indexOf");
+                    if (this.isStringType(type.flags)) {
+                        return "mb_strpos(" + leftSideText + ", " + argText + ")";
+                    } else {
+                        return "array_search(" + argText + ", " + leftSideText + ")";
+                    }
+                case 'join': // [1,2,3].join(',') => implode(',', [1,2,3])
+                    return "implode(" + argText + ", " + leftSideText + ")";
+                case 'split': // "ol".split("o") -> explode("o", "ol")
+                    return "explode(" + argText + ", " + leftSideText + ")"; 
                 }
             }
         }
@@ -240,14 +240,14 @@ export class PhpTranspiler extends BaseTranspiler {
         const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
 
         switch (right) {
-            case "string":
-                return this.getIden(identation) + notOperator + "is_string(" + this.printNode(expression, 0) + ")";
-            case "number":
-                return this.getIden(identation) + notOperator + "(is_int(" + this.printNode(expression, 0) + ") || is_float(" + this.printNode(expression, 0) + "))";
-            case "boolean":
-                return this.getIden(identation) + notOperator + "is_bool(" + this.printNode(expression, 0) + ")";
-            case "object":
-                return this.getIden(identation) + notOperator + "is_array(" + this.printNode(expression, 0) + ")";
+        case "string":
+            return this.getIden(identation) + notOperator + "is_string(" + this.printNode(expression, 0) + ")";
+        case "number":
+            return this.getIden(identation) + notOperator + "(is_int(" + this.printNode(expression, 0) + ") || is_float(" + this.printNode(expression, 0) + "))";
+        case "boolean":
+            return this.getIden(identation) + notOperator + "is_bool(" + this.printNode(expression, 0) + ")";
+        case "object":
+            return this.getIden(identation) + notOperator + "is_array(" + this.printNode(expression, 0) + ")";
         }
 
         return undefined;
@@ -284,15 +284,15 @@ export class PhpTranspiler extends BaseTranspiler {
             const leftSide = this.printNode(leftSideOfIndexOf, 0);
             const rightType = global.checker.getTypeAtLocation(leftSideOfIndexOf); // type of myString in myString.indexOf ("b") >= 0;
             switch(prop) {
-                case 'indexOf':
-                    if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
-                        this.warnIfAnyType(node, rightType.flags,leftSide, "indexOf");
-                        if (this.isStringType(rightType.flags)) {
-                            return this.getIden(identation) + "mb_strpos(" + leftSide + ", " + parsedArg + ") !== false";
-                        } else {
-                            return this.getIden(identation) + "in_array(" + parsedArg + ", " + leftSide + ")";
-                        }
+            case 'indexOf':
+                if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
+                    this.warnIfAnyType(node, rightType.flags,leftSide, "indexOf");
+                    if (this.isStringType(rightType.flags)) {
+                        return this.getIden(identation) + "mb_strpos(" + leftSide + ", " + parsedArg + ") !== false";
+                    } else {
+                        return this.getIden(identation) + "in_array(" + parsedArg + ", " + leftSide + ")";
                     }
+                }
             }
         }
         return undefined;

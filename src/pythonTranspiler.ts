@@ -100,27 +100,27 @@ export class PythonTranspiler extends BaseTranspiler {
         const args = node.arguments;
         let finalExpression = undefined;
         switch (expressionText) {
-            case "Array.isArray":
-                finalExpression = "isinstance(" + this.printNode(args[0], 0) + ", list)";
-                break;
-            case "Math.floor":
-                finalExpression = "int(math.floor(" + this.printNode(args[0], 0) + "))";
-                break;
-            case "Object.keys":
-                finalExpression = "list(" + this.printNode(args[0], 0) + ".keys())";
-                break;
-            case "Object.values":
-                finalExpression = "list(" + this.printNode(args[0], 0) + ".values())";
-                break;
-            case "Math.round":
-                finalExpression = "int(round(" + this.printNode(args[0], 0) + "))";
-                break;
-            case "Math.ceil":
-                finalExpression = "int(math.ceil(" + this.printNode(args[0], 0) + "))";
-                break;
-            case "Promise.all":
-                finalExpression = "asyncio.gather(*" + this.printNode(args[0], 0) + ")";
-                break;
+        case "Array.isArray":
+            finalExpression = "isinstance(" + this.printNode(args[0], 0) + ", list)";
+            break;
+        case "Math.floor":
+            finalExpression = "int(math.floor(" + this.printNode(args[0], 0) + "))";
+            break;
+        case "Object.keys":
+            finalExpression = "list(" + this.printNode(args[0], 0) + ".keys())";
+            break;
+        case "Object.values":
+            finalExpression = "list(" + this.printNode(args[0], 0) + ".values())";
+            break;
+        case "Math.round":
+            finalExpression = "int(round(" + this.printNode(args[0], 0) + "))";
+            break;
+        case "Math.ceil":
+            finalExpression = "int(math.ceil(" + this.printNode(args[0], 0) + "))";
+            break;
+        case "Promise.all":
+            finalExpression = "asyncio.gather(*" + this.printNode(args[0], 0) + ")";
+            break;
         }
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;
@@ -139,12 +139,12 @@ export class PythonTranspiler extends BaseTranspiler {
             const argText = this.printNode(arg, 0);
             const leftSideText = this.printNode(letfSide, 0);
             switch (rightSide) {
-                case 'includes':
-                    return this.getIden(identation) + argText + " in " + leftSideText;
-                case 'join':
-                    return this.getIden(identation) + argText + ".join(" + leftSideText + ")";
-                case 'split':
-                    return this.getIden(identation) + leftSideText + ".split(" + argText + ")";
+            case 'includes':
+                return this.getIden(identation) + argText + " in " + leftSideText;
+            case 'join':
+                return this.getIden(identation) + argText + ".join(" + leftSideText + ")";
+            case 'split':
+                return this.getIden(identation) + leftSideText + ".split(" + argText + ")";
             }
         }
 
@@ -168,21 +168,21 @@ export class PythonTranspiler extends BaseTranspiler {
 
     transformLeadingComment(comment) {
         const commentRegex = [
-                [ /(^|\s)\/\//g, '$1#' ], // regular comments
+            [ /(^|\s)\/\//g, '$1#' ], // regular comments
                 [ /\/\*\*/, '\"\"\"' ], // eslint-disable-line
                 [ / \*\//, '\"\"\"' ], // eslint-disable-line
                 [ /\[([^\[\]]*)\]\{@link (.*)\}/g, '`$1 <$2>`' ], // eslint-disable-line
-                [ /\s+\* @method/g, '' ], // docstring @method
-                [ /(\s+) \* @description (.*)/g, '$1$2' ], // docstring description
-                [ /\s+\* @name .*/g, '' ], // docstring @name
-                [ /(\s+) \* @see( .*)/g, '$1see$2' ], // docstring @see
-                [ /(\s+ \* @(param|returns) {[^}]*)string([^}]*}.*)/g, '$1str$3' ], // docstring type conversion
-                [ /(\s+ \* @(param|returns) {[^}]*)object([^}]*}.*)/g, '$1dict$3' ], // doctstrubg type conversion
+            [ /\s+\* @method/g, '' ], // docstring @method
+            [ /(\s+) \* @description (.*)/g, '$1$2' ], // docstring description
+            [ /\s+\* @name .*/g, '' ], // docstring @name
+            [ /(\s+) \* @see( .*)/g, '$1see$2' ], // docstring @see
+            [ /(\s+ \* @(param|returns) {[^}]*)string([^}]*}.*)/g, '$1str$3' ], // docstring type conversion
+            [ /(\s+ \* @(param|returns) {[^}]*)object([^}]*}.*)/g, '$1dict$3' ], // doctstrubg type conversion
                 [ /(\s+) \* @returns ([^\{])/g, '$1:returns: $2' ], // eslint-disable-line
-                [ /(\s+) \* @returns \{(.+)\}/g, '$1:returns $2:' ], // docstring return
+            [ /(\s+) \* @returns \{(.+)\}/g, '$1:returns $2:' ], // docstring return
                 [ /(\s+ \* @param \{[\]\[\|a-zA-Z]+\} )([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+) (.*)/g, '$1$2[\'$3\'] $4' ], // eslint-disable-line
                 [ /(\s+) \* @([a-z]+) \{([\]\[a-zA-Z\|]+)\} ([a-zA-Z0-9_\-\.\[\]\']+)/g, '$1:$2 $3 $4:' ],  // eslint-disable-line
-            ];
+        ];
 
         const transformed = regexAll(comment, commentRegex);
         return transformed;
@@ -190,8 +190,8 @@ export class PythonTranspiler extends BaseTranspiler {
 
     transformTrailingComment(comment) {
         const commentRegex = [
-                [ /(^|\s)\/\//g, '$1#' ], // regular comments
-            ];
+            [ /(^|\s)\/\//g, '$1#' ], // regular comments
+        ];
 
         const transformed = regexAll(comment, commentRegex);
         return " " + transformed;
@@ -247,14 +247,14 @@ export class PythonTranspiler extends BaseTranspiler {
         const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
 
         switch (right) {
-            case "string":
-                return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", str)";
-            case "number":
-                return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", numbers.Real)";
-            case "boolean":
-                return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", bool)";
-            case "object":
-                return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", dict)";
+        case "string":
+            return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", str)";
+        case "number":
+            return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", numbers.Real)";
+        case "boolean":
+            return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", bool)";
+        case "object":
+            return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", dict)";
         }
 
         return undefined;
@@ -284,10 +284,10 @@ export class PythonTranspiler extends BaseTranspiler {
             // const rightType = global.checker.getTypeAtLocation(leftSideOfIndexOf); // type of myString in myString.indexOf ("b") >= 0;
 
             switch(prop) {
-                case 'indexOf':
-                    if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
-                        return this.getIden(identation) + `${parsedArg} in ${leftSide}`;
-                    }
+            case 'indexOf':
+                if (op === SyntaxKind.GreaterThanEqualsToken && right === '0') {
+                    return this.getIden(identation) + `${parsedArg} in ${leftSide}`;
+                }
             }
         }
         return undefined;
@@ -306,14 +306,14 @@ export class PythonTranspiler extends BaseTranspiler {
         const isUndefined = rightText === "undefined";
         if (isUndefined) {
             switch (operator.kind) {
-                case ts.SyntaxKind.EqualsEqualsToken:
-                    return "is";
-                case ts.SyntaxKind.ExclamationEqualsToken:
-                    return "is not";
-                case ts.SyntaxKind.ExclamationEqualsEqualsToken:
-                    return "is not";
-                case ts.SyntaxKind.EqualsEqualsEqualsToken:
-                    return "is";
+            case ts.SyntaxKind.EqualsEqualsToken:
+                return "is";
+            case ts.SyntaxKind.ExclamationEqualsToken:
+                return "is not";
+            case ts.SyntaxKind.ExclamationEqualsEqualsToken:
+                return "is not";
+            case ts.SyntaxKind.EqualsEqualsEqualsToken:
+                return "is";
             }
         }
     }

@@ -1152,7 +1152,7 @@ class BaseTranspiler {
             
             let isUnionString = false; // handle unions later
             if (type.flags === ts.TypeFlags.Union) {
-                isUnionString = this.isStringType(type.types[0].flags);
+                isUnionString = this.isStringType(type?.types[0].flags);
             }
 
             if (isString || isUnionString || type.flags === ts.TypeFlags.Any) { // default to string when unknown

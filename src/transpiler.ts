@@ -118,14 +118,14 @@ export default class Transpiler {
 
         let transpiledContent = undefined;
         switch(lang) {
-            case Languages.Python:
-                transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
-                break;
-            case Languages.Php:
-                transpiledContent = this.phpTranspiler.printNode(global.src, -1);
-                break;
-            case Languages.CSharp:
-                transpiledContent = this.csharpTranspiler.printNode(global.src, -1);
+        case Languages.Python:
+            transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
+            break;
+        case Languages.Php:
+            transpiledContent = this.phpTranspiler.printNode(global.src, -1);
+            break;
+        case Languages.CSharp:
+            transpiledContent = this.csharpTranspiler.printNode(global.src, -1);
         }
 
         const imports = this.pythonTranspiler.getFileImports(global.src);
