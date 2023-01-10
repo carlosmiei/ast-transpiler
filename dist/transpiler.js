@@ -200,8 +200,8 @@ var BaseTranspiler = class {
     this.UNKOWN_PROP_WRAPPER_CLOSE = "";
     this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN = "";
     this.UNKOWN_PROP_ASYNC_WRAPPER_CLOSE = "";
-    this.EQUALS_WRAPPER_OPEN = "";
-    this.EQUALS_WRAPPER_CLOSE = "";
+    this.EQUALS_EQUALS_WRAPPER_OPEN = "";
+    this.EQUALS_EQUALS_WRAPPER_CLOSE = "";
     this.DIFFERENT_WRAPPER_OPEN = "";
     this.DIFFERENT_WRAPPER_CLOSE = "";
     this.GREATER_THAN_WRAPPER_OPEN = "";
@@ -722,39 +722,7 @@ var BaseTranspiler = class {
     let modifiers = this.printModifiers(node);
     const defaultAccess = this.METHOD_DEFAULT_ACCESS ? this.METHOD_DEFAULT_ACCESS + " " : "";
     modifiers = modifiers ? modifiers + " " : defaultAccess;
-    modifiers = modifiers.indexOf("public") === -1 && modifiers.indexOf("private") === -1 && modifiers.indexOf("protected") === -1 ? defaultAccess + modifiers : modifiers;
-    let parsedArgs = void 0;
-    if (this.id === "C#") {
-      const methodOverride = this.getMethodOverride(node);
-      const isOverride = methodOverride !== void 0;
-      modifiers = isOverride ? modifiers + "override " : modifiers + "virtual ";
-      if (isOverride && (returnType === "object" || returnType === "Task<object>")) {
-        returnType = this.printFunctionType(methodOverride);
-      }
-      if (isOverride && node.parameters.length > 0) {
-        const first = node.parameters[0];
-        const firstType = this.getType(first);
-        if (firstType === void 0) {
-          const currentArgs = node.parameters;
-          const parentArgs = methodOverride.parameters;
-          parsedArgs = "";
-          parentArgs.forEach((param, index) => {
-            const originalName = this.printNode(currentArgs[index].name, 0);
-            const parsedArg = this.printParameteCustomName(param, originalName);
-            parsedArgs += parsedArg;
-            if (index < parentArgs.length - 1) {
-              parsedArgs += ", ";
-            }
-          });
-        } else {
-          parsedArgs = this.printMethodParameters(node);
-        }
-      } else {
-        parsedArgs = this.printMethodParameters(node);
-      }
-    } else {
-      parsedArgs = this.printMethodParameters(node);
-    }
+    const parsedArgs = this.printMethodParameters(node);
     returnType = returnType ? returnType + " " : returnType;
     const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
     const methodDef = this.getIden(identation) + modifiers + returnType + methodToken + name + "(" + parsedArgs + ")";
@@ -826,27 +794,16 @@ var BaseTranspiler = class {
     });
     return parsedTypes;
   }
+  printArgsForCallExpression(node, identation) {
+    const args = node.arguments;
+    const parsedArgs = args.map((a) => {
+      return this.printNode(a, identation).trim();
+    }).join(", ");
+    return parsedArgs;
+  }
   printCallExpression(node, identation) {
     const expression = node.expression;
-    const args = node.arguments;
-    let parsedArgs = "";
-    if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) {
-      const parsedTypes = this.getTypesFromCallExpressionParameters(node);
-      const tmpArgs = [];
-      args.forEach((arg, index) => {
-        const parsedType = parsedTypes[index];
-        let cast = "";
-        if (parsedType !== "object" && parsedType !== "float" && parsedType !== "int") {
-          cast = parsedType ? `(${parsedType})` : "";
-        }
-        tmpArgs.push(cast + this.printNode(arg, identation).trim());
-      });
-      parsedArgs = tmpArgs.join(",");
-    } else {
-      parsedArgs = args.map((a) => {
-        return this.printNode(a, identation).trim();
-      }).join(", ");
-    }
+    const parsedArgs = this.printArgsForCallExpression(node, identation);
     const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
     const finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
     if (finalExpression) {
@@ -980,7 +937,7 @@ var BaseTranspiler = class {
       const isString = this.isStringType(type.flags);
       let isUnionString = false;
       if (type.flags === ts.TypeFlags.Union) {
-        isUnionString = this.isStringType(type.types[0].flags);
+        isUnionString = this.isStringType(type?.types[0].flags);
       }
       if (isString || isUnionString || type.flags === ts.TypeFlags.Any) {
         const cast = ts.isStringLiteralLike(argumentExpression) ? "" : "(string)";
@@ -2024,8 +1981,8 @@ var parserConfig3 = {
   "UNKOWN_PROP_WRAPPER_CLOSE": ")",
   "UKNOWN_PROP_ASYNC_WRAPPER_OPEN": "this.callAsync(",
   "UNKOWN_PROP_ASYNC_WRAPPER_CLOSE": ")",
-  "EQUALS_WRAPPER_OPEN": "isEqual(",
-  "EQUALS_WRAPPER_CLOSE": ")",
+  "EQUALS_EQUALS_WRAPPER_OPEN": "isEqual(",
+  "EQUALS_EQUALS_WRAPPER_CLOSE": ")",
   "DIFFERENT_WRAPPER_OPEN": "!isEqual(",
   "DIFFERENT_WRAPPER_CLOSE": ")",
   "GREATER_THAN_WRAPPER_OPEN": "isGreaterThan(",
@@ -2093,6 +2050,21 @@ var CSharpTranspiler = class extends BaseTranspiler {
       "base": "bs",
       "internal": "intern",
       "event": "eventVar"
+    };
+    this.binaryExpressionsWrappers = {
+      [ts4.SyntaxKind.EqualsEqualsToken]: [this.EQUALS_EQUALS_WRAPPER_OPEN, this.EQUALS_EQUALS_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.EqualsEqualsEqualsToken]: [this.EQUALS_EQUALS_WRAPPER_OPEN, this.EQUALS_EQUALS_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.ExclamationEqualsToken]: [this.DIFFERENT_WRAPPER_OPEN, this.DIFFERENT_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.ExclamationEqualsEqualsToken]: [this.DIFFERENT_WRAPPER_OPEN, this.DIFFERENT_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.GreaterThanToken]: [this.GREATER_THAN_WRAPPER_OPEN, this.GREATER_THAN_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.GreaterThanEqualsToken]: [this.GREATER_THAN_EQUALS_WRAPPER_OPEN, this.GREATER_THAN_EQUALS_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.LessThanToken]: [this.LESS_THAN_WRAPPER_OPEN, this.LESS_THAN_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.LessThanEqualsToken]: [this.LESS_THAN_EQUALS_WRAPPER_OPEN, this.LESS_THAN_EQUALS_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.PlusToken]: [this.PLUS_WRAPPER_OPEN, this.PLUS_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.MinusToken]: [this.MINUS_WRAPPER_OPEN, this.MINUS_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.AsteriskToken]: [this.MULTIPLY_WRAPPER_OPEN, this.MULTIPLY_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.PercentToken]: [this.MOD_WRAPPER_OPEN, this.MOD_WRAPPER_CLOSE],
+      [ts4.SyntaxKind.SlashToken]: [this.DIVIDE_WRAPPER_OPEN, this.DIVIDE_WRAPPER_CLOSE]
     };
   }
   getBlockOpen(identation) {
@@ -2288,61 +2260,10 @@ var CSharpTranspiler = class extends BaseTranspiler {
     }
     const leftText = this.printNode(left, 0);
     const rightText = this.printNode(right, 0);
-    if (op === ts4.SyntaxKind.EqualsEqualsToken || op === ts4.SyntaxKind.EqualsEqualsEqualsToken) {
-      const open = this.EQUALS_WRAPPER_OPEN;
-      const close = this.EQUALS_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.ExclamationEqualsEqualsToken || op === ts4.SyntaxKind.ExclamationEqualsToken) {
-      const open = this.DIFFERENT_WRAPPER_OPEN;
-      const close = this.DIFFERENT_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.GreaterThanToken) {
-      const open = this.GREATER_THAN_WRAPPER_OPEN;
-      const close = this.GREATER_THAN_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.GreaterThanEqualsToken) {
-      const open = this.GREATER_THAN_EQUALS_WRAPPER_OPEN;
-      const close = this.GREATER_THAN_EQUALS_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.LessThanToken) {
-      const open = this.LESS_THAN_WRAPPER_OPEN;
-      const close = this.LESS_THAN_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.LessThanEqualsToken) {
-      const open = this.LESS_THAN_EQUALS_WRAPPER_OPEN;
-      const close = this.LESS_THAN_EQUALS_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.PlusToken) {
-      const leftText2 = this.printNode(left, 0);
-      const rightText2 = this.printNode(right, 0);
-      const open = this.PLUS_WRAPPER_OPEN;
-      const close = this.PLUS_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText2}, ${rightText2}${close}`;
-    }
-    if (op === ts4.SyntaxKind.MinusToken) {
-      const open = this.MINUS_WRAPPER_OPEN;
-      const close = this.MINUS_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.SlashToken) {
-      const open = this.DIVIDE_WRAPPER_OPEN;
-      const close = this.DIVIDE_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.AsteriskToken) {
-      const open = this.MULTIPLY_WRAPPER_OPEN;
-      const close = this.MULTIPLY_WRAPPER_CLOSE;
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.PercentToken) {
-      const open = this.MOD_WRAPPER_OPEN;
-      const close = this.MOD_WRAPPER_CLOSE;
+    if (op in this.binaryExpressionsWrappers) {
+      const wrapper = this.binaryExpressionsWrappers[op];
+      const open = wrapper[0];
+      const close = wrapper[1];
       return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
     }
     if (op === ts4.SyntaxKind.EqualsToken) {
@@ -2494,6 +2415,63 @@ var CSharpTranspiler = class extends BaseTranspiler {
       }
     }
     return arrayOpen + elements + this.ARRAY_CLOSING_TOKEN;
+  }
+  printMethodDefinition(node, identation) {
+    let name = node.name.escapedText;
+    name = this.transformMethodNameIfNeeded(name);
+    let returnType = this.printFunctionType(node);
+    let modifiers = this.printModifiers(node);
+    const defaultAccess = this.METHOD_DEFAULT_ACCESS ? this.METHOD_DEFAULT_ACCESS + " " : "";
+    modifiers = modifiers ? modifiers + " " : defaultAccess;
+    modifiers = modifiers.indexOf("public") === -1 && modifiers.indexOf("private") === -1 && modifiers.indexOf("protected") === -1 ? defaultAccess + modifiers : modifiers;
+    let parsedArgs = void 0;
+    const methodOverride = this.getMethodOverride(node);
+    const isOverride = methodOverride !== void 0;
+    modifiers = isOverride ? modifiers + "override " : modifiers + "virtual ";
+    if (isOverride && (returnType === "object" || returnType === "Task<object>")) {
+      returnType = this.printFunctionType(methodOverride);
+    }
+    if (isOverride && node.parameters.length > 0) {
+      const first = node.parameters[0];
+      const firstType = this.getType(first);
+      if (firstType === void 0) {
+        const currentArgs = node.parameters;
+        const parentArgs = methodOverride.parameters;
+        parsedArgs = "";
+        parentArgs.forEach((param, index) => {
+          const originalName = this.printNode(currentArgs[index].name, 0);
+          const parsedArg = this.printParameteCustomName(param, originalName);
+          parsedArgs += parsedArg;
+          if (index < parentArgs.length - 1) {
+            parsedArgs += ", ";
+          }
+        });
+      }
+    }
+    parsedArgs = parsedArgs ? parsedArgs : this.printMethodParameters(node);
+    returnType = returnType ? returnType + " " : returnType;
+    const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
+    const methodDef = this.getIden(identation) + modifiers + returnType + methodToken + name + "(" + parsedArgs + ")";
+    return this.printNodeCommentsIfAny(node, identation, methodDef);
+  }
+  printArgsForCallExpression(node, identation) {
+    const args = node.arguments;
+    let parsedArgs = "";
+    if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) {
+      const parsedTypes = this.getTypesFromCallExpressionParameters(node);
+      const tmpArgs = [];
+      args.forEach((arg, index) => {
+        const parsedType = parsedTypes[index];
+        let cast = "";
+        if (parsedType !== "object" && parsedType !== "float" && parsedType !== "int") {
+          cast = parsedType ? `(${parsedType})` : "";
+        }
+        tmpArgs.push(cast + this.printNode(arg, identation).trim());
+      });
+      parsedArgs = tmpArgs.join(",");
+      return parsedArgs;
+    }
+    return super.printArgsForCallExpression(node, identation);
   }
 };
 

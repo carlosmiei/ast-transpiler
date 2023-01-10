@@ -110,8 +110,8 @@ declare class BaseTranspiler {
     UNKOWN_PROP_WRAPPER_CLOSE: string;
     UKNOWN_PROP_ASYNC_WRAPPER_OPEN: string;
     UNKOWN_PROP_ASYNC_WRAPPER_CLOSE: string;
-    EQUALS_WRAPPER_OPEN: string;
-    EQUALS_WRAPPER_CLOSE: string;
+    EQUALS_EQUALS_WRAPPER_OPEN: string;
+    EQUALS_EQUALS_WRAPPER_CLOSE: string;
     DIFFERENT_WRAPPER_OPEN: string;
     DIFFERENT_WRAPPER_CLOSE: string;
     GREATER_THAN_WRAPPER_OPEN: string;
@@ -215,6 +215,7 @@ declare class BaseTranspiler {
     printSuperCallInsideConstructor(node: any, identation: any): string;
     isBuiltInFunctionCall(node: any): any;
     getTypesFromCallExpressionParameters(node: any): any[];
+    printArgsForCallExpression(node: any, identation: any): any;
     printCallExpression(node: any, identation: any): string;
     printClassBody(node: any, identation: any): string;
     printClassDefinition(node: any, identation: any): string;
@@ -299,6 +300,7 @@ declare class PhpTranspiler extends BaseTranspiler {
 }
 
 declare class CSharpTranspiler extends BaseTranspiler {
+    binaryExpressionsWrappers: any;
     constructor(config?: {});
     initConfig(): void;
     getBlockOpen(identation: any): string;
@@ -317,6 +319,8 @@ declare class CSharpTranspiler extends BaseTranspiler {
     printInstanceOfExpression(node: any, identation: any): string;
     printAsExpression(node: any, identation: any): string;
     printArrayLiteralExpression(node: any): string;
+    printMethodDefinition(node: any, identation: any): string;
+    printArgsForCallExpression(node: any, identation: any): any;
 }
 
 declare enum Languages {
