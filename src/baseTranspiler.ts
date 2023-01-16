@@ -463,6 +463,10 @@ class BaseTranspiler {
         return undefined; // stub to override
     }
 
+    printLengthProperty(node, identation, name = undefined) {
+        return undefined; // stub to override
+    }
+
     printPropertyAccessExpression(node, identation) {
 
         const expression = node.expression;
@@ -474,6 +478,11 @@ class BaseTranspiler {
 
         let leftSide = node.expression.escapedText;
         let rightSide = node.name.escapedText;
+
+        switch (rightSide) {
+        case "length":
+            return this.printLengthProperty(node, identation, leftSide);
+        }
 
         let rawExpression = node.getFullText().trim();
         
@@ -932,6 +941,79 @@ class BaseTranspiler {
         }).join(", ");
         return parsedArgs;
     }
+    
+    // builtin functions override
+    printArrayIsArrayCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printObjectKeysCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printObjectValuesCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printJsonParseCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printPromiseAllCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printMathFloorCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printMathRoundCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printMathCeilCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printIncludesCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printIndexOfCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printJoinCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printSplitCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printToStringCall(node, identation, name = undefined) {
+        return undefined; // stub
+    }
+
+    printToUpperCaseCall(node, identation, name) {
+        return undefined; // stub
+    }
+
+    printToLowerCaseCall(node, identation, name) {
+        return undefined; // stub
+    }
+
+    printShiftCall(node, identation, name) {
+        return undefined; // stub
+    }
+
+    printPopCall(node, identation, name) {
+        return undefined; // stub
+    }
 
     printCallExpression(node, identation) {
         const expression = node.expression;
@@ -943,6 +1025,66 @@ class BaseTranspiler {
         const finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
         if (finalExpression) {
             return this.getIden(identation) + finalExpression;
+        }
+
+        // check propertyAccessExpression for built in functions calls like Json.parse
+        if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
+            const expressionText = node.expression.getText().trim();
+            const args = node.arguments ?? [];
+            if (args.length === 1) {
+                const parsedArg = this.printNode(args[0], 0);
+                switch (expressionText) {
+                case "JSON.parse":
+                    return this.printJsonParseCall(node, identation, parsedArg);
+                case "Array.isArray":
+                    return this.printArrayIsArrayCall(node, identation, parsedArg);
+                case "Object.keys":
+                    return this.printObjectKeysCall(node, identation, parsedArg);
+                case "Object.values":
+                    return this.printObjectValuesCall(node, identation, parsedArg);
+                case "Promise.all":
+                    return this.printPromiseAllCall(node, identation, parsedArg);
+                }
+            }
+            const rightSide = node.expression.name?.escapedText;
+            const leftSide = node.expression?.expression;
+            
+            if (args.length === 0 && rightSide !== undefined && leftSide !== undefined) {
+                const parsedLeftSide = this.printNode(leftSide, 0);
+                switch (rightSide) {
+                case "toString":
+                    return this.printToStringCall(node, identation, parsedLeftSide);
+                case "toUpperCase":
+                    return this.printToUpperCaseCall(node, identation, parsedLeftSide);
+                case "toLowerCase":
+                    return this.printToLowerCaseCall(node, identation, parsedLeftSide);
+                case "shift":
+                    return this.printShiftCall(node, identation, parsedLeftSide);
+                case "pop":
+                    return this.printPopCall(node, identation, parsedLeftSide);
+                }
+            }
+
+            // handle built in functions like 
+
+            const arg = args && args.length > 0 ? args[0] : undefined;
+
+            if (leftSide && rightSide && arg) {
+                const parsedArg = this.printNode(arg, identation).trimStart();
+                const name = this.printNode(leftSide, 0);
+                switch(rightSide) {
+                case 'push':
+                    return this.printArrayPushCall(node, identation, name, parsedArg);
+                case 'includes':
+                    return this.printIncludesCall(node, identation, name, parsedArg);
+                case 'indexOf':
+                    return this.printIndexOfCall(node, identation, name, parsedArg);
+                case 'join':
+                    return this.printJoinCall(node, identation, name, parsedArg);
+                case 'split':
+                    return this.printSplitCall(node, identation, name, parsedArg);
+                }
+            }
         }
 
         // print super() call inside constructor

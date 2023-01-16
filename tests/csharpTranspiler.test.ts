@@ -850,6 +850,38 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
+    test('advanced: should infer arg type from parent method', () => {
+        const ts =
+        "class a {\n" +
+        "\n" +
+        "    main(a:string) {\n" +
+        "        return \"1\";\n" +
+        "    }\n" +
+        "}\n" +
+        "\n" +
+        "class b extends a{\n" +
+        "    main(a) {\n" +
+        "        return \"2\";\n" +
+        "    }\n" +
+        "}"
+        const csharp = 
+        "class a\n" +
+        "{\n" +
+        "    public virtual string main(string a)\n" +
+        "    {\n" +
+        "        return ((string) (\"1\"));\n" +
+        "    }\n" +
+        "}\n" +
+        "class b : a\n" +
+        "{\n" +
+        "    public override string main(string a)\n" +
+        "    {\n" +
+        "        return ((string) (\"2\"));\n" +
+        "    }\n" +
+        "}"
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     // test('should transpile file from path', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(true);
     //     const csharp = readFileSync ('./tests/files/output/php/test1.php', "utf8");

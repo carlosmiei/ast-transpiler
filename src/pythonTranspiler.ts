@@ -95,36 +95,36 @@ export class PythonTranspiler extends BaseTranspiler {
         ];
     }
 
+    printArrayIsArrayCall(node, identation, parsedArg = undefined) {
+        return  `isinstance(${parsedArg}, list)`;
+    }
+
+    printObjectKeysCall(node, identation, parsedArg = undefined) {
+        return  `list(${parsedArg}.keys())`;
+    }
+
+    printObjectValuesCall(node, identation, parsedArg = undefined) {
+        return  `list(${parsedArg}.values())`;
+    }
+
+    printPromiseAllCall(node, identation, parsedArg) {
+        return `asyncio.gather(*${parsedArg})`;
+    }
+
+    printMathFloorCall(node, identation, parsedArg = undefined) {
+        return `int(math.floor(${parsedArg}))`;
+    }
+
+    printMathCeilCall(node, identation, parsedArg = undefined) {
+        return `int(math.ceil(${parsedArg}))`;
+    }
+
+    printMathRoundCall(node, identation, parsedArg = undefined) {
+        return `int(round(${parsedArg}))`;
+    }
+
     printOutOfOrderCallExpressionIfAny(node, identation) {
-        const expressionText = node.expression.getText();
         const args = node.arguments;
-        let finalExpression = undefined;
-        switch (expressionText) {
-        case "Array.isArray":
-            finalExpression = "isinstance(" + this.printNode(args[0], 0) + ", list)";
-            break;
-        case "Math.floor":
-            finalExpression = "int(math.floor(" + this.printNode(args[0], 0) + "))";
-            break;
-        case "Object.keys":
-            finalExpression = "list(" + this.printNode(args[0], 0) + ".keys())";
-            break;
-        case "Object.values":
-            finalExpression = "list(" + this.printNode(args[0], 0) + ".values())";
-            break;
-        case "Math.round":
-            finalExpression = "int(round(" + this.printNode(args[0], 0) + "))";
-            break;
-        case "Math.ceil":
-            finalExpression = "int(math.ceil(" + this.printNode(args[0], 0) + "))";
-            break;
-        case "Promise.all":
-            finalExpression = "asyncio.gather(*" + this.printNode(args[0], 0) + ")";
-            break;
-        }
-        if (finalExpression) {
-            return this.getIden(identation) + finalExpression;
-        }
 
         const letfSide = node.expression.expression;
         const rightSide = node.expression.name?.escapedText;
