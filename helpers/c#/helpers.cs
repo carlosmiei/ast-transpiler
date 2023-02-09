@@ -138,8 +138,26 @@ public partial class Helper
 
     public bool isLessThan(object a, object b)
     {
-
-        return !isGreaterThan(a, b) && !isEqual(a, b);
+        if (a.GetType() == typeof(Int64))
+        {
+            return (Int64)a < (Int64)b;
+        }
+        else if (a.GetType() == typeof(int))
+        {
+            return (int)a < (int)b;
+        }
+        else if (a.GetType() == typeof(double))
+        {
+            return (double)a < (double)b;
+        }
+        else if (a.GetType() == typeof(string))
+        {
+            return ((string)a).CompareTo((string)b) < 0;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public bool isGreaterThanOrEqual(object a, object b)
