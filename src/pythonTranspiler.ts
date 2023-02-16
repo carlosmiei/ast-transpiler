@@ -137,11 +137,39 @@ export class PythonTranspiler extends BaseTranspiler {
     }
 
     printPopCall(node: any, identation: any, name?: any) {
-        return `${name}.pop(0)`;
+        return `${name}.pop()`;
     }
 
     printShiftCall(node: any, identation: any, name?: any) {
         return `${name}.pop(0)`;
+    }
+
+    printArrayPushCall(node, identation, name, parsedArg) {
+        return `${name}.append(${parsedArg})`;
+    }
+
+    printToStringCall(node, identation, name = undefined) {
+        return `str(${name})`;
+    }
+
+    printIndexOfCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `${name}.find(${parsedArg})`;
+    }
+
+    printToUpperCaseCall(node, identation, name = undefined) {
+        return `${name}.upper()`;
+    }
+
+    printToLowerCaseCall(node, identation, name = undefined) {
+        return `${name}.lower()`;
+    }
+
+    printJsonParseCall(node: any, identation: any, parsedArg?: any) {
+        return `json.loads(${parsedArg})`;
+    }
+
+    printJsonStringifyCall(node: any, identation: any, parsedArg?: any) {
+        return `json.dumps(${parsedArg})`;
     }
 
     printElementAccessExpressionExceptionIfAny(node) {

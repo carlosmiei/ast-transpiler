@@ -438,7 +438,7 @@ describe('python tests', () => {
         "myList.push (4);\n" +
         "myList.pop ();\n" +
         "myList.shift ();"
-        const python = 
+        const python =
         "myList = [1, 2, 3]\n" +
         "b = isinstance(myList, list)\n" +
         "y = ','.join(myList)\n" +
@@ -667,6 +667,17 @@ describe('python tests', () => {
         "    x = 1\n" +
         "except Exception as e:\n" +
         "    print(e)" 
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+        transpiler.setPythonUncamelCaseIdentifiers(false);
+    })
+    test('should transpile spread operator', () => {
+        const ts =
+        "const x = [1,2,3]\n" +
+        "const y = [...x]"
+        const python =
+        "x = [1, 2, 3]\n" +
+        "y = [*x]"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);

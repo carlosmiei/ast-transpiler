@@ -46,9 +46,9 @@ export class PhpTranspiler extends BaseTranspiler {
     AWAIT_WRAPPER_CLOSE;
     ASYNC_FUNCTION_WRAPPER_OPEN = "";
     constructor(config = {}) {
-        
+
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
-        
+
         super(config);
         this.id = "php";
         this.asyncTranspiling = config['async'] ?? true;
@@ -99,10 +99,10 @@ export class PhpTranspiler extends BaseTranspiler {
             if (left.kind == SyntaxKind.StringLiteral || right.kind == SyntaxKind.StringLiteral) {
                 return TOKEN;
             }
-            
+
             const leftType = global.checker.getTypeAtLocation(left);
             const rightType = global.checker.getTypeAtLocation(right);
-            
+
             if (leftType.flags === ts.TypeFlags.String || rightType.flags === ts.TypeFlags.String) {
                 return TOKEN;
             }
@@ -164,6 +164,19 @@ export class PhpTranspiler extends BaseTranspiler {
         return `Promise\\all(${parsedArg})`;
     }
 
+
+    printMathCeilCall(node, identation, parsedArg = undefined) {
+        return `((int) ceil(${parsedArg}))`;
+    }
+
+    printMathRoundCall(node, identation, parsedArg = undefined) {
+        return `((int) round(${parsedArg}))`;
+    }
+
+    printMathFloorCall(node: any, identation: any, parsedArg?: any) {
+        return `((int) floor(${parsedArg}))`;
+    }
+
     printIncludesCall(node, identation, name = undefined, parsedArg = undefined) {
         // "ol".includes("o") -> str_contains("ol", "o") or [12,3,4].includes(3) -> in_array(3, [12,3,4])
         const leftSide = node.expression?.expression;
@@ -197,7 +210,7 @@ export class PhpTranspiler extends BaseTranspiler {
     printSplitCall(node, identation, name = undefined, parsedArg = undefined) {
         return `explode(${parsedArg}, ${name})`;
     }
-    
+
     getExceptionalAccessTokenIfAny(node) {
         const leftSide = node.expression.escapedText ?? node.expression.getFullText().trim();
 

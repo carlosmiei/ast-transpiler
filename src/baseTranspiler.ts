@@ -961,6 +961,11 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printJsonStringifyCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+
     printPromiseAllCall(node, identation, parsedArg = undefined) {
         return undefined; // stub
     }
@@ -1038,6 +1043,8 @@ class BaseTranspiler {
                 switch (expressionText) {
                 case "JSON.parse":
                     return this.printJsonParseCall(node, identation, parsedArg);
+                case "JSON.stringify":
+                    return this.printJsonStringifyCall(node, identation, parsedArg);
                 case "Array.isArray":
                     return this.printArrayIsArrayCall(node, identation, parsedArg);
                 case "Object.keys":
@@ -1046,6 +1053,10 @@ class BaseTranspiler {
                     return this.printObjectValuesCall(node, identation, parsedArg);
                 case "Promise.all":
                     return this.printPromiseAllCall(node, identation, parsedArg);
+                case "Math.round":
+                    return this.printMathRoundCall(node, identation, parsedArg);
+                case "Math.floor":
+                    return this.printMathFloorCall(node, identation, parsedArg);
                 }
             }
             const rightSide = node.expression.name?.escapedText;
