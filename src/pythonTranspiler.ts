@@ -90,8 +90,8 @@ export class PythonTranspiler extends BaseTranspiler {
         };
 
         this.PropertyAccessRequiresParenthesisRemoval = [
-            'length',
-            'toString',
+            // 'length',
+            // 'toString',
         ];
     }
 
@@ -123,32 +123,24 @@ export class PythonTranspiler extends BaseTranspiler {
         return `int(round(${parsedArg}))`;
     }
 
-    printOutOfOrderCallExpressionIfAny(node, identation) {
-        const args = node.arguments;
+    printIncludesCall(node, identation, name?, parsedArg?) {
+        return `${parsedArg} in ${name}`;
+    }
 
-        const letfSide = node.expression.expression;
-        const rightSide = node.expression.name?.escapedText;
+    printJoinCall(node: any, identation: any, name?: any, parsedArg?: any) {
+        return `${parsedArg}.join(${name})`;
+    }
 
-        if (rightSide === "shift") {
-            return this.getIden(identation) + this.printNode(letfSide, 0) + ".pop(0)";
-        }
+    printSplitCall(node: any, identation: any, name?: any, parsedArg?: any) {
+        return `${name}.split(${parsedArg})`;
+    }
 
-        const arg = args && args.length > 0 ? args[0] : undefined;
-        
-        if (letfSide && arg) {
-            const argText = this.printNode(arg, 0);
-            const leftSideText = this.printNode(letfSide, 0);
-            switch (rightSide) {
-            case 'includes':
-                return this.getIden(identation) + argText + " in " + leftSideText;
-            case 'join':
-                return this.getIden(identation) + argText + ".join(" + leftSideText + ")";
-            case 'split':
-                return this.getIden(identation) + leftSideText + ".split(" + argText + ")";
-            }
-        }
+    printPopCall(node: any, identation: any, name?: any) {
+        return `${name}.pop(0)`;
+    }
 
-        return undefined;
+    printShiftCall(node: any, identation: any, name?: any) {
+        return `${name}.pop(0)`;
     }
 
     printElementAccessExpressionExceptionIfAny(node) {

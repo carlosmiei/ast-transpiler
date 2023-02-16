@@ -11,6 +11,7 @@
     ],
     "rules": { 
       "indent": ["error", 4],
+      "no-trailing-spaces": "error",
       "no-console": 1,
       "semi": "error"
     }

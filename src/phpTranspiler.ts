@@ -354,7 +354,7 @@ export class PhpTranspiler extends BaseTranspiler {
             'Math.pow': 'pow',
             'Math.min': 'min',
             'Math.max': 'max',
-            'Promise.all': 'Promise\\all',
+            // 'Promise.all': 'Promise\\all',
         };
 
         this.CallExpressionReplacements = {
