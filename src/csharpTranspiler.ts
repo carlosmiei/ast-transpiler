@@ -55,7 +55,7 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     constructor(config = {}) {
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
-        
+
         super(config);
 
         this.requiresParameterType = true;
@@ -168,10 +168,10 @@ export class CSharpTranspiler extends BaseTranspiler {
                 `(${args}) : ${this.SUPER_CALL_TOKEN}(${superCallParams})` +
                 constructorBody;
         }
-        
+
         return this.getIden(identation) +
-                className + 
-                "(" + args + ")" + 
+                className +
+                "(" + args + ")" +
                 constructorBody;
     }
 
@@ -192,7 +192,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 return wrapperOpen + propName + parsedArg + wrapperClose;
             }
         }
-        return; 
+        return;
     }
 
     printElementAccessExpressionExceptionIfAny(node) {
@@ -243,7 +243,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 case "Math.abs":
                     return `Math.Abs((double)${parsedArg})`;
                 }
-            } else if (args.length === 2) 
+            } else if (args.length === 2)
             {
                 const parsedArg1 = this.printNode(args[0], 0);
                 const parsedArg2 = this.printNode(args[1], 0);
@@ -266,11 +266,11 @@ export class CSharpTranspiler extends BaseTranspiler {
                     return res;
                 }
             }
-    
+
             const rightSide = node.expression.name?.escapedText;
-            
+
             const arg = args && args.length > 0 ? args[0] : undefined;
-            
+
             if (arg) {
                 const argText = this.printNode(arg, identation).trimStart();
                 const type = global.checker.getTypeAtLocation(leftSide); // eslint-disable-line
@@ -358,7 +358,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 const leftElement = arrayBindingPatternElements[index];
                 const leftType = global.checker.getTypeAtLocation(leftElement);
                 const parsedType = this.getTypeFromRawType(leftType);
-                
+
                 const castExp = parsedType ? `(${parsedType})` : "";
 
                 const statement = this.getIden(identation) + `${e} = ${castExp}${syntheticName}[${index}]`;
@@ -458,7 +458,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         const expression = node.expression;
         const leftSide = this.printNode(expression, 0);
         const rightSide = node.name.escapedText;
-        
+
         let rawExpression = undefined;
 
         switch(rightSide) {
@@ -535,7 +535,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 } else {
                     firstStatement = defaultInitializers + firstStatement;
                 }
-            } 
+            }
             const blockOpen = this.getBlockOpen(identation);
             const blockClose = this.getBlockClose(identation);
             firstStatement = remainingString.length > 0 ? firstStatement + "\n" : firstStatement;
@@ -553,7 +553,7 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printAsExpression(node, identation) {
         const type = node.type;
-        
+
         if (type.kind === ts.SyntaxKind.AnyKeyword) {
             return `((object)${this.printNode(node.expression, identation)})`;
         }
@@ -576,7 +576,7 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printArrayLiteralExpression(node) {
 
-        let arrayOpen = this.ARRAY_OPENING_TOKEN;        
+        let arrayOpen = this.ARRAY_OPENING_TOKEN;
         const elems = node.elements;
 
         const elements = node.elements.map((e) => {
@@ -590,11 +590,11 @@ export class CSharpTranspiler extends BaseTranspiler {
                 // const type = global.checker.getTypeAtLocation(first);
                 const type = this.getFunctionType(first);
                 // const parsedType = this.getTypeFromRawType(type);
-                // parsedType === "Task" || 
+                // parsedType === "Task" ||
                 if (type === undefined || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
                     arrayOpen = "new List<Task<object>> {";
                 } else {
-                    arrayOpen = `new List<${type}> {`; 
+                    arrayOpen = `new List<${type}> {`;
                 }
             }
         }
@@ -611,7 +611,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         let modifiers = this.printModifiers(node);
         const defaultAccess = this.METHOD_DEFAULT_ACCESS ? this.METHOD_DEFAULT_ACCESS + " ": "";
         modifiers = modifiers ? modifiers + " " : defaultAccess; // tmp check this
-        
+
         modifiers = modifiers.indexOf("public") === -1 && modifiers.indexOf("private") === -1 && modifiers.indexOf("protected") === -1 ? defaultAccess + modifiers : modifiers;
 
         let parsedArgs = undefined;
@@ -645,11 +645,11 @@ export class CSharpTranspiler extends BaseTranspiler {
                         parsedArgs+= ", ";
                     }
                 });
-            } 
-        } 
+            }
+        }
 
         parsedArgs = parsedArgs ? parsedArgs : this.printMethodParameters(node);
-        
+
         returnType = returnType ? returnType + " " : returnType;
 
         const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
@@ -675,10 +675,10 @@ export class CSharpTranspiler extends BaseTranspiler {
             });
             parsedArgs = tmpArgs.join(",");
             return parsedArgs;
-        } 
+        }
         return super.printArgsForCallExpression(node, identation);
     }
-    
+
     // check this out later
 
 }

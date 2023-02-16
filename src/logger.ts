@@ -26,7 +26,7 @@ class Logger {
     static warning(message: string) {
         this.log(yellow(`[WARNING]: ${message}`));
     }
-    
+
     static error(message: string) {
         this.log(red(`[ERROR]: ${message}`));
     }

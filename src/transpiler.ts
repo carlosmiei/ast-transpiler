@@ -76,7 +76,7 @@ export default class Transpiler {
     setVerboseMode(verbose: boolean) {
         Logger.setVerboseMode(verbose);
     }
-    
+
     createProgramInMemoryAndSetGlobals(content) {
         const [ memProgram, memType, memSource] = getProgramAndTypeCheckerFromMemory(__dirname_mock, content);
         global.src = memSource;
@@ -181,7 +181,7 @@ export default class Transpiler {
     setPhpUncamelCaseIdentifiers(uncamelCase: boolean) {
         this.phpTranspiler.uncamelcaseIdentifiers = uncamelCase;
     }
-    
+
     setPythonUncamelCaseIdentifiers(uncamelCase: boolean) {
         this.pythonTranspiler.uncamelcaseIdentifiers = uncamelCase;
     }
@@ -197,7 +197,7 @@ export default class Transpiler {
     setPythonStringLiteralReplacements(replacements): void {
         this.pythonTranspiler.StringLiteralReplacements = replacements;
     }
-}   
+}
 
 export {
     Transpiler
