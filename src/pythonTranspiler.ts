@@ -37,16 +37,17 @@ const parserConfig = {
     'METHOD_TOKEN': 'def',
     'CATCH_TOKEN': 'except',
     'CATCH_DECLARATION': 'Exception as',
-    'METHOD_DEFAULT_ACCESS': ''
+    'METHOD_DEFAULT_ACCESS': '',
+    'SPREAD_TOKEN': '*',
 };
 export class PythonTranspiler extends BaseTranspiler {
     constructor(config = {}) {
-        
+
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
 
         super(config);
         this.id = "python";
-        
+
         this.initConfig();
         this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
@@ -150,7 +151,7 @@ export class PythonTranspiler extends BaseTranspiler {
     }
 
     printForStatement(node, identation) {
-        const varName = node.initializer.declarations[0].name.escapedText; 
+        const varName = node.initializer.declarations[0].name.escapedText;
         const initValue = this.printNode(node.initializer.declarations[0].initializer, 0);
         const roofValue = this.printNode(node.condition.right,0);
 
@@ -193,7 +194,7 @@ export class PythonTranspiler extends BaseTranspiler {
         const expression = node.expression;
         const leftSide = this.printNode(expression, 0);
         const rightSide = node.name.escapedText;
-        
+
         let rawExpression = undefined;
 
         if (rightSide === "length") {
@@ -252,7 +253,7 @@ export class PythonTranspiler extends BaseTranspiler {
         return undefined;
 
     }
-    
+
     printCustomBinaryExpressionIfAny(node, identation) {
         const left = node.left;
         const right = node.right.text;
