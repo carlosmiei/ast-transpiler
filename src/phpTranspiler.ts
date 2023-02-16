@@ -156,6 +156,10 @@ export class PhpTranspiler extends BaseTranspiler {
         return `json_decode(${parsedArg}, $as_associative_array = true)`;
     }
 
+    printJsonStringifyCall(node: any, identation: any, parsedArg?: any) {
+        return `json_encode(${parsedArg})`;
+    }
+
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
         return `${name}[] = ${parsedArg}`;
     }
@@ -163,7 +167,6 @@ export class PhpTranspiler extends BaseTranspiler {
     printPromiseAllCall(node, identation, parsedArg = undefined) {
         return `Promise\\all(${parsedArg})`;
     }
-
 
     printMathCeilCall(node, identation, parsedArg = undefined) {
         return `((int) ceil(${parsedArg}))`;

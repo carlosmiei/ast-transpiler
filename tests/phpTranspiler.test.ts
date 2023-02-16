@@ -424,8 +424,8 @@ describe('php transpiling tests', () => {
         "$e = PHP_INT_MAX;\n" +
         "$f = abs(-2);\n" +
         "$g = pow(1, 2);\n" +
-        "$h = (int) round(5);\n" +
-        "$i = (int) floor(5.5);"
+        "$h = ((int) round(5));\n" +
+        "$i = ((int) floor(5.5));"
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     })
