@@ -6,7 +6,7 @@
   "types": "./dist/transpiler.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/transpiler.js",
+      "require": "./dist/transpiler.cjs",
       "import": "./dist/transpiler.js",
       "types": "./dist/transpiler.d.ts"
     }
