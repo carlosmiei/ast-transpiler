@@ -765,6 +765,16 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('should transpile spread operator', () => {
+        const ts =
+        "const x = [1,2,3]\n" +
+        "const y = [...x]"
+        const php =
+        "$x = [1, 2, 3];\n" +
+        "$y = [...$x];"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('should transpile file from path', () => {
         transpiler.setPhpUncamelCaseIdentifiers(true);
         const php = readFileSync ('./tests/files/output/php/test1.php', "utf8");
