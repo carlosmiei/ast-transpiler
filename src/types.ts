@@ -1,4 +1,9 @@
 
+interface IInput {
+    language: Languages;
+    async: boolean;
+}
+
 interface IFileImport {
     name: string;
     path: string;
@@ -14,6 +19,17 @@ interface ITranspiledFile {
     content: string;
     imports: IFileImport[];
     exports: IFileExport[];
+}
+
+enum Languages {
+    Python,
+    Php,
+    CSharp,
+}
+
+enum TranspilationMode {
+    ByPath,
+    ByContent
 }
 
 // const TranspilingError = (message) => ({
@@ -43,10 +59,13 @@ class FunctionArgumentTypeError extends TranspilationError {
 }
 
 export {
+    Languages,
+    TranspilationMode,
     IFileImport,
     ITranspiledFile,
     IFileExport,
     TranspilationError,
     FunctionReturnTypeError,
-    FunctionArgumentTypeError
+    FunctionArgumentTypeError,
+    IInput
 };

@@ -5,20 +5,9 @@ import { PhpTranspiler } from './phpTranspiler.js';
 import { CSharpTranspiler } from './csharpTranspiler.js';
 import * as path from "path";
 import { Logger } from './logger.js';
-import { IFileExport, IFileImport, ITranspiledFile } from './types.js';
+import { Languages, TranspilationMode, IFileExport, IFileImport, ITranspiledFile, IInput } from './types.js';
 
 const __dirname_mock = currentPath;
-
-enum Languages {
-    Python,
-    Php,
-    CSharp,
-}
-
-enum TranspilationMode {
-    ByPath,
-    ByContent
-}
 
 function getProgramAndTypeCheckerFromMemory (rootDir: string, text: string, options: any = {}): [any,any,any]  {
     options = options || ts.getDefaultCompilerOptions();
@@ -105,31 +94,42 @@ export default class Transpiler {
         }
     }
 
-    transpile(lang: Languages, mode: TranspilationMode, file: string): ITranspiledFile {
+    transpile(lang: Languages, mode: TranspilationMode, file: string, sync = false, setGlobals = true, handleImports = true): ITranspiledFile {
+        // improve this logic later
+        if (setGlobals) {
+            if (mode === TranspilationMode.ByPath) {
+                this.createProgramByPathAndSetGlobals(file);
+            } else {
+                this.createProgramInMemoryAndSetGlobals(file);
+            }
 
-        if (mode === TranspilationMode.ByPath) {
-            this.createProgramByPathAndSetGlobals(file);
-        } else {
-            this.createProgramInMemoryAndSetGlobals(file);
+            // check for warnings and errors
+            this.checkFileDiagnostics();
         }
-
-        // check for warnings and errors
-        this.checkFileDiagnostics();
 
         let transpiledContent = undefined;
         switch(lang) {
         case Languages.Python:
+            this.pythonTranspiler.asyncTranspiling = !sync;
             transpiledContent = this.pythonTranspiler.printNode(global.src, -1);
+            this.pythonTranspiler.asyncTranspiling = true; // reset to default
             break;
         case Languages.Php:
+            this.phpTranspiler.asyncTranspiling = !sync;
             transpiledContent = this.phpTranspiler.printNode(global.src, -1);
+            this.phpTranspiler.asyncTranspiling = true; // reset to default
             break;
         case Languages.CSharp:
             transpiledContent = this.csharpTranspiler.printNode(global.src, -1);
         }
+        let imports = [];
+        let exports = [];
 
-        const imports = this.pythonTranspiler.getFileImports(global.src);
-        const exports = this.pythonTranspiler.getFileExports(global.src);
+        if (handleImports) {
+            imports = this.pythonTranspiler.getFileImports(global.src);
+            exports = this.pythonTranspiler.getFileExports(global.src);
+        }
+
 
         Logger.success("transpilation finished successfully");
 
@@ -138,6 +138,59 @@ export default class Transpiler {
             imports,
             exports
         };
+    }
+
+    transpileDifferentLanguagesGeneric(mode: TranspilationMode, input: IInput[], content: string): ITranspiledFile[] {
+        if (mode === TranspilationMode.ByPath) {
+            this.createProgramByPathAndSetGlobals(content);
+        } else {
+            this.createProgramInMemoryAndSetGlobals(content);
+        }
+
+        // check for warnings and errors
+        this.checkFileDiagnostics();
+
+        const files = [];
+        input.forEach( (inp) => {
+            const async = inp.async;
+
+            files.push({
+                content: this.transpile(inp.language, mode, content, !async, false, false).content
+            });
+        });
+
+        const imports = this.pythonTranspiler.getFileImports(global.src);
+        const exports = this.pythonTranspiler.getFileExports(global.src);
+
+        const output =  files.map( (file) => {
+            return {
+                content: file.content,
+                imports,
+                exports
+            };
+        });
+
+        return output;
+    }
+
+    transpileDifferentLanguages(input: any[], content: string): ITranspiledFile[] {
+        const config = input.map( (inp) => {
+            return {
+                language: this.convertStringToLanguageEnum(inp.language),
+                async: inp.async || true
+            };
+        } );
+        return this.transpileDifferentLanguagesGeneric(TranspilationMode.ByContent, config, content);
+    }
+
+    transpileDifferentLanguagesByPath(input: any[], content: string): ITranspiledFile[] {
+        const config = input.map( (inp) => {
+            return {
+                language: this.convertStringToLanguageEnum(inp.language),
+                async: inp.async || true
+            };
+        } );
+        return this.transpileDifferentLanguagesGeneric(TranspilationMode.ByPath, config, content);
     }
 
     transpilePython(content): ITranspiledFile {
@@ -196,6 +249,17 @@ export default class Transpiler {
 
     setPythonStringLiteralReplacements(replacements): void {
         this.pythonTranspiler.StringLiteralReplacements = replacements;
+    }
+
+    convertStringToLanguageEnum(lang: string): Languages {
+        switch(lang) {
+        case "python":
+            return Languages.Python;
+        case "php":
+            return Languages.Php;
+        case "csharp":
+            return Languages.CSharp;
+        }
     }
 }
 

@@ -1,10 +1,11 @@
 import ts from 'typescript';
-import { IFileImport, IFileExport, TranspilationError, FunctionReturnTypeError } from './types.js';
+import { IFileImport, IFileExport, TranspilationError } from './types.js';
 import { unCamelCase } from "./utils.js";
 import { Logger } from "./logger.js";
 class BaseTranspiler {
 
     NUM_LINES_BETWEEN_CLASS_MEMBERS = 1;
+    LINES_BETWEEN_FILE_MEMBERS = 0;
     NUM_LINES_END_FILE = 1;
     SPACE_DEFAULT_PARAM = " ";
     BLOCK_OPENING_TOKEN = '{';
@@ -1611,7 +1612,7 @@ class BaseTranspiler {
                     return this.printNode(m, identation + 1);
                 });
 
-                return transformedStatements.filter(st => st.length > 0 ).join("\n") + "\n".repeat(this.NUM_LINES_END_FILE);
+                return transformedStatements.filter(st => st.length > 0 ).join("\n" + "\n".repeat(this.LINES_BETWEEN_FILE_MEMBERS)) + "\n".repeat(this.NUM_LINES_END_FILE);
             }
             return "";
 

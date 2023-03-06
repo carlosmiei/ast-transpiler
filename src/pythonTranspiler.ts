@@ -50,7 +50,7 @@ export class PythonTranspiler extends BaseTranspiler {
 
         this.initConfig();
         this.asyncTranspiling = config['async'] ?? true;
-        this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
+        this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? true;
 
         // user overrides
         this.applyUserOverrides(config);
