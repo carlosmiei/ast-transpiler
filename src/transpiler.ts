@@ -194,19 +194,19 @@ export default class Transpiler {
     }
 
     transpilePython(content): ITranspiledFile {
-        return this.transpile(Languages.Python, TranspilationMode.ByContent, content);
+        return this.transpile(Languages.Python, TranspilationMode.ByContent, content, !this.pythonTranspiler.asyncTranspiling);
     }
 
     transpilePythonByPath(path): ITranspiledFile {
-        return this.transpile(Languages.Python, TranspilationMode.ByPath, path);
+        return this.transpile(Languages.Python, TranspilationMode.ByPath, path, !this.pythonTranspiler.asyncTranspiling);
     }
 
     transpilePhp(content): ITranspiledFile {
-        return this.transpile(Languages.Php, TranspilationMode.ByContent, content);
+        return this.transpile(Languages.Php, TranspilationMode.ByContent, content, !this.phpTranspiler.asyncTranspiling);
     }
 
     transpilePhpByPath(path): ITranspiledFile {
-        return this.transpile(Languages.Php, TranspilationMode.ByPath, path);
+        return this.transpile(Languages.Php, TranspilationMode.ByPath, path, !this.phpTranspiler.asyncTranspiling);
     }
 
     transpileCSharp(content): ITranspiledFile {
