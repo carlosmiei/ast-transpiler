@@ -489,12 +489,14 @@ describe('python tests', () => {
         "typeof response !== 'string'\n" +
         "typeof response === 'object'\n" +
         "typeof response === 'boolean'\n" +
+        "typeof response === 'undefined'\n" +
         "typeof response === 'number'";
         const python =
         "response = 'foo'\n" +
         "not isinstance(response, str)\n" +
         "isinstance(response, dict)\n" +
         "isinstance(response, bool)\n" +
+        "response is None\n" +
         "isinstance(response, numbers.Real)";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
