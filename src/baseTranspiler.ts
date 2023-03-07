@@ -1023,6 +1023,10 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printAssertCall(node, identation, parsedArgs) {
+        return `assert(${parsedArgs})`;
+    }
+
     printCallExpression(node, identation) {
         const expression = node.expression;
 
@@ -1098,6 +1102,12 @@ class BaseTranspiler {
                 case 'split':
                     return this.printSplitCall(node, identation, name, parsedArg);
                 }
+            }
+        }  else {
+            // handle functions like assert
+            const args = node.arguments ?? [];
+            if (args.length === 2 && expression.escapedText === "assert") {
+                return this.printAssertCall(node, identation, parsedArgs);
             }
         }
 

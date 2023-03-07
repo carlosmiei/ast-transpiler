@@ -7,6 +7,7 @@ beforeAll(() => {
     const config = {
         'verbose': false,
         'python': {
+            'uncamelcaseIdentifiers': false,
             'parser': {
                 'NUM_LINES_END_FILE': 0
             }
@@ -666,7 +667,7 @@ describe('python tests', () => {
         "try:\n" +
         "    x = 1\n" +
         "except Exception as e:\n" +
-        "    print(e)" 
+        "    print(e)"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);
@@ -678,6 +679,15 @@ describe('python tests', () => {
         const python =
         "x = [1, 2, 3]\n" +
         "y = [*x]"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+        transpiler.setPythonUncamelCaseIdentifiers(false);
+    })
+    test('should transpile assert', () => {
+        const ts =
+        "assert(1+1, 'failed assertion')"
+        const python =
+        "assert 1 + 1, 'failed assertion'"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);

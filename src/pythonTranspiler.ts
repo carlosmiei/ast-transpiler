@@ -178,6 +178,10 @@ export class PythonTranspiler extends BaseTranspiler {
         }
     }
 
+    printAssertCall(node, identation, parsedArgs) {
+        return `assert ${parsedArgs}`;
+    }
+
     printForStatement(node, identation) {
         const varName = node.initializer.declarations[0].name.escapedText;
         const initValue = this.printNode(node.initializer.declarations[0].initializer, 0);

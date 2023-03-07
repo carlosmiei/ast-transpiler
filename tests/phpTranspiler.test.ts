@@ -33,7 +33,6 @@ describe('php transpiling tests', () => {
         "    const x = 1;\n" +
         "    break;\n" +
         "}"
-        
         const php =
         "while (true) {\n" +
         "    $x = 1;\n" +
@@ -772,6 +771,14 @@ describe('php transpiling tests', () => {
         const php =
         "$x = [1, 2, 3];\n" +
         "$y = [...$x];"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('should transpile assert', () => {
+        const ts =
+        "assert(1+1, 'failed assertion')"
+        const php =
+        "assert(1 + 1, 'failed assertion');"
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
