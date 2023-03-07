@@ -280,6 +280,8 @@ export class PythonTranspiler extends BaseTranspiler {
             return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", bool)";
         case "object":
             return this.getIden(identation) + notOperator + "isinstance(" + this.printNode(expression, 0) + ", dict)";
+        case "undefined":
+            return this.getIden(identation) + this.printNode(expression, 0) + " is " + notOperator + "None";
         }
 
         return undefined;

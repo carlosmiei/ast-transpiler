@@ -236,6 +236,8 @@ export class PhpTranspiler extends BaseTranspiler {
         const isDifferentOperator = op === SyntaxKind.ExclamationEqualsEqualsToken || op === SyntaxKind.ExclamationEqualsToken;
         const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
 
+        const opComp = isDifferentOperator ? this.EXCLAMATION_EQUALS_EQUALS_TOKEN : this.EQUALS_EQUALS_EQUALS_TOKEN;
+
         switch (right) {
         case "string":
             return this.getIden(identation) + notOperator + "is_string(" + this.printNode(expression, 0) + ")";
@@ -245,6 +247,8 @@ export class PhpTranspiler extends BaseTranspiler {
             return this.getIden(identation) + notOperator + "is_bool(" + this.printNode(expression, 0) + ")";
         case "object":
             return this.getIden(identation) + notOperator + "is_array(" + this.printNode(expression, 0) + ")";
+        case "undefined":
+            return this.getIden(identation) + this.printNode(expression, 0) + " " + opComp + " null";
         }
 
         return undefined;
