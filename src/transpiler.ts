@@ -177,7 +177,7 @@ export default class Transpiler {
         const config = input.map( (inp) => {
             return {
                 language: this.convertStringToLanguageEnum(inp.language),
-                async: inp.async || true
+                async: inp.async
             };
         } );
         return this.transpileDifferentLanguagesGeneric(TranspilationMode.ByContent, config, content);
@@ -187,7 +187,7 @@ export default class Transpiler {
         const config = input.map( (inp) => {
             return {
                 language: this.convertStringToLanguageEnum(inp.language),
-                async: inp.async || true
+                async: inp.async
             };
         } );
         return this.transpileDifferentLanguagesGeneric(TranspilationMode.ByPath, config, content);

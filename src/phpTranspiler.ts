@@ -304,7 +304,7 @@ export class PhpTranspiler extends BaseTranspiler {
             const parsedArgs = node.parameters.map(param => this.printParameter(param, false)).join(", ");
             const params = parsedArgs ? " use (" + parsedArgs + ")" : "";
 
-            const bodyStms = node.body.statements;
+            const bodyStms = [...node.body.statements];
             const firstBodyStm = this.printNode(bodyStms[0], identation+2);
             bodyStms.shift();
             const funcBody = bodyStms.map((s) => this.printNode(s, identation+2)).join("\n");
