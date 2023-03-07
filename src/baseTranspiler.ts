@@ -1107,7 +1107,7 @@ class BaseTranspiler {
             // handle functions like assert
             const args = node.arguments ?? [];
             if (args.length === 2 && expression.escapedText === "assert") {
-                return this.printAssertCall(node, identation, parsedArgs);
+                return this.getIden(identation) + this.printAssertCall(node, identation, parsedArgs);
             }
         }
 
