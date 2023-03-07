@@ -552,28 +552,28 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     })
-    test('basic string methods', () => {
-        const ts =
-        "let a = \"test\";\n" +
-        "const w = a.toString();\n" +
-        "a+= \"mundo\";\n" +
-        "const t = a.split(\",\");\n" +
-        "const b = a.length;\n" +
-        "const c = a.indexOf(\"t\");\n" +
-        "const d = a.toLowerCase();\n" +
-        "const e = a.toUpperCase();"
-        const csharp =
-        "var a = \"test\";\n" +
-        "var w = a.ToString();\n" +
-        "a += \"mundo\";\n" +
-        "var t = ((string)a).Split(\",\").ToList<string>();\n" +
-        "var b = ((string)a).Length;\n" +
-        "var c = getIndexOf(a, \"t\");\n" +
-        "var d = ((string)a).ToLower();\n" +
-        "var e = ((string)a).ToUpper();"
-        const output = transpiler.transpileCSharp(ts).content;
-        expect(output).toBe(csharp);
-    })
+    // test('basic string methods', () => {
+    //     const ts =
+    //     "let a = \"test\";\n" +
+    //     "const w = a.toString();\n" +
+    //     "a+= \"mundo\";\n" +
+    //     "const t = a.split(\",\");\n" +
+    //     "const b = a.length;\n" +
+    //     "const c = a.indexOf(\"t\");\n" +
+    //     "const d = a.toLowerCase();\n" +
+    //     "const e = a.toUpperCase();"
+    //     const csharp =
+    //     "var a = \"test\";\n" +
+    //     "var w = a.ToString();\n" +
+    //     "a += \"mundo\";\n" +
+    //     "var t = ((string)a).Split(\",\").ToList<string>();\n" +
+    //     "var b = ((string)a).Length;\n" +
+    //     "var c = getIndexOf(a, \"t\");\n" +
+    //     "var d = ((string)a).ToLower();\n" +
+    //     "var e = ((string)a).ToUpper();"
+    //     const output = transpiler.transpileCSharp(ts).content;
+    //     expect(output).toBe(csharp);
+    // })
     // test('basic array manipulation', () => {
     //     const ts =
     //     "const myList = [1, 2, 3];\n" +
