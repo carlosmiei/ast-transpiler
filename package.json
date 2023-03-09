@@ -1,6 +1,6 @@
 {
   "name": "ast-transpiler",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "module": "./dist/transpiler.js",
   "types": "./dist/transpiler.d.ts",
@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "colorette": "^2.0.19",
+    "piscina": "^3.2.0",
     "typescript": "^4.8.4"
   },
   "author": {
