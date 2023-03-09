@@ -38,25 +38,27 @@ enum TranspilationMode {
 // });
 
 class TranspilationError extends Error {
-    constructor (message) {
-        super (message);
+    constructor (id, message, nodeText, start, end) {
+        const parsedMessage = `Lang: ${id} Error: ${message} at ${start}:${end} node: "${nodeText}"`;
+        super (parsedMessage);
         this.name = 'TranspilationError';
+
     }
 }
 
-class FunctionReturnTypeError extends TranspilationError {
-    constructor (message) {
-        super (message);
-        this.name = 'FuctionReturnTypeError';
-    }
-}
+// class FunctionReturnTypeError extends TranspilationError {
+//     constructor (message) {
+//         super (message);
+//         this.name = 'FuctionReturnTypeError';
+//     }
+// }
 
-class FunctionArgumentTypeError extends TranspilationError {
-    constructor (message) {
-        super (message);
-        this.name = 'FunctionArgumentTypeError';
-    }
-}
+// class FunctionArgumentTypeError extends TranspilationError {
+//     constructor (message) {
+//         super (message);
+//         this.name = 'FunctionArgumentTypeError';
+//     }
+// }
 
 export {
     Languages,
@@ -65,7 +67,7 @@ export {
     ITranspiledFile,
     IFileExport,
     TranspilationError,
-    FunctionReturnTypeError,
-    FunctionArgumentTypeError,
+    // FunctionReturnTypeError,
+    // FunctionArgumentTypeError,
     IInput
 };

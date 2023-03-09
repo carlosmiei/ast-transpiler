@@ -1627,11 +1627,7 @@ class BaseTranspiler {
             return "";
 
         } catch (e) {
-            if (!(e instanceof TranspilationError)) {
-                throw new TranspilationError(e.messageText);
-            } else {
-                throw e;
-            }
+            throw new TranspilationError(this.id, e.messageText, node.getFullText(), node.pos, node.end);
         }
     }
 
