@@ -1,5 +1,6 @@
 import { BaseTranspiler } from "./baseTranspiler.js";
 import ts, { TypeChecker } from 'typescript';
+import { parse } from "path";
 
 const parserConfig = {
     'ELSEIF_TOKEN': 'else if',
@@ -228,18 +229,6 @@ export class CSharpTranspiler extends BaseTranspiler {
                 switch (expressionText) {
                 // case "JSON.parse":
                 //     return `json_decode(${parsedArg}, $as_associative_array = true)`;
-                case "Array.isArray":
-                    return `(${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))`;
-                case "Object.keys":
-                    return `new List<string>(((Dictionary<string,object>)${parsedArg}).Keys)`;
-                case "Object.values":
-                    return `new List<object>(((Dictionary<string,object>)${parsedArg}).Values)`;
-                case "Math.round":
-                    return `Math.Round((double)${parsedArg})`;
-                case "Math.ceil":
-                    return `Math.Ceiling((double)${parsedArg})`;
-                case "Math.floor":
-                    return `Math.Floor((double)${parsedArg})`;
                 case "Math.abs":
                     return `Math.Abs((double)${parsedArg})`;
                 }
@@ -264,36 +253,6 @@ export class CSharpTranspiler extends BaseTranspiler {
                 const res = this.printWrappedUnknownThisProperty(node);
                 if (res) {
                     return res;
-                }
-            }
-
-            const rightSide = node.expression.name?.escapedText;
-
-            const arg = args && args.length > 0 ? args[0] : undefined;
-
-            if (arg) {
-                const argText = this.printNode(arg, identation).trimStart();
-                const type = global.checker.getTypeAtLocation(leftSide); // eslint-disable-line
-                switch (rightSide) {
-                case 'includes':
-                    return `${leftSideText}.Contains(${argText})`;
-                case 'join': // names.join(',') => String.Join(", ", names);
-                    return `String.Join(${argText}, ${leftSideText})`;
-                case 'split': // "ol".split("o") "ol".Split(' ').ToList();
-                    return `((string)${leftSideText}).Split(${argText}).ToList<string>()`;
-                case 'slice':
-                    return `((string)${leftSideText}).Substring(${argText})`;
-                case 'replace':
-                    return `((string)${leftSideText}).Replace(${argText}, ${this.printNode(args[1], identation)})`;
-                case 'indexOf':
-                    return `${this.INDEXOF_WRAPPER_OPEN}${leftSideText}, ${argText}${this.INDEXOF_WRAPPER_CLOSE}`;
-                }
-            } else {
-                switch(rightSide) {
-                case 'toUpperCase':
-                    return `((string)${this.printNode(leftSide, 0)}).ToUpper()`;
-                case 'toLowerCase':
-                    return `((string)${this.printNode(leftSide, 0)}).ToLower()`;
                 }
             }
         }
@@ -681,8 +640,87 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     // check this out later
 
-}
+    printArrayIsArrayCall(node, identation, parsedArg = undefined) {
+        return `(${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))`;
+    }
 
+    printObjectKeysCall(node, identation, parsedArg = undefined) {
+        return `new List<string>(((Dictionary<string,object>)${parsedArg}).Keys)`;
+    }
+
+    printObjectValuesCall(node, identation, parsedArg = undefined) {
+        return `new List<object>(((Dictionary<string,object>)${parsedArg}).Values)`;
+    }
+
+    printJsonParseCall(node, identation, parsedArg = undefined) {
+        return `parseJson(${parsedArg})`;
+    }
+
+    printJsonStringifyCall(node, identation, parsedArg = undefined) {
+        return undefined;
+    }
+
+    printPromiseAllCall(node, identation, parsedArg = undefined) {
+        return `Task.WhenAll(${parsedArg})`;
+    }
+
+    printMathFloorCall(node, identation, parsedArg = undefined) {
+        return `Math.Floor((double)${parsedArg})`;
+    }
+
+    printMathRoundCall(node, identation, parsedArg = undefined) {
+        return `Math.Round((double)${parsedArg})`;
+    }
+
+    printMathCeilCall(node, identation, parsedArg = undefined) {
+        `Math.Ceiling((double)${parsedArg})`;
+    }
+
+    printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
+        return  `((List<object>)${name}).Add(${parsedArg})`;
+    }
+
+    printIncludesCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `${name}.Contains(${parsedArg})`;
+    }
+
+    printIndexOfCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
+    }
+
+    printJoinCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `String.Join(${parsedArg}, ${name})`;
+    }
+
+    printSplitCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `((string)${name}).Split(${parsedArg}).ToList<string>()`;
+    }
+
+    printToStringCall(node, identation, name = undefined) {
+        return `((object)${name}).ToString()`;
+    }
+
+    printToUpperCaseCall(node, identation, name = undefined) {
+        return `((string)${name}).ToUpper()`;
+    }
+
+    printToLowerCaseCall(node, identation, name = undefined) {
+        return `((string)${name}).ToLower()`;
+    }
+
+    printShiftCall(node, identation, name = undefined) {
+        return `((List<object>)${name}).First()`;
+    }
+
+    printPopCall(node, identation, name = undefined) {
+        return `((List<object>)${name}).Last()`;
+    }
+
+    printAssertCall(node, identation, parsedArgs) {
+        return `assert(${parsedArgs})`;
+    }
+
+}
 
 // if (this.requiresCallExpressionCast) {
 //     const parsedTypes = this.getTypesFromCallExpressionParameters(node);
