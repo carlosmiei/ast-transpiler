@@ -1,6 +1,5 @@
 import { BaseTranspiler } from "./baseTranspiler.js";
 import ts, { TypeChecker } from 'typescript';
-import { parse } from "path";
 
 const parserConfig = {
     'ELSEIF_TOKEN': 'else if',
@@ -720,6 +719,12 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `assert(${parsedArgs})`;
     }
 
+    printLengthProperty(node, identation, name = undefined) {
+        const leftSide = this.printNode(node.expression, 0);
+        const type = (global.checker as TypeChecker).getTypeAtLocation(node.expression); // eslint-disable-line
+        this.warnIfAnyType(node, type.flags, leftSide, "length");
+        return this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`;
+    }
 }
 
 // if (this.requiresCallExpressionCast) {
