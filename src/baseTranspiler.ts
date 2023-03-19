@@ -434,7 +434,7 @@ class BaseTranspiler {
             if (this.COMPARISON_WRAPPER_OPEN) {
                 leftVar = this.printNode(left, 0);
                 rightVar = this.printNode(right, identation);
-                return this.getIden(identation) + `${this.COMPARISON_WRAPPER_OPEN}${leftVar}, ${rightVar}${this.COMPARISON_WRAPPER_CLOSE}`;
+                return `${this.COMPARISON_WRAPPER_OPEN}${leftVar}, ${rightVar}${this.COMPARISON_WRAPPER_CLOSE}`;
             }
         }
 
@@ -451,7 +451,7 @@ class BaseTranspiler {
 
         operator = customOperator ? customOperator : operator;
 
-        return this.getIden(identation) + leftVar +" "+ operator + " " + rightVar.trim();
+        return leftVar +" "+ operator + " " + rightVar.trim();
     }
 
     transformPropertyAcessExpressionIfNeeded (node) {
@@ -647,6 +647,9 @@ class BaseTranspiler {
             if (ts.isArrayLiteralExpression(initializer)) {
                 return this.ARRAY_KEYWORD;
             }
+            if ((ts as any).isBooleanLiteral(initializer)) {
+                return this.BOOLEAN_KEYWORD;
+            }
             if (ts.isObjectLiteralExpression(initializer)) {
                 return this.OBJECT_KEYWORD;
             }
@@ -662,9 +665,6 @@ class BaseTranspiler {
             }
             if (ts.isStringLiteralLike(initializer)) {
                 return this.STRING_KEYWORD;
-            }
-            if ((ts as any).isBooleanLiteral(initializer)) {
-                return this.BOOLEAN_KEYWORD;
             }
         }
         return undefined;
@@ -759,7 +759,13 @@ class BaseTranspiler {
         }
 
         const typeText = this.getType(node);
-        if (typeText === undefined) {
+        // if (typeText === this.BOOLEAN_KEYWORD) {
+        //     return typeText;
+        // }
+
+        return this.DEFAULT_PARAMETER_TYPE;
+
+        if (typeText === undefined || typeText === this.STRING_KEYWORD) {
             // throw new FunctionReturnTypeError("Parameter type is not supported or undefined");
             this.warn(node, node.getText(), "Parameter type not found, will default to: " + this.DEFAULT_PARAMETER_TYPE);
             return this.DEFAULT_PARAMETER_TYPE;
@@ -774,7 +780,7 @@ class BaseTranspiler {
         }
 
         const typeText = this.getFunctionType(node);
-        if (typeText === undefined) {
+        if (typeText === undefined || (typeText !== this.VOID_KEYWORD && typeText !== this.PROMISE_TYPE_KEYWORD)) {
             // throw new FunctionReturnTypeError("Function return type is not supported");
             let res = "";
             if (this.isAsyncFunction(node)) {
@@ -1003,6 +1009,10 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printSliceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
+        return undefined; // stub
+    }
+
     printToStringCall(node, identation, name = undefined) {
         return undefined; // stub
     }
@@ -1036,7 +1046,7 @@ class BaseTranspiler {
 
         const finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
         if (finalExpression) {
-            return this.getIden(identation) + finalExpression;
+            return finalExpression;
         }
 
         // check propertyAccessExpression for built in functions calls like Json.parse
@@ -1102,12 +1112,20 @@ class BaseTranspiler {
                 case 'split':
                     return this.printSplitCall(node, identation, name, parsedArg);
                 }
+
+                if (args.length === 1 || args.length === 2) {
+                    const parsedArg2 = args[1] ? this.printNode(args[1], identation).trimStart() : undefined;
+                    switch(rightSide) {
+                    case 'slice':
+                        return this.printSliceCall(node, identation, name, parsedArg, parsedArg2);
+                    }
+                }
             }
         }  else {
             // handle functions like assert
             const args = node.arguments ?? [];
             if (args.length === 2 && expression.escapedText === "assert") {
-                return this.getIden(identation) + this.printAssertCall(node, identation, parsedArgs);
+                return this.printAssertCall(node, identation, parsedArgs);
             }
         }
 
@@ -1128,7 +1146,7 @@ class BaseTranspiler {
             }
         }
 
-        let parsedCall = this.getIden(identation) + parsedExpression;
+        let parsedCall = parsedExpression;
         if (!removeParenthesis) {
             parsedCall+= "(" + parsedArgs + ")";
 
@@ -1345,12 +1363,12 @@ class BaseTranspiler {
 
         let expression = this.printNode(node, 0);
         // wrap falsy/truty expressions if needed
-        if (node.kind !== ts.SyntaxKind.BinaryExpression && node.kind !== ts.SyntaxKind.ParenthesizedExpression) {
+        if ( (1+1) || (node.kind !== ts.SyntaxKind.BinaryExpression && node.kind !== ts.SyntaxKind.ParenthesizedExpression)) {
 
             const typeFlags = global.checker.getTypeAtLocation(node).flags;
-            if (typeFlags !== ts.TypeFlags.BooleanLiteral && typeFlags  !== ts.TypeFlags.Boolean) {
+            if ( (1+1) || typeFlags !== ts.TypeFlags.BooleanLiteral && typeFlags  !== ts.TypeFlags.Boolean) {
                 expression = this.printNode(node, 0);
-                this.warn(node, node.getText(), "Falsy/Truthy expressions are not supported by this language, so adding the defined wrapper!");
+                // this.warn(node, node.getText(), "Falsy/Truthy expressions are not supported by this language, so adding the defined wrapper!");
                 expression = `${this.FALSY_WRAPPER_OPEN}${expression}${this.FALSY_WRAPPER_CLOSE}`;
             }
         }
@@ -1436,7 +1454,7 @@ class BaseTranspiler {
     printAwaitExpression(node, identation) {
         const expression = this.printNode(node.expression, 0);
         const awaitToken = this.asyncTranspiling ? this.AWAIT_TOKEN + " " : "";
-        return this.getIden(identation) + awaitToken + expression;
+        return awaitToken + expression;
     }
 
     printConditionalExpression(node, identation) {
@@ -1444,7 +1462,7 @@ class BaseTranspiler {
         const whenTrue = this.printNode(node.whenTrue, 0);
         const whenFalse = this.printNode(node.whenFalse, 0);
 
-        return this.getIden(identation) + condition + " ? " + whenTrue + " : " + whenFalse;
+        return condition + " ? " + whenTrue + " : " + whenFalse;
     }
 
     printAsExpression(node, identation) {
@@ -1514,7 +1532,7 @@ class BaseTranspiler {
         if (exprStm.length === 0) {
             return "";
         }
-        const expStatement = this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
+        const expStatement = this.getIden(identation) + exprStm + this.LINE_TERMINATOR;
         return this.printNodeCommentsIfAny(node, identation, expStatement);
     }
 

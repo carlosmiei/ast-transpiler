@@ -7,7 +7,7 @@ const parserConfig = {
     'ARRAY_OPENING_TOKEN': 'new List<object>() {',
     'ARRAY_CLOSING_TOKEN': '}',
     'PROPERTY_ASSIGNMENT_TOKEN': ',',
-    'VAR_TOKEN': 'var',
+    'VAR_TOKEN': 'object',
     'METHOD_TOKEN': '',
     'PROPERTY_ASSIGNMENT_OPEN': '{',
     'PROPERTY_ASSIGNMENT_CLOSE': '}',
@@ -319,7 +319,8 @@ export class CSharpTranspiler extends BaseTranspiler {
 
                 const castExp = parsedType ? `(${parsedType})` : "";
 
-                const statement = this.getIden(identation) + `${e} = ${castExp}${syntheticName}[${index}]`;
+                // const statement = this.getIden(identation) + `${e} = (${castExp}((List<object>)${syntheticName}))[${index}]`;
+                const statement = this.getIden(identation) + `${e} = ((List<object>)${syntheticName})[${index}]`;
                 if (index < parsedArrayBindingElements.length - 1) {
                     arrayBindingStatement += statement + ";\n";
                 } else {
@@ -390,7 +391,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             parsedArrayBindingElements.forEach((e, index) => {
                 // const type = this.getType(node);
                 // const parsedType = this.getTypeFromRawType(type);
-                const statement = this.getIden(identation) + `var ${e} = ${syntheticName}[${index}]`;
+                const statement = this.getIden(identation) + `var ${e} = ((List<object>) ${syntheticName})[${index}]`;
                 if (index < parsedArrayBindingElements.length - 1) {
                     arrayBindingStatement += statement + ";\n";
                 } else {
@@ -437,7 +438,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printCustomDefaultValueIfNeeded(node) {
-        if (ts.isArrayLiteralExpression(node) || ts.isObjectLiteralExpression(node)) {
+        if (ts.isArrayLiteralExpression(node) || ts.isObjectLiteralExpression(node) || ts.isStringLiteral(node)) {
             return this.UNDEFINED_TOKEN;
         }
 
@@ -476,6 +477,12 @@ export class CSharpTranspiler extends BaseTranspiler {
                         initParams.push(`${this.printNode(param.name, 0)} ??= new Dictionary<string, object>();`);
                     }
                     if (ts.isNumericLiteral(initializer)) {
+                        initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
+                    }
+                    if (ts.isStringLiteral(initializer)) {
+                        initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
+                    }
+                    if ((ts as any).isBooleanLiteral(initializer)) {
                         initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
                     }
                 }
@@ -620,7 +627,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     printArgsForCallExpression(node, identation) {
         const args = node.arguments;
         let parsedArgs  = "";
-        if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) { //eslint-disable-line
+        if (false && this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) { //eslint-disable-line
             const parsedTypes = this.getTypesFromCallExpressionParameters(node);
             const tmpArgs = [];
             args.forEach((arg, index) => {
@@ -692,7 +699,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printSplitCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `((string)${name}).Split(${parsedArg}).ToList<string>()`;
+        return `((string)${name}).Split((string)${parsedArg}).ToList<object>()`;
     }
 
     printToStringCall(node, identation, name = undefined) {
@@ -719,11 +726,44 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `assert(${parsedArgs})`;
     }
 
+    printSliceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
+        if (parsedArg2 === undefined){
+            return `((string)${name}).Substring((int)${parsedArg})`;
+        }
+        return `((string)${name}).Substring((int)${parsedArg}, (int)${parsedArg2})`;
+    }
+
     printLengthProperty(node, identation, name = undefined) {
         const leftSide = this.printNode(node.expression, 0);
         const type = (global.checker as TypeChecker).getTypeAtLocation(node.expression); // eslint-disable-line
         this.warnIfAnyType(node, type.flags, leftSide, "length");
         return this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`;
+    }
+
+    printPostFixUnaryExpression(node, identation) {
+        const {operand, operator} = node;
+        const leftSide = this.printNode(operand, 0);
+        const op = this.PostFixOperators[operator]; // todo: handle --
+        return `postFixIncrement(${leftSide})`;
+    }
+
+    printConditionalExpression(node, identation) {
+        const condition = this.printCondition(node.condition, identation);
+        const whenTrue = this.printNode(node.whenTrue, 0);
+        const whenFalse = this.printNode(node.whenFalse, 0);
+
+        return `((bool) ${condition})` + " ? " + whenTrue + " : " + whenFalse;
+    }
+
+    printThrowStatement(node, identation) {
+        // const expression = this.printNode(node.expression, 0);
+        // return this.getIden(node) + this.THROW_TOKEN + " " + expression + this.LINE_TERMINATOR;
+        let newExpression = node.expression?.expression?.escapedText;
+        newExpression = newExpression ? newExpression : this.printNode(node.expression.expression, 0); // new Exception or new exact[string] check this out
+        const args = node.expression?.arguments.map(n => this.printNode(n, 0)).join(",");
+        const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
+        const throwExpression = `${newToken}${newExpression}${this.LEFT_PARENTHESIS}((string)${args})${this.RIGHT_PARENTHESIS}`;
+        return this.getIden(identation) + throwExpression + this.LINE_TERMINATOR;
     }
 }
 
