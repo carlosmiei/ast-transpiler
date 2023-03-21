@@ -490,7 +490,7 @@ class BaseTranspiler {
         let rawExpression = node.getFullText().trim();
 
         if (this.FullPropertyAccessReplacements.hasOwnProperty(rawExpression)){ // eslint-disable-line
-            return this.getIden(identation) + this.FullPropertyAccessReplacements[rawExpression]; // eslint-disable-line
+            return this.FullPropertyAccessReplacements[rawExpression]; // eslint-disable-line
         }
 
         leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : this.printNode(expression, 0); // eslint-disable-line
@@ -505,7 +505,7 @@ class BaseTranspiler {
 
         rawExpression = leftSide + accessToken + rightSide;
 
-        return this.getIden(identation) + rawExpression;
+        return rawExpression;
     }
 
     printCustomDefaultValueIfNeeded(node) {
@@ -1490,21 +1490,21 @@ class BaseTranspiler {
         rightPart = rightPart.trim();
 
         // cast return type if needed
-        if (this.requiresCallExpressionCast) {
-            const functionNode = this.getFunctionNodeFromReturn(node);
-            let functionType = this.getFunctionType(functionNode, false);
-            if (functionType === undefined) {
-                // check the parent method type if any
-                const overrideMethod = this.getMethodOverride(functionNode);
-                if (overrideMethod !== undefined) {
-                    functionType = this.getFunctionType(overrideMethod, false);
-                }
-            }
-            if (functionType && exp?.kind !== ts.SyntaxKind.UndefinedKeyword) {
-                rightPart = rightPart ? ' ' + `((${functionType}) (${rightPart}))` + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
-                return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
-            }
-        }
+        // if (false && this.requiresCallExpressionCast) {
+        //     const functionNode = this.getFunctionNodeFromReturn(node);
+        //     let functionType = this.getFunctionType(functionNode, false);
+        //     if (functionType === undefined) {
+        //         // check the parent method type if any
+        //         const overrideMethod = this.getMethodOverride(functionNode);
+        //         if (overrideMethod !== undefined) {
+        //             functionType = this.getFunctionType(overrideMethod, false);
+        //         }
+        //     }
+        //     if (functionType && exp?.kind !== ts.SyntaxKind.UndefinedKeyword) {
+        //         rightPart = rightPart ? ' ' + `((${functionType}) (${rightPart}))` + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
+        //         return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
+        //     }
+        // }
         rightPart = rightPart ? ' ' + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
         return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
     }

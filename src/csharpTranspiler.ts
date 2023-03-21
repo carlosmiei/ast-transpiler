@@ -97,7 +97,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             // 'Math.round': 'Math.Round', // need to cast
             'Math.floor': 'Math.Floor',
             'Math.pow': 'Math.Pow',
-            'Promise.all': 'Task.WhenAll',
+            // 'Promise.all': 'Task.WhenAll',
         };
 
         this.CallExpressionReplacements = {
@@ -333,7 +333,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         }
 
         if (op === ts.SyntaxKind.InKeyword) {
-            return `${this.getIden(identation)}((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey((string)${this.printNode(left, 0)})`;
+            return `((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey(toStringOrNull(${this.printNode(left, 0)}))`;
         }
         const leftText = this.printNode(left, 0);
         const rightText = this.printNode(right, 0);
@@ -352,8 +352,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             const rightType = global.checker.getTypeAtLocation(right);
 
             if (this.isAnyType(rightType.flags) && !this.isAnyType(leftType.flags)) {
-                const parsedType = this.getTypeFromRawType(leftType);
-                return `${this.getIden(identation)}${leftText} = (${parsedType})(${rightText})`;
+                // const parsedType = this.getTypeFromRawType(leftType);
+                return `${leftText} = ${rightText}`;
             }
         }
 
@@ -438,7 +438,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printCustomDefaultValueIfNeeded(node) {
-        if (ts.isArrayLiteralExpression(node) || ts.isObjectLiteralExpression(node) || ts.isStringLiteral(node)) {
+        if (ts.isArrayLiteralExpression(node) || ts.isObjectLiteralExpression(node) || ts.isStringLiteral(node) || (ts as any).isBooleanLiteral(node)) {
             return this.UNDEFINED_TOKEN;
         }
 
@@ -553,12 +553,21 @@ export class CSharpTranspiler extends BaseTranspiler {
             const first = elems[0];
             if (first.kind === ts.SyntaxKind.CallExpression) {
                 // const type = global.checker.getTypeAtLocation(first);
-                const type = this.getFunctionType(first);
+                let type = this.getFunctionType(first);
                 // const parsedType = this.getTypeFromRawType(type);
                 // parsedType === "Task" ||
+                // to do check this later
                 if (type === undefined || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
-                    arrayOpen = "new List<Task<object>> {";
+                    if (type === undefined) {
+                        arrayOpen = "new List<object> {";
+                    } else {
+                        arrayOpen = "new List<Task<object>> {";
+                    }
                 } else {
+                    // check this out later
+                    if (type === 'Task<List<object>>') {
+                        type = 'Task<object>';
+                    }
                     arrayOpen = `new List<${type}> {`;
                 }
             }
@@ -663,11 +672,11 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printJsonStringifyCall(node, identation, parsedArg = undefined) {
-        return undefined;
+        return `json(${parsedArg})`; // make this customizable
     }
 
     printPromiseAllCall(node, identation, parsedArg = undefined) {
-        return `Task.WhenAll(${parsedArg})`;
+        return `promiseAll(${parsedArg})`;
     }
 
     printMathFloorCall(node, identation, parsedArg = undefined) {
@@ -744,7 +753,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         const {operand, operator} = node;
         const leftSide = this.printNode(operand, 0);
         const op = this.PostFixOperators[operator]; // todo: handle --
-        return `postFixIncrement(${leftSide})`;
+        return `postFixIncrement(ref ${leftSide})`;
     }
 
     printConditionalExpression(node, identation) {
@@ -758,12 +767,15 @@ export class CSharpTranspiler extends BaseTranspiler {
     printThrowStatement(node, identation) {
         // const expression = this.printNode(node.expression, 0);
         // return this.getIden(node) + this.THROW_TOKEN + " " + expression + this.LINE_TERMINATOR;
+        if (node.expression.kind === ts.SyntaxKind.Identifier) {
+            return this.getIden(identation) + this.THROW_TOKEN + ' ' + this.printNode(node.expression, 0) + this.LINE_TERMINATOR;
+        }
+        const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
         let newExpression = node.expression?.expression?.escapedText;
         newExpression = newExpression ? newExpression : this.printNode(node.expression.expression, 0); // new Exception or new exact[string] check this out
         const args = node.expression?.arguments.map(n => this.printNode(n, 0)).join(",");
-        const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
-        const throwExpression = `${newToken}${newExpression}${this.LEFT_PARENTHESIS}((string)${args})${this.RIGHT_PARENTHESIS}`;
-        return this.getIden(identation) + throwExpression + this.LINE_TERMINATOR;
+        const throwExpression = ` ${newToken}${newExpression}${this.LEFT_PARENTHESIS}((string)${args})${this.RIGHT_PARENTHESIS}`;
+        return this.getIden(identation) + this.THROW_TOKEN + throwExpression + this.LINE_TERMINATOR;
     }
 }
 
