@@ -2,15 +2,37 @@ namespace Main;
 
 using System.Globalization;
 using System.Text.Json;
+using dict = Dictionary<string, object>;
 
 
-// make these methods available in your code (partial class, static, etc)
-
-public partial class Helper
+public partial class Exchange
 {
 
     // tmp most of these methods are going to be re-implemented in the future to be more generic and efficient
-
+    public object postFixIncrement(ref object a)
+    {
+        if (a.GetType() == typeof(Int64))
+        {
+            a = (Int64)a + 1;
+        }
+        else if (a.GetType() == typeof(int))
+        {
+            a = (int)a + 1;
+        }
+        else if (a.GetType() == typeof(double))
+        {
+            a = (double)a + 1;
+        }
+        else if (a.GetType() == typeof(string))
+        {
+            a = (string)a + 1;
+        }
+        else
+        {
+            return null;
+        }
+        return a;
+    }
     public dict parseJson(object json)
     {
         return JsonSerializer.Deserialize<Dictionary<string, object>>((string)json);
@@ -434,5 +456,17 @@ public partial class Helper
         {
             return null;
         }
+    }
+
+    public async Task<List<object>> promiseAll(object promisesObj)
+    {
+        var promises = (List<object>)promisesObj;
+        var tasks = new List<Task<object>>();
+        foreach (var promise in promises)
+        {
+            tasks.Add((Task<object>)promise);
+        }
+        var results = await Task.WhenAll(tasks);
+        return results.ToList();
     }
 }

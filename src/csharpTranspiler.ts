@@ -1,5 +1,7 @@
 import { BaseTranspiler } from "./baseTranspiler.js";
 import ts, { TypeChecker } from 'typescript';
+import { parse } from "path";
+import exp from "constants";
 
 const parserConfig = {
     'ELSEIF_TOKEN': 'else if',
@@ -7,7 +9,7 @@ const parserConfig = {
     'ARRAY_OPENING_TOKEN': 'new List<object>() {',
     'ARRAY_CLOSING_TOKEN': '}',
     'PROPERTY_ASSIGNMENT_TOKEN': ',',
-    'VAR_TOKEN': 'object',
+    'VAR_TOKEN': 'object', // object
     'METHOD_TOKEN': '',
     'PROPERTY_ASSIGNMENT_OPEN': '{',
     'PROPERTY_ASSIGNMENT_CLOSE': '}',
@@ -137,6 +139,46 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printSuperCallInsideConstructor(node, identation) {
         return ""; // csharp does not need super call inside constructor
+    }
+
+    printIdentifier(node) {
+        let idValue = node.text ?? node.escapedText;
+
+        if (this.ReservedKeywordsReplacements[idValue]) {
+            idValue = this.ReservedKeywordsReplacements[idValue];
+        }
+
+        if (idValue === "undefined") {
+            return this.UNDEFINED_TOKEN;
+        }
+
+        // check if it is a class declaration that we need to wrap arounf typeof
+        // example: const x = Error -> var x = typeof(Error)
+        const type = global.checker.getTypeAtLocation(node);
+        const symbol = type?.symbol;
+        if (symbol !== undefined) {
+            const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
+            const decl = symbol?.declarations ?? [];
+            let isBuiltIn = undefined;
+            if (decl.length > 0) {
+                isBuiltIn = decl[0].getSourceFile().fileName.indexOf('typescript') > -1; //very hacky find a better solution later
+            }
+
+            if (isBuiltIn !== undefined && !isBuiltIn) {
+                const isClassDeclaration = declarations.find(l => l.kind === ts.SyntaxKind.ClassDeclaration);
+                if (isClassDeclaration) {
+                    const isInsideNewExpression =  node?.parent?.kind === ts.SyntaxKind.NewExpression;
+                    const isInsideCatch = node?.parent?.kind === ts.SyntaxKind.ThrowStatement;
+                    const isLeftSide = node?.parent?.name === node || (node?.parent?.left === node);
+                    const isCallOrPropertyAccess = node?.parent?.kind === ts.SyntaxKind.PropertyAccessExpression || node?.parent?.kind === ts.SyntaxKind.ElementAccessExpression;
+                    if (!isLeftSide && !isCallOrPropertyAccess && !isInsideCatch && !isInsideNewExpression) {
+                        return `typeof(${idValue})`;
+                    }
+                }
+            }
+        }
+
+        return this.transformIdentifier(idValue); // check this later
     }
 
     printConstructorDeclaration (node, identation) {
@@ -276,13 +318,13 @@ export class CSharpTranspiler extends BaseTranspiler {
         const target = this.printNode(expression, 0);
         switch (right) {
         case "string":
-            return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(string)`;
+            return notOperator + `((${target}).GetType() == typeof(string))`;
         case "number":
-            return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double)`;
+            return notOperator + `((${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double))`;
         case "boolean":
-            return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(bool)`;
+            return notOperator + `((${target}).GetType() == typeof(bool))`;
         case "object":
-            return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(Dictionary<string, object>)`;
+            return notOperator + `((${target}).GetType() == typeof(Dictionary<string, object>))`;
         }
 
         return undefined;
@@ -335,27 +377,37 @@ export class CSharpTranspiler extends BaseTranspiler {
         if (op === ts.SyntaxKind.InKeyword) {
             return `((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey(toStringOrNull(${this.printNode(left, 0)}))`;
         }
+
         const leftText = this.printNode(left, 0);
         const rightText = this.printNode(right, 0);
+
+        if (op === ts.SyntaxKind.PlusEqualsToken) {
+            return `${leftText} = add(${leftText}, ${rightText})`;
+        }
+
+        if (op === ts.SyntaxKind.MinusEqualsToken) {
+            return `${leftText} = subtract(${leftText}, ${rightText})`;
+        }
+
 
         if (op in this.binaryExpressionsWrappers) {
             const wrapper = this.binaryExpressionsWrappers[op];
             const open = wrapper[0];
             const close = wrapper[1];
-            return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
+            return `${open}${leftText}, ${rightText}${close}`;
         }
 
         // x = y
         // cast y to x type when y is unknown
-        if (op === ts.SyntaxKind.EqualsToken) {
-            const leftType = global.checker.getTypeAtLocation(left);
-            const rightType = global.checker.getTypeAtLocation(right);
+        // if (op === ts.SyntaxKind.EqualsToken) {
+        //     const leftType = global.checker.getTypeAtLocation(left);
+        //     const rightType = global.checker.getTypeAtLocation(right);
 
-            if (this.isAnyType(rightType.flags) && !this.isAnyType(leftType.flags)) {
-                // const parsedType = this.getTypeFromRawType(leftType);
-                return `${leftText} = ${rightText}`;
-            }
-        }
+        //     if (this.isAnyType(rightType.flags) && !this.isAnyType(leftType.flags)) {
+        //         // const parsedType = this.getTypeFromRawType(leftType);
+        //         return `${leftText} = ${rightText}`;
+        //     }
+        // }
 
         return undefined;
     }
@@ -403,10 +455,11 @@ export class CSharpTranspiler extends BaseTranspiler {
             return arrayBindingStatement;
         }
 
+        const isNew = (declaration.initializer.kind === ts.SyntaxKind.NewExpression);
+        const varToken = isNew ? 'var ' : 'object ' ;
 
         // handle default undefined initialization
         const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
-        const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
         if (parsedValue === this.UNDEFINED_TOKEN) {
             return this.getIden(identation) + "object " + this.printNode(declaration.name) + " = " + parsedValue;
         }
@@ -558,16 +611,22 @@ export class CSharpTranspiler extends BaseTranspiler {
                 // parsedType === "Task" ||
                 // to do check this later
                 if (type === undefined || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
-                    if (type === undefined) {
-                        arrayOpen = "new List<object> {";
-                    } else {
-                        arrayOpen = "new List<Task<object>> {";
-                    }
+                    // if (type === undefined) {
+                    arrayOpen = "new List<object> {";
+                    // }
+                    //  else {
+                    //     arrayOpen = "new List<Task<object>> {";
+                    // }
                 } else {
+                    type = 'object';
                     // check this out later
-                    if (type === 'Task<List<object>>') {
-                        type = 'Task<object>';
-                    }
+                    // if (type === 'Task<List<object>>') {
+                    //     type = 'Task<object>';
+                    // }
+                    // if (type === 'string'){
+                    //     type = 'object';
+                    // }
+                    // type =
                     arrayOpen = `new List<${type}> {`;
                 }
             }
@@ -711,6 +770,10 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `((string)${name}).Split((string)${parsedArg}).ToList<object>()`;
     }
 
+    printToFixedCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `toFixed(${name}, ${parsedArg})`;
+    }
+
     printToStringCall(node, identation, name = undefined) {
         return `((object)${name}).ToString()`;
     }
@@ -725,6 +788,10 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printShiftCall(node, identation, name = undefined) {
         return `((List<object>)${name}).First()`;
+    }
+
+    printReverseCall(node, identation, name = undefined) {
+        return `((List<object>)${name}).Reverse()`;
     }
 
     printPopCall(node, identation, name = undefined) {
@@ -742,6 +809,10 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `((string)${name}).Substring((int)${parsedArg}, (int)${parsedArg2})`;
     }
 
+    printReplaceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
+        return `((string)${name}).Replace((string)${parsedArg}, (string)${parsedArg2})`;
+    }
+
     printLengthProperty(node, identation, name = undefined) {
         const leftSide = this.printNode(node.expression, 0);
         const type = (global.checker as TypeChecker).getTypeAtLocation(node.expression); // eslint-disable-line
@@ -751,13 +822,33 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printPostFixUnaryExpression(node, identation) {
         const {operand, operator} = node;
+        if (operand.kind === ts.SyntaxKind.NumericLiteral) {
+            return super.printPostFixUnaryExpression(node, identation);
+        }
         const leftSide = this.printNode(operand, 0);
         const op = this.PostFixOperators[operator]; // todo: handle --
         return `postFixIncrement(ref ${leftSide})`;
     }
 
+    printPrefixUnaryExpression(node, identation) {
+        const {operand, operator} = node;
+        if (operand.kind === ts.SyntaxKind.NumericLiteral) {
+            return super.printPrefixUnaryExpression(node, identation);
+        }
+        if (operator === ts.SyntaxKind.ExclamationToken) {
+            // not branch check falsy/turthy values if needed;
+            return  this.PrefixFixOperators[operator] + this.printCondition(node.operand, 0);
+        }
+        const leftSide = this.printNode(operand, 0);
+        if (operator === ts.SyntaxKind.PlusToken) {
+            return `prefixUnaryPlus(ref ${leftSide})`;
+        } else {
+            return `prefixUnaryNeg(ref ${leftSide})`;
+        }
+    }
+
     printConditionalExpression(node, identation) {
-        const condition = this.printCondition(node.condition, identation);
+        const condition = this.printCondition(node.condition, 0);
         const whenTrue = this.printNode(node.whenTrue, 0);
         const whenFalse = this.printNode(node.whenFalse, 0);
 
@@ -770,12 +861,38 @@ export class CSharpTranspiler extends BaseTranspiler {
         if (node.expression.kind === ts.SyntaxKind.Identifier) {
             return this.getIden(identation) + this.THROW_TOKEN + ' ' + this.printNode(node.expression, 0) + this.LINE_TERMINATOR;
         }
-        const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
-        let newExpression = node.expression?.expression?.escapedText;
-        newExpression = newExpression ? newExpression : this.printNode(node.expression.expression, 0); // new Exception or new exact[string] check this out
-        const args = node.expression?.arguments.map(n => this.printNode(n, 0)).join(",");
-        const throwExpression = ` ${newToken}${newExpression}${this.LEFT_PARENTHESIS}((string)${args})${this.RIGHT_PARENTHESIS}`;
-        return this.getIden(identation) + this.THROW_TOKEN + throwExpression + this.LINE_TERMINATOR;
+        if (node.expression.kind === ts.SyntaxKind.NewExpression) {
+            const expression = node.expression;
+            // handle throw new Error (Message)
+            // and throw new x[a] (message)
+            const argumentsExp = expression?.arguments ?? [];
+            const parsedArg = argumentsExp.map(n => this.printNode(n, 0)).join(",") ?? '';
+            const newExpression =  this.printNode(expression.expression, 0);
+            if (expression.expression.kind === ts.SyntaxKind.Identifier) {
+                // handle throw new X
+                const id = expression.expression;
+                const symbol = global.checker.getSymbolAtLocation(expression.expression);
+                if (symbol) {
+                    const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
+                    const isClassDeclaration = declarations.find(l => l.kind === ts.SyntaxKind.InterfaceDeclaration ||  l.kind === ts.SyntaxKind.ClassDeclaration);
+                    if (isClassDeclaration){
+                        return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${id.escapedText} ((string)${parsedArg}) ${this.LINE_TERMINATOR}`;
+                    } else {
+                        return this.getIden(identation) + `throwDynamicException((string)${id.escapedText}, ${parsedArg});return null;`;
+                    }
+                }
+                return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${newExpression} (${parsedArg}) ${this.LINE_TERMINATOR}`;
+            } else if (expression.expression.kind === ts.SyntaxKind.ElementAccessExpression) {
+                return this.getIden(identation) + `throwDynamicException(${newExpression}, ${parsedArg});`;
+            }
+            return super.printThrowStatement(node, identation);
+        }
+        // const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
+        // const newExpression = node.expression?.expression?.escapedText;
+        // // newExpression = newExpression ? newExpression : this.printNode(node.expression.expression, 0); // new Exception or new exact[string] check this out
+        // // const args = node.expression?.arguments.map(n => this.printNode(n, 0)).join(",");
+        // // const throwExpression = ` ${newToken}${newExpression}${this.LEFT_PARENTHESIS}((string)${args})${this.RIGHT_PARENTHESIS}`;
+        // return this.getIden(identation) + this.THROW_TOKEN + throwExpression + this.LINE_TERMINATOR;
     }
 }
 

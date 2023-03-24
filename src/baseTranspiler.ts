@@ -303,6 +303,9 @@ class BaseTranspiler {
         //// might be costly, try to improve its performance later
         ////
         // Check if the method is a member of a class
+        if (node === undefined) {
+            return undefined;
+        }
         if (!ts.isClassDeclaration(node.parent)) {
             return undefined;
         }
@@ -315,27 +318,35 @@ class BaseTranspiler {
             return undefined;
         }
 
-        const parentClass = (ts as any).getAllSuperTypeNodes(node.parent)[0];
-        const parentClassType = global.checker.getTypeAtLocation(parentClass);
-        const parentClassDecl = parentClassType?.symbol?.valueDeclaration;
+        let method = undefined;
 
-        if (parentClassDecl === undefined) {
-            this.warn(node, "Parent class", "Parent class not found");
-            return undefined;
+        let parentClass = (ts as any).getAllSuperTypeNodes(node.parent)[0];
+
+        while (parentClass !== undefined) {
+            const parentClassType = global.checker.getTypeAtLocation(parentClass);
+            const parentClassDecl = parentClassType?.symbol?.valueDeclaration;
+
+            if (parentClassDecl === undefined) {
+                this.warn(node, "Parent class", "Parent class not found");
+                return undefined;
+            }
+
+            const parentClassMembers = parentClassDecl.members ?? [];
+
+            parentClassMembers.forEach(elem=> {
+                if (ts.isMethodDeclaration(elem)) {
+
+                    const name = elem.name.getText().trim();
+                    if ((node as any).name.escapedText === name) {
+                        method = elem;
+                    }
+                }
+            });
+
+            parentClass = (ts as any).getAllSuperTypeNodes(parentClassDecl)[0] ?? undefined;
         }
 
-        const parentClassMembers = parentClassDecl.members ?? [];
 
-        let method = undefined;
-        parentClassMembers.forEach(elem=> {
-            if (ts.isMethodDeclaration(elem)) {
-
-                const name = elem.name.getText().trim();
-                if ((node as any).name.escapedText === name) {
-                    method = elem;
-                }
-            }
-        });
 
         // TODO: Check if the method has the same signature as a method in the base class
         return method;
@@ -1009,7 +1020,15 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printToFixedCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
     printSliceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
+        return undefined; // stub
+    }
+
+    printReplaceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
         return undefined; // stub
     }
 
@@ -1026,6 +1045,10 @@ class BaseTranspiler {
     }
 
     printShiftCall(node, identation, name = undefined) {
+        return undefined; // stub
+    }
+
+    printReverseCall(node, identation, name = undefined) {
         return undefined; // stub
     }
 
@@ -1090,6 +1113,8 @@ class BaseTranspiler {
                     return this.printShiftCall(node, identation, parsedLeftSide);
                 case "pop":
                     return this.printPopCall(node, identation, parsedLeftSide);
+                case "reverse":
+                    return this.printReverseCall(node, identation, parsedLeftSide);
                 }
             }
 
@@ -1111,6 +1136,8 @@ class BaseTranspiler {
                     return this.printJoinCall(node, identation, name, parsedArg);
                 case 'split':
                     return this.printSplitCall(node, identation, name, parsedArg);
+                case 'toFixed':
+                    return this.printToFixedCall(node, identation, name, parsedArg);
                 }
 
                 if (args.length === 1 || args.length === 2) {
@@ -1118,6 +1145,8 @@ class BaseTranspiler {
                     switch(rightSide) {
                     case 'slice':
                         return this.printSliceCall(node, identation, name, parsedArg, parsedArg2);
+                    case 'replace':
+                        return this.printReplaceCall(node, identation, name, parsedArg, parsedArg2);
                     }
                 }
             }
@@ -1307,7 +1336,7 @@ class BaseTranspiler {
         // x["a"] = x["b"] : binary expression
         // const a = x["b"] : variable declaration
         const isLeftSideOfAssignment = node.parent?.kind === ts.SyntaxKind.BinaryExpression &&
-                            node.parent.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+                            (node.parent.operatorToken.kind === ts.SyntaxKind.EqualsToken || node.parent.operatorToken.kind === ts.SyntaxKind.PlusEqualsToken) &&
                             node.parent?.left === node;
         // to do; check nested accesses
         // const newNode = node.parent;
