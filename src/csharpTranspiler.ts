@@ -113,7 +113,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             'params': 'parameters',
             'base': 'bs',
             'internal': 'intern',
-            'event': 'eventVar'
+            'event': 'eventVar',
+            'fixed': 'fixedVar',
         };
 
         this.binaryExpressionsWrappers = {
