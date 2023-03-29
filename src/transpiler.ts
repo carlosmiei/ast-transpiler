@@ -130,13 +130,14 @@ export default class Transpiler {
             exports = this.pythonTranspiler.getFileExports(global.src);
         }
 
-
+        const methodsTypes = this.pythonTranspiler.getMethodTypes(global.src);
         Logger.success("transpilation finished successfully");
 
         return {
             content: transpiledContent,
             imports,
-            exports
+            exports,
+            methodsTypes
         };
     }
 
@@ -159,6 +160,8 @@ export default class Transpiler {
             });
         });
 
+        const methodsTypes = this.pythonTranspiler.getMethodTypes(global.src);
+
         const imports = this.pythonTranspiler.getFileImports(global.src);
         const exports = this.pythonTranspiler.getFileExports(global.src);
 
@@ -166,7 +169,8 @@ export default class Transpiler {
             return {
                 content: file.content,
                 imports,
-                exports
+                exports,
+                methodsTypes
             };
         });
 

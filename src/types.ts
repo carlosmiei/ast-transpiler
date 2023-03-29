@@ -4,6 +4,21 @@ interface IInput {
     async: boolean;
 }
 
+
+interface IParameterType {
+    name: string;
+    type: string;
+    isOptional: boolean;
+    initializer?: string;
+}
+
+interface IMethodType {
+    async: boolean;
+    name: string;
+    returnType: string;
+    parameters: IParameterType[];
+}
+
 interface IFileImport {
     name: string;
     path: string;
@@ -19,6 +34,7 @@ interface ITranspiledFile {
     content: string;
     imports: IFileImport[];
     exports: IFileExport[];
+    methodsTypes?: IMethodType[];
 }
 
 enum Languages {
@@ -69,5 +85,7 @@ export {
     TranspilationError,
     // FunctionReturnTypeError,
     // FunctionArgumentTypeError,
-    IInput
+    IInput,
+    IMethodType,
+    IParameterType
 };

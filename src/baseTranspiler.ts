@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { IFileImport, IFileExport, TranspilationError } from './types.js';
+import { IFileImport, IFileExport, TranspilationError, IMethodType, IParameterType } from './types.js';
 import { unCamelCase } from "./utils.js";
 import { Logger } from "./logger.js";
 class BaseTranspiler {
@@ -1875,6 +1875,83 @@ class BaseTranspiler {
             return esmExports;
         }
         return this.getCJSExports(node);
+    }
+
+    getReturnTypeFromMethod(node): string {
+        // first try custom type
+        const name = node.type?.typeName?.escapedText;
+        if (name){
+            return name as string;
+        }
+        const bType = global.checker.getTypeAtLocation(node);
+        // const func2Symbol = bType.getProperty("test1")!;
+        const func2Type = global.checker.getTypeOfSymbolAtLocation(bType.symbol, bType.symbol.valueDeclaration);
+        const func2Signature = global.checker.getSignaturesOfType(func2Type, ts.SignatureKind.Call)[0];
+        const rawType = func2Signature.getReturnType();
+        // const parsed = ts.TypeFlags[rawType.flags];
+        // console.log(parsed);
+        const res = global.checker.typeToString(rawType); // C
+        return res;
+    }
+
+    getParameterType(node): IParameterType {
+        const isOptional = node.questionToken !== undefined;
+
+        const result: IParameterType = {
+            name: node.name.getText(),
+            isOptional: isOptional,
+            type: undefined
+        };
+
+        // first try custom type
+        if (node.type === undefined) {
+            // does not have a type or uses a initializer
+            if (node.initializer !== undefined) {
+                const type = global.checker.getTypeAtLocation(node.initializer);
+                const res = global.checker.typeToString(type); // C
+                // console.log("initializer", res);
+                result.initializer = node.initializer.text;
+                result.type = res;
+                return result;
+            }
+        }
+
+        const name = node.type?.typeName?.escapedText;
+        if (name){
+            result.type = name as string;
+            if (node.initializer !== undefined) {
+                result.initializer = node.initializer.text;
+            }
+            return result;
+        }
+
+        if (node.type != undefined) {
+            const type = global.checker.getTypeAtLocation(node.type);
+            const res = global.checker.typeToString(type); // C
+            result.type = res as string;
+            return result;
+        }
+    }
+
+    getMethodTypes(node): IMethodType[] {
+        const result: IMethodType[] = [];
+        if (ts.isClassDeclaration(node)) {
+            const methods = node.members.filter((m) => ts.isMethodDeclaration(m));
+            methods.forEach(m => {
+                const isAsync = this.isAsyncFunction(m);
+                const name = m.name.getText();
+                const returnType = this.getReturnTypeFromMethod(m);
+                const parameters = (m as any).parameters;
+                const paramTypes:IParameterType[] = parameters.map((p) => this.getParameterType(p));
+                result.push({
+                    name,
+                    async:isAsync,
+                    returnType,
+                    parameters: paramTypes
+                });
+            });
+        }
+        return result;
     }
 }
 
