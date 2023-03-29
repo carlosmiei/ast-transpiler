@@ -740,7 +740,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printMathFloorCall(node, identation, parsedArg = undefined) {
-        return `Math.Floor((double)${parsedArg})`;
+        return `(Math.Floor(Double.Parse((${parsedArg}).ToString())))`;
     }
 
     printMathRoundCall(node, identation, parsedArg = undefined) {
