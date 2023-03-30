@@ -351,7 +351,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e, 0));
             const syntheticName = parsedArrayBindingElements.join("") + "Variable";
 
-            let arrayBindingStatement = this.getIden(identation) + `var ${syntheticName} = ${this.printNode(right, 0)};\n`;
+            let arrayBindingStatement = `var ${syntheticName} = ${this.printNode(right, 0)};\n`;
 
             parsedArrayBindingElements.forEach((e, index) => {
                 // const type = this.getType(node);
@@ -439,7 +439,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e.name, 0));
             const syntheticName = parsedArrayBindingElements.join("") + "Variable";
 
-            let arrayBindingStatement = this.getIden(identation) + `var ${syntheticName} = ${this.printNode(declaration.initializer, 0)};\n`;
+            let arrayBindingStatement =  `var ${syntheticName} = ${this.printNode(declaration.initializer, 0)};\n`;
 
             parsedArrayBindingElements.forEach((e, index) => {
                 // const type = this.getType(node);
