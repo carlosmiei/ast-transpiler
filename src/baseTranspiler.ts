@@ -928,7 +928,7 @@ class BaseTranspiler {
         const parsedArgs = args.map((a) => {
             return this.printNode(a, identation).trim();
         }).join(",");
-        return this.getIden(identation) + this.SUPER_CALL_TOKEN + "(" + parsedArgs + ")";
+        return this.SUPER_CALL_TOKEN + "(" + parsedArgs + ")";
     }
 
     isBuiltInFunctionCall(node) {

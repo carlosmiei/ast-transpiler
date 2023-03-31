@@ -72,10 +72,10 @@ export class PhpTranspiler extends BaseTranspiler {
         const expression = this.printNode(node.expression, 0);
 
         if (!this.asyncTranspiling) {
-            return this.getIden(identation) + expression;
+            return expression;
         }
 
-        return this.getIden(identation) + this.AWAIT_WRAPPER_OPEN + expression + this.AWAIT_WRAPPER_CLOSE;
+        return this.AWAIT_WRAPPER_OPEN + expression + this.AWAIT_WRAPPER_CLOSE;
     }
 
     transformIdentifier(identifier) {
