@@ -498,7 +498,7 @@ class BaseTranspiler {
             return this.printLengthProperty(node, identation, leftSide);
         }
 
-        let rawExpression = node.getFullText().trim();
+        let rawExpression = node.getText().trim();
 
         if (this.FullPropertyAccessReplacements.hasOwnProperty(rawExpression)){ // eslint-disable-line
             return this.FullPropertyAccessReplacements[rawExpression]; // eslint-disable-line
@@ -1164,8 +1164,8 @@ class BaseTranspiler {
         }
 
         let parsedExpression = undefined;
-        if (this.CallExpressionReplacements.hasOwnProperty(expression.escapedText)) { // eslint-disable-line
-            parsedExpression = this.CallExpressionReplacements[expression.escapedText];
+        if (this.CallExpressionReplacements.hasOwnProperty(expression.getText())) { // eslint-disable-line
+            parsedExpression = this.CallExpressionReplacements[expression.getText()];
         } else {
             if (expression.kind === ts.SyntaxKind.Identifier) {
                 const idValue = expression.text ?? expression.escapedText;
