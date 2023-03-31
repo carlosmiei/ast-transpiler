@@ -1911,7 +1911,7 @@ class BaseTranspiler {
                 const res = global.checker.typeToString(type); // C
                 // console.log("initializer", res);
                 result.initializer = node.initializer.text;
-                result.type = res;
+                result.type = ts.TypeFlags[type.flags];
                 return result;
             }
         }
@@ -1931,6 +1931,7 @@ class BaseTranspiler {
             result.type = res as string;
             return result;
         }
+        return result;
     }
 
     getMethodTypes(file): IMethodType[] {
@@ -1948,7 +1949,10 @@ class BaseTranspiler {
                 const parameters = (m as any).parameters;
                 // const paramTypes:IParameterType[] = parameters.map((p) => this.getParameterType(p));
                 const paramTypes:IParameterType[] = [];
-                parameters.forEach((p) => { paramTypes.push(this.getParameterType(p));});
+                parameters.forEach((p) => {
+                    const res = this.getParameterType(p);
+                    paramTypes.push(res);
+                });
                 result.push({
                     name,
                     async:isAsync,
