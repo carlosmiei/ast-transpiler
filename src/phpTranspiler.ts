@@ -69,7 +69,7 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     printAwaitExpression(node, identation) {
-        const expression = this.printNode(node.expression, 0);
+        const expression = this.printNode(node.expression, identation);
 
         if (!this.asyncTranspiling) {
             return expression;

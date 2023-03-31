@@ -891,12 +891,12 @@ class BaseTranspiler {
         return node.text;
     }
 
-    printArrayLiteralExpression(node) {
+    printArrayLiteralExpression(node, identation) {
 
         const elements = node.elements.map((e) => {
             return this.printNode(e);
         }).join(", ");
-        return this.ARRAY_OPENING_TOKEN + elements + this.ARRAY_CLOSING_TOKEN;
+        return this.ARRAY_OPENING_TOKEN + elements  + this.ARRAY_CLOSING_TOKEN;
     }
 
     printVariableDeclarationList(node,identation) {
@@ -1469,8 +1469,8 @@ class BaseTranspiler {
 
     printNewExpression(node, identation) {
         let expression = node.expression?.escapedText;
-        expression = expression ? expression : this.printNode(node.expression, 0); // new Exception or new exact[string] check this out
-        const args = node.arguments.map(n => this.printNode(n, 0)).join(",");
+        expression = expression ? expression : this.printNode(node.expression); // new Exception or new exact[string] check this out
+        const args = node.arguments.map(n => this.printNode(n, identation)).join(",");
         const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
         return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
     }
@@ -1603,7 +1603,7 @@ class BaseTranspiler {
             } else if (ts.isPropertyAccessExpression(node)) {
                 return this.printPropertyAccessExpression(node, identation);
             } else if (ts.isArrayLiteralExpression(node)) {
-                return this.printArrayLiteralExpression(node);
+                return this.printArrayLiteralExpression(node, identation);
             } else if (ts.isCallExpression(node)) {
                 return this.printCallExpression(node, identation);
             } else if (ts.isWhileStatement(node)) {
