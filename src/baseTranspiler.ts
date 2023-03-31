@@ -1481,7 +1481,7 @@ class BaseTranspiler {
     }
 
     printAwaitExpression(node, identation) {
-        const expression = this.printNode(node.expression, 0);
+        const expression = this.printNode(node.expression, identation);
         const awaitToken = this.asyncTranspiling ? this.AWAIT_TOKEN + " " : "";
         return awaitToken + expression;
     }
@@ -1933,16 +1933,22 @@ class BaseTranspiler {
         }
     }
 
-    getMethodTypes(node): IMethodType[] {
+    getMethodTypes(file): IMethodType[] {
         const result: IMethodType[] = [];
-        if (ts.isClassDeclaration(node)) {
+        if (!file.statements) {
+            return result;
+        }
+        const classDeclarations = file.statements.filter((s) => ts.isClassDeclaration(s));
+        classDeclarations.forEach((node) => {
             const methods = node.members.filter((m) => ts.isMethodDeclaration(m));
             methods.forEach(m => {
                 const isAsync = this.isAsyncFunction(m);
                 const name = m.name.getText();
                 const returnType = this.getReturnTypeFromMethod(m);
                 const parameters = (m as any).parameters;
-                const paramTypes:IParameterType[] = parameters.map((p) => this.getParameterType(p));
+                // const paramTypes:IParameterType[] = parameters.map((p) => this.getParameterType(p));
+                const paramTypes:IParameterType[] = [];
+                parameters.forEach((p) => { paramTypes.push(this.getParameterType(p));});
                 result.push({
                     name,
                     async:isAsync,
@@ -1950,7 +1956,8 @@ class BaseTranspiler {
                     parameters: paramTypes
                 });
             });
-        }
+        });
+
         return result;
     }
 }
