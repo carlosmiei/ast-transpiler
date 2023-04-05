@@ -1,6 +1,7 @@
 namespace Main;
 
 using System.Globalization;
+using System.Reflection;
 using System.Text.Json;
 using dict = Dictionary<string, object>;
 
@@ -9,7 +10,19 @@ public partial class Exchange
 {
 
     // tmp most of these methods are going to be re-implemented in the future to be more generic and efficient
-    public object postFixIncrement(ref object a)
+
+    public static object normalizeIntIfNeeded(object a)
+    {
+        if (a == null)
+            return null;
+
+        if (a.GetType() == typeof(int))
+        {
+            return System.Convert.ToInt64(a);
+        }
+        return a;
+    }
+    public static object postFixIncrement(ref object a)
     {
         if (a.GetType() == typeof(Int64))
         {
@@ -33,30 +46,110 @@ public partial class Exchange
         }
         return a;
     }
+
+    public static object prefixUnaryNeg(ref object a)
+    {
+        if (a.GetType() == typeof(Int64))
+        {
+            a = -(Int64)a;
+        }
+        else if (a.GetType() == typeof(int))
+        {
+            a = -(int)a;
+        }
+        else if (a.GetType() == typeof(double))
+        {
+            a = -(double)a;
+        }
+        else if (a.GetType() == typeof(string))
+        {
+            return null;
+        }
+        else
+        {
+            return null;
+        }
+        return a;
+    }
+
+    public static object prefixUnaryPlus(ref object a)
+    {
+        if (a.GetType() == typeof(Int64))
+        {
+            a = +(Int64)a;
+        }
+        else if (a.GetType() == typeof(int))
+        {
+            a = +(int)a;
+        }
+        else if (a.GetType() == typeof(double))
+        {
+            a = +(double)a;
+        }
+        else if (a.GetType() == typeof(string))
+        {
+            return null;
+        }
+        else
+        {
+            return null;
+        }
+        return a;
+    }
+
+    public static object plusEqual(object a, object value)
+    {
+
+        a = normalizeIntIfNeeded(a);
+        value = normalizeIntIfNeeded(value);
+
+        if (value == null)
+            return null;
+        if (a.GetType() == typeof(Int64))
+        {
+            a = (Int64)a + (Int64)value;
+        }
+        else if (a.GetType() == typeof(int))
+        {
+            a = (int)a + (int)value;
+        }
+        else if (a.GetType() == typeof(double))
+        {
+            a = (double)a + (double)value;
+        }
+        else if (a.GetType() == typeof(string))
+        {
+            a = (string)a + (string)value;
+        }
+        else
+        {
+            return null;
+        }
+        return a;
+    }
+
     public dict parseJson(object json)
     {
         return JsonSerializer.Deserialize<Dictionary<string, object>>((string)json);
     }
 
-    public bool isTrue(object value)
+    public static bool isTrue(object value)
     {
         if (value == null)
         {
             return false;
         }
 
-        var i = 1;
-        double d = 1.0;
-        var s = i == d;
+        value = normalizeIntIfNeeded(value);
 
         // return value != null && value != false && value != 0 && value != "" && value != "0" && value != "false" && value != "False" && value != "FALSE";
         if (value.GetType() == typeof(bool))
         {
             return (bool)value;
         }
-        else if (value.GetType() == typeof(int))
+        else if (value.GetType() == typeof(Int64))
         {
-            return (int)value != 0;
+            return (Int64)value != 0;
         }
         else if (value.GetType() == typeof(double))
         {
@@ -86,14 +179,22 @@ public partial class Exchange
         {
             return ((List<double>)value).Count > 0;
         }
+        else if (value.GetType() == typeof(Dictionary<string, object>))
+        {
+            return true;
+        }
         else
         {
             return false;
         }
     }
 
-    public bool isEqual(object a, object b)
+    public static bool isEqual(object a, object b)
     {
+
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
+
         if (a == null && b == null)
         {
             return true;
@@ -128,14 +229,30 @@ public partial class Exchange
         {
             return ((string)a) == ((string)b);
         }
+        else if (a.GetType() == typeof(bool))
+        {
+            return ((bool)a) == ((bool)b);
+        }
         else
         {
             return false;
         }
     }
 
-    public bool isGreaterThan(object a, object b)
+    public static bool isGreaterThan(object a, object b)
     {
+        if (a != null && b == null)
+        {
+            return true;
+        }
+        else if (a == null || b == null)
+        {
+            return false;
+        }
+
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
+
         if (a.GetType() == typeof(Int64))
         {
             return (Int64)a > (Int64)b;
@@ -158,23 +275,23 @@ public partial class Exchange
         }
     }
 
-    public bool isLessThan(object a, object b)
+    public static bool isLessThan(object a, object b)
     {
 
         return !isGreaterThan(a, b) && !isEqual(a, b);
     }
 
-    public bool isGreaterThanOrEqual(object a, object b)
+    public static bool isGreaterThanOrEqual(object a, object b)
     {
         return isGreaterThan(a, b) || isEqual(a, b);
     }
 
-    public bool isLessThanOrEqual(object a, object b)
+    public static bool isLessThanOrEqual(object a, object b)
     {
         return isLessThan(a, b) || isEqual(a, b);
     }
 
-    public object mod(object a, object b)
+    public static object mod(object a, object b)
     {
         if (a == null || b == null)
         {
@@ -182,6 +299,9 @@ public partial class Exchange
         }
         if (a.GetType() != b.GetType())
             return null;
+
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
 
         if (a.GetType() == typeof(string) || a.GetType() == typeof(Int64) || a.GetType() == typeof(int))
             return ((int)a) % ((int)b);
@@ -191,8 +311,11 @@ public partial class Exchange
         // return add(a, b);
     }
 
-    public object add(object a, object b)
+    public static object add(object a, object b)
     {
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
+
         if (a.GetType() == typeof(Int64))
         {
             return (Int64)a + (Int64)b;
@@ -211,17 +334,17 @@ public partial class Exchange
         }
     }
 
-    public string add(string a, string b)
+    public static string add(string a, string b)
     {
         return a + b;
     }
 
-    public string add(string a, object b)
+    public static string add(string a, object b)
     {
         return add(a, b.ToString());
     }
 
-    public string add(object a, string b)
+    public static string add(object a, string b)
     {
         if (a == null || b == null)
         {
@@ -238,7 +361,7 @@ public partial class Exchange
         // return add(a, b);
     }
 
-    public int add(int a, int b)
+    public static int add(int a, int b)
     {
         return a + b;
     }
@@ -248,11 +371,19 @@ public partial class Exchange
         return a + b;
     }
 
-    public object subtract(object a, object b)
+    public static object subtract(object a, object b)
     {
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
+
+        // subtract logic
         if (a.GetType() == typeof(Int64))
         {
             return (Int64)a - (Int64)b;
+        }
+        else if (a.GetType() == typeof(int))
+        {
+            return (int)a - (int)b;
         }
         else if (a.GetType() == typeof(double))
         {
@@ -264,7 +395,7 @@ public partial class Exchange
         }
     }
 
-    public int subtract(int a, int b)
+    public static int subtract(int a, int b)
     {
         return a - b;
     }
@@ -274,8 +405,11 @@ public partial class Exchange
         return a - b;
     }
 
-    public object divide(object a, object b)
+    public static object divide(object a, object b)
     {
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
+
         if (a.GetType() == typeof(Int64))
         {
             return (Int64)a / (Int64)b;
@@ -290,8 +424,10 @@ public partial class Exchange
         }
     }
 
-    public object multiply(object a, object b)
+    public static object multiply(object a, object b)
     {
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
         if (a.GetType() == typeof(Int64))
         {
             return (Int64)a * (Int64)b;
@@ -306,7 +442,7 @@ public partial class Exchange
         }
     }
 
-    public int getArrayLength(object value)
+    public static int getArrayLength(object value)
     {
         if (value == null)
         {
@@ -327,8 +463,10 @@ public partial class Exchange
         }
     }
 
-    public object mathMin(object a, object b)
+    public static object mathMin(object a, object b)
     {
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
         if (a.GetType() == typeof(Int64))
         {
             return Math.Min((Int64)a, (Int64)b);
@@ -343,8 +481,10 @@ public partial class Exchange
         }
     }
 
-    public object mathMax(object a, object b)
+    public static object mathMax(object a, object b)
     {
+        a = normalizeIntIfNeeded(a);
+        b = normalizeIntIfNeeded(b);
         if (a.GetType() == typeof(Int64))
         {
             return Math.Max((Int64)a, (Int64)b);
@@ -359,15 +499,19 @@ public partial class Exchange
         }
     }
 
-    public int getIndexOf(object a, object b)
+    public static int getIndexOf(object str, object target)
     {
-        if (a.GetType() == typeof(List<object>))
+        if (str.GetType() == typeof(List<object>))
         {
-            return ((List<object>)a).IndexOf(b);
+            return ((List<object>)str).IndexOf(target);
         }
-        else if (a.GetType() == typeof(List<string>))
+        else if (str.GetType() == typeof(List<string>))
         {
-            return ((List<string>)a).IndexOf((string)b);
+            return ((List<string>)str).IndexOf((string)target);
+        }
+        else if (str.GetType() == typeof(string))
+        {
+            return ((string)str).IndexOf((string)target);
         }
         else
         {
@@ -375,18 +519,35 @@ public partial class Exchange
         }
     }
 
-    public int parseInt(object a)
+    public static object parseInt(object a)
     {
-        return int.Parse((string)a);
+        object parsedValue = null;
+        try
+        {
+            parsedValue = (Convert.ToInt64(a));
+        }
+        catch (Exception e)
+        {
+        }
+        return parsedValue;
     }
 
-    public float parseFloat(object a)
+    public static object parseFloat(object a)
     {
-        return float.Parse((string)a, CultureInfo.InvariantCulture.NumberFormat);
+        object parsedValue = null;
+        try
+        {
+            parsedValue = float.Parse((string)a, CultureInfo.InvariantCulture.NumberFormat);
+        }
+        catch (Exception e)
+        {
+        }
+        return parsedValue;
     }
 
     // generic getValue to replace elementAccesses
-    public object getValue(object value2, object key)
+    public object getValue(object a, object b) => GetValue(a, b);
+    public static object GetValue(object value2, object key)
     {
         if (value2 == null || key == null)
         {
@@ -417,7 +578,7 @@ public partial class Exchange
         {
             // check here if index is out of bounds
             var parsed = (int)key;
-            var listLength = this.getArrayLength(value);
+            var listLength = getArrayLength(value);
             if (parsed >= listLength)
             {
                 return null;
@@ -427,7 +588,7 @@ public partial class Exchange
         else if (value.GetType() == typeof(List<string>))
         {
             var parsed = (int)key;
-            var listLength = this.getArrayLength(value);
+            var listLength = getArrayLength(value);
             if (parsed >= listLength)
             {
                 return null;
@@ -440,12 +601,12 @@ public partial class Exchange
             return ((List<Int64>)value)[parsed];
         }
         // check this last, avoid reflection
-        else if (key.GetType() == typeof(string) && (this.GetType()).GetProperty((string)key) != null)
+        else if (key.GetType() == typeof(string) && (value.GetType()).GetProperty((string)key) != null)
         {
-            var prop = (this.GetType()).GetProperty((string)key);
+            var prop = (value.GetType()).GetProperty((string)key);
             if (prop != null)
             {
-                return prop.GetValue(this, null);
+                return prop.GetValue(value2, null);
             }
             else
             {
@@ -468,5 +629,40 @@ public partial class Exchange
         }
         var results = await Task.WhenAll(tasks);
         return results.ToList();
+    }
+
+    public static string toStringOrNull(object value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+        else
+        {
+            return (string)value;
+        }
+    }
+
+    public void throwDynamicException(object exception, object message)
+    {
+        var Exception = NewException((Type)exception, (string)message);
+        throw Exception;
+    }
+
+    // This function is the salient bit here
+    public Exception NewException(Type exception, String message)
+    {
+        return Activator.CreateInstance(exception, message) as Exception;
+    }
+
+    public static object toFixed(object number, object decimals)
+    {
+        return Math.Round((double)number, (int)decimals);
+    }
+
+    public static object callDynamically(object obj, object methodName, object[] args = null)
+    {
+        args ??= new object[] { };
+        return obj.GetType().GetMethod("YourMethodName", BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Invoke(obj, args);
     }
 }
