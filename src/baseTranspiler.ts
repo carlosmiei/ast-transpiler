@@ -820,7 +820,8 @@ class BaseTranspiler {
         let returnType = this.printFunctionType(node);
         returnType = returnType ? returnType + " " : returnType;
 
-        const functionDef = this.getIden(identation) + modifiers + returnType + this.FUNCTION_TOKEN + " " + name
+        const fnKeyword = this.FUNCTION_TOKEN ? this.FUNCTION_TOKEN + " " : "";
+        const functionDef = this.getIden(identation) + modifiers + returnType + fnKeyword + name
             + "(" + parsedArgs + ")";
 
         return functionDef;

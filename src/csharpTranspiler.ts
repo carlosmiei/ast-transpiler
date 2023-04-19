@@ -48,6 +48,7 @@ const parserConfig = {
     'INDEXOF_WRAPPER_CLOSE': ')',
     'MOD_WRAPPER_OPEN': 'mod(',
     'MOD_WRAPPER_CLOSE': ')',
+    'FUNCTION_TOKEN': ''
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
