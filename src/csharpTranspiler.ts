@@ -1,7 +1,5 @@
 import { BaseTranspiler } from "./baseTranspiler.js";
 import ts, { TypeChecker } from 'typescript';
-import { parse } from "path";
-import exp from "constants";
 
 const parserConfig = {
     'ELSEIF_TOKEN': 'else if',
@@ -23,6 +21,7 @@ const parserConfig = {
     'UNKOWN_PROP_WRAPPER_CLOSE': ')',
     'UKNOWN_PROP_ASYNC_WRAPPER_OPEN': 'this.callAsync(',
     'UNKOWN_PROP_ASYNC_WRAPPER_CLOSE': ')',
+    'DYNAMIC_CALL_OPEN': 'callDynamically(',
     'EQUALS_EQUALS_WRAPPER_OPEN': 'isEqual(',
     'EQUALS_EQUALS_WRAPPER_CLOSE': ')',
     'DIFFERENT_WRAPPER_OPEN': '!isEqual(',
@@ -238,6 +237,23 @@ export class CSharpTranspiler extends BaseTranspiler {
         return;
     }
 
+    printDynamicCall(node, identation) {
+        const isAsync = true; // setting to true for now, because there are some scenarios where we don't know
+        const elementAccess = node.expression;
+        if (elementAccess?.kind === ts.SyntaxKind.ElementAccessExpression) {
+            const parsedArg = node.arguments?.length > 0 ? node.arguments.map(n => this.printNode(n, identation).trimStart()).join(", ") : "";
+            const target = this.printNode(elementAccess.expression, 0);
+            const propName = this.printNode(elementAccess.argumentExpression, 0);
+            const argsArray = `new object[] { ${parsedArg} }`;
+            const open = this.DYNAMIC_CALL_OPEN;
+            let statement = `${open}${target}, ${propName}, ${argsArray})`;
+            statement = isAsync ? `((Task<object>)${statement})` : statement;
+            return statement;
+        }
+        return undefined;
+    }
+
+
     printElementAccessExpressionExceptionIfAny(node) {
         // convert this[method] into this.call(method) or this.callAsync(method)
     //    if (node?.expression?.kind === ts.SyntaxKind.ThisKeyword) {
@@ -299,11 +315,18 @@ export class CSharpTranspiler extends BaseTranspiler {
             }
         }
 
-        // replace this[method]() calls
-        const thisElementAccess = this.printThisElementAccesssIfNeeded(node, identation);
-        if (thisElementAccess) {
-            return thisElementAccess;
+        // // replace this[method]() calls
+        // const thisElementAccess = this.printThisElementAccesssIfNeeded(node, identation);
+        // if (thisElementAccess) {
+        //     return thisElementAccess;
+        // }
+
+        // handle dynamic calls, this[method](A) or exchange[b] (c) using reflection
+        if (node.expression.kind === ts.SyntaxKind.ElementAccessExpression) {
+            return this.printDynamicCall(node, identation);
         }
+
+
         return undefined;
     }
 
@@ -439,7 +462,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e.name, 0));
             const syntheticName = parsedArrayBindingElements.join("") + "Variable";
 
-            let arrayBindingStatement =  `var ${syntheticName} = ${this.printNode(declaration.initializer, 0)};\n`;
+            let arrayBindingStatement =  `${this.getIden(identation)}var ${syntheticName} = ${this.printNode(declaration.initializer, 0)};\n`;
 
             parsedArrayBindingElements.forEach((e, index) => {
                 // const type = this.getType(node);
@@ -720,7 +743,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printObjectKeysCall(node, identation, parsedArg = undefined) {
-        return `new List<string>(((Dictionary<string,object>)${parsedArg}).Keys)`;
+        return `new List<object>(((Dictionary<string,object>)${parsedArg}).Keys)`;
     }
 
     printObjectValuesCall(node, identation, parsedArg = undefined) {
@@ -764,7 +787,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printJoinCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `String.Join(${parsedArg}, ${name})`;
+        return `String.Join(${parsedArg}, ((List<object>)${name}).ToArray())`;
     }
 
     printSplitCall(node, identation, name = undefined, parsedArg = undefined) {

@@ -16,6 +16,7 @@ class BaseTranspiler {
     DEFAULT_IDENTATION = "    ";
     STRING_QUOTE_TOKEN = '"';
     UNDEFINED_TOKEN = "null";
+    NULL_TOKEN = "null";
     IF_TOKEN = "if";
     ELSE_TOKEN = "else";
     ELSEIF_TOKEN = "else if";
@@ -154,6 +155,8 @@ class BaseTranspiler {
 
     PARSEINT_WRAPPER_OPEN = "";
     PARSEINT_WRAPPER_CLOSE = "";
+
+    DYNAMIC_CALL_OPEN = "";
 
     SPREAD_TOKEN = "...";
 
@@ -1581,6 +1584,10 @@ class BaseTranspiler {
         return this.getIden(identation) + this.SPREAD_TOKEN + expression;
     }
 
+    printNullKeyword(node, identation){
+        return this.getIden(identation) + this.NULL_TOKEN;
+    }
+
     printNode(node, identation = 0): string {
 
         try {
@@ -1658,10 +1665,12 @@ class BaseTranspiler {
                 return this.printParameter(node);
             } else if (ts.isConstructorDeclaration(node)) {
                 return this.printConstructorDeclaration(node, identation);
-            } if (ts.isPropertyDeclaration(node)) {
+            } else if (ts.isPropertyDeclaration(node)) {
                 return this.printPropertyDeclaration(node, identation);
-            } if (ts.isSpreadElement(node)) {
+            } else if (ts.isSpreadElement(node)) {
                 return this.printSpreadElement(node, identation);
+            } else if (ts.SyntaxKind.NullKeyword === node.kind) {
+                return this.printNullKeyword(node, identation);
             }
 
             if (node.statements) {
@@ -1879,10 +1888,7 @@ class BaseTranspiler {
 
     getReturnTypeFromMethod(node): string {
         // first try custom type
-        const name = node.type?.typeName?.escapedText;
-        if (name){
-            return name as string;
-        }
+
         const bType = global.checker.getTypeAtLocation(node);
         // const func2Symbol = bType.getProperty("test1")!;
         const func2Type = global.checker.getTypeOfSymbolAtLocation(bType.symbol, bType.symbol.valueDeclaration);
@@ -1891,6 +1897,12 @@ class BaseTranspiler {
         // const parsed = ts.TypeFlags[rawType.flags];
         // console.log(parsed);
         const res = global.checker.typeToString(rawType); // C
+        if (res === undefined) {
+            const name = node.type?.typeName?.escapedText;
+            if (name){
+                return name as string;
+            }
+        }
         return res;
     }
 
@@ -1903,6 +1915,10 @@ class BaseTranspiler {
             type: undefined
         };
 
+        if (node.initializer !== undefined) {
+            result.initializer = node.initializer.getText();
+        }
+
         // first try custom type
         if (node.type === undefined) {
             // does not have a type or uses a initializer
@@ -1910,7 +1926,7 @@ class BaseTranspiler {
                 const type = global.checker.getTypeAtLocation(node.initializer);
                 const res = global.checker.typeToString(type); // C
                 // console.log("initializer", res);
-                result.initializer = node.initializer.text;
+                // result.initializer = node.initializer.text;
                 result.type = ts.TypeFlags[type.flags];
                 return result;
             }
