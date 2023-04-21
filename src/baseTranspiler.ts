@@ -821,6 +821,9 @@ class BaseTranspiler {
         returnType = returnType ? returnType + " " : returnType;
 
         const fnKeyword = this.FUNCTION_TOKEN ? this.FUNCTION_TOKEN + " " : "";
+        if (!fnKeyword){
+            modifiers = modifiers + "public ";
+        }
         const functionDef = this.getIden(identation) + modifiers + returnType + fnKeyword + name
             + "(" + parsedArgs + ")";
 

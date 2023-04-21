@@ -345,7 +345,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         case "string":
             return notOperator + `((${target}).GetType() == typeof(string))`;
         case "number":
-            return notOperator + `((${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double))`;
+            return notOperator + `((${target}).GetType() == typeof(Int64)) || ((${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double))`;
         case "boolean":
             return notOperator + `((${target}).GetType() == typeof(bool))`;
         case "object":
@@ -831,7 +831,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         if (parsedArg2 === undefined){
             return `((string)${name}).Substring((int)${parsedArg})`;
         }
-        return `((string)${name}).Substring((int)${parsedArg}, (int)${parsedArg2})`;
+        return `((string)${name})[((int)${parsedArg})..((int)${parsedArg2})]`;
     }
 
     printReplaceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
