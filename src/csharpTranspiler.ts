@@ -48,7 +48,7 @@ const parserConfig = {
     'INDEXOF_WRAPPER_CLOSE': ')',
     'MOD_WRAPPER_OPEN': 'mod(',
     'MOD_WRAPPER_CLOSE': ')',
-    'FUNCTION_TOKEN': ''
+    'FUNCTION_TOKEN': '',
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
@@ -400,7 +400,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         }
 
         if (op === ts.SyntaxKind.InKeyword) {
-            return `((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey(toStringOrNull(${this.printNode(left, 0)}))`;
+            return `inOp(${this.printNode(right, 0)}, ${this.printNode(left, 0)})`;
         }
 
         const leftText = this.printNode(left, 0);
@@ -829,9 +829,11 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printSliceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
         if (parsedArg2 === undefined){
-            return `((string)${name}).Substring((int)${parsedArg})`;
+            // return `((string)${name}).Substring((int)${parsedArg})`;
+            parsedArg2 = 'null';
         }
-        return `((string)${name})[((int)${parsedArg})..((int)${parsedArg2})]`;
+        // return `((string)${name})[((int)${parsedArg})..((int)${parsedArg2})]`;
+        return `slice(${name}, ${parsedArg}, ${parsedArg2})`;
     }
 
     printReplaceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
