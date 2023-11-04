@@ -784,6 +784,12 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('should transpile Number.isInteger', () => {
+        const ts = "Number.isInteger(1)";
+        const php = "is_int(1);";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('should transpile file from path', () => {
         transpiler.setPhpUncamelCaseIdentifiers(true);
         const php = readFileSync ('./tests/files/output/php/test1.php', "utf8");

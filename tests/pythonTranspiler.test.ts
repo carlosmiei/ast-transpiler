@@ -694,6 +694,12 @@ describe('python tests', () => {
         expect(output).toBe(python);
         transpiler.setPythonUncamelCaseIdentifiers(false);
     })
+    test('should transpile Number.isInteger', () => {
+        const ts = "Number.isInteger(1)"
+        const python = "isinstance(1, int)"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('should remove cjs import from transpiled code', () => {
         const ts =
         "const {a,b,x} = require  ('ola')  \n" +

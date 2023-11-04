@@ -144,6 +144,10 @@ export class PhpTranspiler extends BaseTranspiler {
         return `gettype(${parsedArg}) === 'array' && array_keys(${parsedArg}) === array_keys(array_keys(${parsedArg}))`;
     }
 
+    printNumberIsIntegerCall(node, identation, parsedArg = undefined) {
+        return `is_int(${parsedArg})`;
+    }
+
     printObjectKeysCall(node, identation, parsedArg = undefined) {
         return `is_array(${parsedArg}) ? array_keys(${parsedArg}) : array()`;
     }
@@ -374,6 +378,7 @@ export class PhpTranspiler extends BaseTranspiler {
             'Math.pow': 'pow',
             'Math.min': 'min',
             'Math.max': 'max',
+            'Number.isInteger': 'is_int',
             // 'Promise.all': 'Promise\\all',
         };
 

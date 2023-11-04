@@ -100,6 +100,10 @@ export class PythonTranspiler extends BaseTranspiler {
         return  `isinstance(${parsedArg}, list)`;
     }
 
+    printNumberIsIntegerCall(node, identation, parsedArg = undefined) {
+        return  `isinstance(${parsedArg}, int)`;
+    }
+
     printObjectKeysCall(node, identation, parsedArg = undefined) {
         return  `list(${parsedArg}.keys())`;
     }
